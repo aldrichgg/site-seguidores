@@ -1,0 +1,1003 @@
+import React, { useState } from "react";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
+import { 
+  Settings as SettingsIcon, 
+  User, 
+  Lock, 
+  Bell, 
+  CreditCard, 
+  Globe, 
+  Palette, 
+  Shield,
+  Save,
+  Check,
+  X,
+  RefreshCw
+} from "lucide-react";
+import { useTheme } from "@/components/ui/theme-provider";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "@/components/ui/use-toast";
+
+// Tipos para definir o estado das integrações de API
+type ApiIntegrationStatus = {
+  key: string;
+  isValid: boolean;
+  isConnected: boolean;
+  lastChecked: Date | null;
+};
+
+const Settings = () => {
+  const { theme, setTheme } = useTheme();
+  const [activeTab, setActiveTab] = useState("configuracoes-gerais");
+  const [companyInfo, setCompanyInfo] = useState({
+    name: "ImpulseGram",
+    email: "contato@impulsegram.com",
+    phone: "(11) 99999-8888",
+    address: "Rua Example, 123 - São Paulo, SP"
+  });
+
+  const [securitySettings, setSecuritySettings] = useState({
+    twoFactorAuth: false,
+    loginNotifications: true,
+    ipWhitelist: false
+  });
+
+  const [notificationPreferences, setNotificationPreferences] = useState({
+    emailNotifications: true,
+    smsNotifications: false,
+    pushNotifications: true,
+    smtpConfig: {
+      host: "",
+      port: 587,
+      user: "",
+      password: "",
+      secure: true,
+      fromEmail: ""
+    }
+  });
+
+  const [paymentSettings, setPaymentSettings] = useState({
+    defaultCurrency: "BRL",
+    taxPercentage: 5,
+    automaticRefunds: false,
+    mercadoPagoAccessToken: "",
+    mercadoPagoPublicKey: "",
+    mercadoPagoClientId: "",
+    mercadoPagoClientSecret: ""
+  });
+
+  const [apiIntegrations, setApiIntegrations] = useState<{
+    instagram: ApiIntegrationStatus;
+    facebook: ApiIntegrationStatus;
+    tiktok: ApiIntegrationStatus;
+  }>({
+    instagram: { key: "", isValid: false, isConnected: false, lastChecked: null },
+    facebook: { key: "", isValid: false, isConnected: false, lastChecked: null },
+    tiktok: { key: "", isValid: false, isConnected: false, lastChecked: null }
+  });
+
+  // Função para salvar configurações
+  const saveSettings = () => {
+    // Lógica para salvar configurações
+    console.log("Salvando configurações...", {
+      companyInfo,
+      securitySettings,
+      notificationPreferences,
+      paymentSettings,
+      apiIntegrations
+    });
+    
+    toast({
+      title: "Configurações Salvas",
+      description: "Suas alterações foram salvas com sucesso!",
+      variant: "default"
+    });
+  };
+
+  // Função para validar chave de API
+  const validateApiKey = async (platform: keyof typeof apiIntegrations, key: string) => {
+    // Simulação de validação de API
+    try {
+      // Aqui você implementaria a lógica real de validação com a API específica
+      const response = await simulateApiValidation(platform, key);
+      
+      setApiIntegrations(prev => ({
+        ...prev,
+        [platform]: {
+          key,
+          isValid: response.isValid,
+          isConnected: response.isConnected,
+          lastChecked: new Date()
+        }
+      }));
+
+      // Notificação de resultado
+      if (response.isValid) {
+        toast({
+          title: `Integração ${platform.charAt(0).toUpperCase() + platform.slice(1)}`,
+          description: "Chave de API validada com sucesso!",
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Erro de Validação",
+          description: "Chave de API inválida ou expirada.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro de Conexão",
+        description: `Não foi possível validar a chave de API do ${platform}.`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Função simulada de validação de API
+  const simulateApiValidation = async (platform: string, key: string) => {
+    // Simulação de chamada de API
+    return new Promise<{isValid: boolean, isConnected: boolean}>(resolve => {
+      // Simula validação com base no comprimento da chave
+      const isValid = key.length >= 10;
+      const isConnected = isValid && Math.random() > 0.2; // 80% de chance de conexão
+
+      // Simula um tempo de resposta de API
+      setTimeout(() => {
+        resolve({ isValid, isConnected });
+      }, 1500);
+    });
+  };
+
+  // Renderização da seção de Integrações de API
+  const renderApiIntegrationSection = (
+    platform: keyof typeof apiIntegrations, 
+    platformName: string
+  ) => {
+    const integration = apiIntegrations[platform];
+
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label>Chave de API {platformName}</Label>
+            <div className="flex items-center space-x-2">
+              <Input 
+                type="password"
+                placeholder={`Insira a chave de API do ${platformName}`}
+                value={integration.key}
+                onChange={(e) => setApiIntegrations(prev => ({
+                  ...prev,
+                  [platform]: { ...prev[platform], key: e.target.value }
+                }))}
+              />
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => validateApiKey(platform, integration.key)}
+                disabled={!integration.key}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          
+          <div className="flex flex-col justify-end space-y-2">
+            <div className="flex items-center space-x-2">
+              <Label>Status:</Label>
+              {integration.isValid ? (
+                <div className="flex items-center text-green-600">
+                  <Check className="mr-1 h-4 w-4" />
+                  Validado
+                </div>
+              ) : (
+                <div className="flex items-center text-red-600">
+                  <X className="mr-1 h-4 w-4" />
+                  Não Validado
+                </div>
+              )}
+            </div>
+            {integration.lastChecked && (
+              <p className="text-xs text-muted-foreground">
+                Última verificação: {integration.lastChecked.toLocaleString()}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Função para salvar configurações de pagamento
+  const handleSavePaymentSettings = () => {
+    try {
+      // Aqui você pode adicionar lógica de validação
+      const { 
+        mercadoPagoAccessToken, 
+        mercadoPagoPublicKey, 
+        mercadoPagoClientId, 
+        mercadoPagoClientSecret 
+      } = paymentSettings;
+
+      // Validação básica (exemplo)
+      if (!mercadoPagoAccessToken || !mercadoPagoPublicKey) {
+        toast({
+          title: "Erro de Validação",
+          description: "Por favor, preencha os campos obrigatórios do Mercado Pago.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Simulação de salvamento (substitua por chamada de API real)
+      console.log("Salvando configurações do Mercado Pago:", paymentSettings);
+      
+      toast({
+        title: "Configurações Salvas",
+        description: "Configurações do Mercado Pago atualizadas com sucesso!",
+        variant: "default"
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao Salvar",
+        description: "Não foi possível salvar as configurações do Mercado Pago.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Cabeçalho */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center">
+            <SettingsIcon className="mr-2 h-6 w-6" />
+            Configurações
+          </h1>
+          <p className="text-muted-foreground">
+            Personalize seu painel administrativo e configurações da empresa
+          </p>
+        </div>
+        <Button onClick={saveSettings}>
+          <Save className="mr-2 h-4 w-4" />
+          Salvar Alterações
+        </Button>
+      </div>
+
+      <div className='flex flex-col min-h-screen'>
+        {/* Main content */}
+        <div className='flex-1 p-4 space-y-6'>
+          {/* Header */}
+          <header className='bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
+            <h1 className='text-2xl font-semibold'>Configurações</h1>
+
+            <div className='flex items-center space-x-4'>
+              <button className='relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all'>
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  className='h-6 w-6'
+                  fill='none'
+                  viewBox='0 0 24 24'
+                  stroke='currentColor'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9'
+                  />
+                </svg>
+                <span className='absolute top-0 right-0 h-2 w-2 rounded-full bg-primary-500'></span>
+              </button>
+
+              <div className='relative'>
+                <details className='cursor-pointer'>
+                  <summary className='list-none flex items-center gap-2'>
+                    <div className='h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium'>
+                      AD
+                    </div>
+                    <div className='hidden sm:block md:block'>
+                      <p className='text-sm font-medium'>Admin User</p>
+                      <p className='text-xs text-gray-500'>Administrador</p>
+                    </div>
+                  </summary>
+                  <div className='absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10'>
+                    <a
+                      href='#'
+                      className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100'
+                    >
+                      Perfil
+                    </a>
+                    <a
+                      href='#'
+                      className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100'
+                    >
+                      Configurações
+                    </a>
+                    <a
+                      href='#'
+                      className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100'
+                    >
+                      Sair
+                    </a>
+                  </div>
+                </details>
+              </div>
+            </div>
+          </header>
+
+          {/* Tab Navigation */}
+          <div className='px-4 md:px-6 pt-4 border-b border-gray-200 overflow-x-auto'>
+            <div className='flex space-x-1 pb-2 min-w-max'>
+              <button 
+                onClick={() => setActiveTab("configuracoes-gerais")}
+                className={`px-3 md:px-4 py-2 ${activeTab === "configuracoes-gerais" 
+                  ? "text-primary-600 border-b-2 border-primary-600" 
+                  : "text-gray-500 hover:text-gray-700"} font-medium text-sm hover:border-b-2 hover:border-gray-300 transition-all whitespace-nowrap`}
+              >
+                Configurações Gerais
+              </button>
+              <button 
+                onClick={() => setActiveTab("precos-planos")}
+                className={`px-3 md:px-4 py-2 ${activeTab === "precos-planos" 
+                  ? "text-primary-600 border-b-2 border-primary-600" 
+                  : "text-gray-500 hover:text-gray-700"} font-medium text-sm hover:border-b-2 hover:border-gray-300 transition-all whitespace-nowrap`}
+              >
+                Preços e Planos
+              </button>
+              <button 
+                onClick={() => setActiveTab("integracoes-api")}
+                className={`px-3 md:px-4 py-2 ${activeTab === "integracoes-api" 
+                  ? "text-primary-600 border-b-2 border-primary-600" 
+                  : "text-gray-500 hover:text-gray-700"} font-medium text-sm hover:border-b-2 hover:border-gray-300 transition-all whitespace-nowrap`}
+              >
+                Integrações e API
+              </button>
+              <button 
+                onClick={() => setActiveTab("pagamentos")}
+                className={`px-3 md:px-4 py-2 ${activeTab === "pagamentos" 
+                  ? "text-primary-600 border-b-2 border-primary-600" 
+                  : "text-gray-500 hover:text-gray-700"} font-medium text-sm hover:border-b-2 hover:border-gray-300 transition-all whitespace-nowrap`}
+              >
+                Pagamentos
+              </button>
+              <button 
+                onClick={() => setActiveTab("seguranca")}
+                className={`px-3 md:px-4 py-2 ${activeTab === "seguranca" 
+                  ? "text-primary-600 border-b-2 border-primary-600" 
+                  : "text-gray-500 hover:text-gray-700"} font-medium text-sm hover:border-b-2 hover:border-gray-300 transition-all whitespace-nowrap`}
+              >
+                Segurança
+              </button>
+              <button 
+                onClick={() => setActiveTab("personalizacao")}
+                className={`px-3 md:px-4 py-2 ${activeTab === "personalizacao" 
+                  ? "text-primary-600 border-b-2 border-primary-600" 
+                  : "text-gray-500 hover:text-gray-700"} font-medium text-sm hover:border-b-2 hover:border-gray-300 transition-all whitespace-nowrap`}
+              >
+                Personalização
+              </button>
+            </div>
+          </div>
+
+          {/* Abas de Configurações */}
+          <Tabs defaultValue="empresa" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="empresa" className="flex items-center gap-2">
+                <Globe className="h-4 w-4" /> Empresa
+              </TabsTrigger>
+              <TabsTrigger value="seguranca" className="flex items-center gap-2">
+                <Shield className="h-4 w-4" /> Segurança
+              </TabsTrigger>
+              <TabsTrigger value="notificacoes" className="flex items-center gap-2">
+                <Bell className="h-4 w-4" /> Notificações
+              </TabsTrigger>
+              <TabsTrigger value="pagamentos" className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" /> Pagamentos
+              </TabsTrigger>
+              <TabsTrigger value="integracao" className="flex items-center gap-2">
+                <User className="h-4 w-4" /> Integrações
+              </TabsTrigger>
+              <TabsTrigger value="aparencia" className="flex items-center gap-2">
+                <Palette className="h-4 w-4" /> Aparência
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Configurações de Empresa */}
+            <TabsContent value="empresa">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Informações da Empresa</CardTitle>
+                  <CardDescription>Detalhes e informações de contato</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Nome da Empresa</Label>
+                      <Input 
+                        value={companyInfo.name}
+                        onChange={(e) => setCompanyInfo({...companyInfo, name: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>E-mail de Contato</Label>
+                      <Input 
+                        type="email"
+                        value={companyInfo.email}
+                        onChange={(e) => setCompanyInfo({...companyInfo, email: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Telefone</Label>
+                      <Input 
+                        value={companyInfo.phone}
+                        onChange={(e) => setCompanyInfo({...companyInfo, phone: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>Endereço</Label>
+                      <Input 
+                        value={companyInfo.address}
+                        onChange={(e) => setCompanyInfo({...companyInfo, address: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Configurações de Segurança */}
+            <TabsContent value="seguranca">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Configurações de Segurança</CardTitle>
+                  <CardDescription>Proteja o acesso ao seu painel</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Autenticação de Dois Fatores</Label>
+                    <Switch 
+                      checked={securitySettings.twoFactorAuth}
+                      onCheckedChange={(checked) => setSecuritySettings({...securitySettings, twoFactorAuth: checked})}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Notificações de Login</Label>
+                    <Switch 
+                      checked={securitySettings.loginNotifications}
+                      onCheckedChange={(checked) => setSecuritySettings({...securitySettings, loginNotifications: checked})}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Lista de IPs Permitidos</Label>
+                    <Switch 
+                      checked={securitySettings.ipWhitelist}
+                      onCheckedChange={(checked) => setSecuritySettings({...securitySettings, ipWhitelist: checked})}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Configurações de Notificações */}
+            <TabsContent value="notificacoes">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Preferências de Notificação</CardTitle>
+                  <CardDescription>Escolha como deseja receber alertas</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Notificações por E-mail</Label>
+                    <Switch 
+                      checked={notificationPreferences.emailNotifications}
+                      onCheckedChange={(checked) => setNotificationPreferences({...notificationPreferences, emailNotifications: checked})}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Notificações por SMS</Label>
+                    <Switch 
+                      checked={notificationPreferences.smsNotifications}
+                      onCheckedChange={(checked) => setNotificationPreferences({...notificationPreferences, smsNotifications: checked})}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Notificações Push</Label>
+                    <Switch 
+                      checked={notificationPreferences.pushNotifications}
+                      onCheckedChange={(checked) => setNotificationPreferences({...notificationPreferences, pushNotifications: checked})}
+                    />
+                  </div>
+
+                  {/* Configurações de SMTP */}
+                  <div className="mt-6 space-y-4">
+                    <h3 className="text-lg font-semibold">Configurações de E-mail SMTP</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Servidor SMTP</Label>
+                        <Input 
+                          placeholder="smtp.exemplo.com"
+                          value={notificationPreferences.smtpConfig.host}
+                          onChange={(e) => setNotificationPreferences(prev => ({
+                            ...prev,
+                            smtpConfig: { ...prev.smtpConfig, host: e.target.value }
+                          }))}
+                        />
+                      </div>
+                      <div>
+                        <Label>Porta</Label>
+                        <Input 
+                          type="number"
+                          placeholder="587"
+                          value={notificationPreferences.smtpConfig.port}
+                          onChange={(e) => setNotificationPreferences(prev => ({
+                            ...prev,
+                            smtpConfig: { ...prev.smtpConfig, port: Number(e.target.value) }
+                          }))}
+                        />
+                      </div>
+                      <div>
+                        <Label>Usuário</Label>
+                        <Input 
+                          placeholder="seu-email@exemplo.com"
+                          value={notificationPreferences.smtpConfig.user}
+                          onChange={(e) => setNotificationPreferences(prev => ({
+                            ...prev,
+                            smtpConfig: { ...prev.smtpConfig, user: e.target.value }
+                          }))}
+                        />
+                      </div>
+                      <div>
+                        <Label>Senha</Label>
+                        <Input 
+                          type="password"
+                          placeholder="Senha do servidor SMTP"
+                          value={notificationPreferences.smtpConfig.password}
+                          onChange={(e) => setNotificationPreferences(prev => ({
+                            ...prev,
+                            smtpConfig: { ...prev.smtpConfig, password: e.target.value }
+                          }))}
+                        />
+                      </div>
+                      <div>
+                        <Label>E-mail de Envio</Label>
+                        <Input 
+                          placeholder="notificacoes@exemplo.com"
+                          value={notificationPreferences.smtpConfig.fromEmail}
+                          onChange={(e) => setNotificationPreferences(prev => ({
+                            ...prev,
+                            smtpConfig: { ...prev.smtpConfig, fromEmail: e.target.value }
+                          }))}
+                        />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="smtp-secure"
+                          checked={notificationPreferences.smtpConfig.secure}
+                          onCheckedChange={(checked) => setNotificationPreferences(prev => ({
+                            ...prev,
+                            smtpConfig: { ...prev.smtpConfig, secure: Boolean(checked) }
+                          }))}
+                        />
+                        <Label htmlFor="smtp-secure">Conexão Segura (SSL/TLS)</Label>
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      <p>Mantenha suas credenciais de SMTP em segurança</p>
+                      <p>📌 Verifique as configurações com seu provedor de e-mail</p>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          // Lógica para testar configurações de SMTP
+                          toast({
+                            title: "Teste de SMTP",
+                            description: "Funcionalidade de teste de SMTP em desenvolvimento",
+                            variant: "default"
+                          });
+                        }}
+                      >
+                        Testar Configurações
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Configurações de Pagamento */}
+            <TabsContent value="pagamentos">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Configurações de Pagamento</CardTitle>
+                  <CardDescription>Gerencie suas integrações de pagamento</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Seção Mercado Pago */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center">
+                        <CreditCard className="mr-2 h-5 w-5" />
+                        Mercado Pago
+                      </h3>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <Label htmlFor="mercadoPagoAccessToken">Access Token</Label>
+                          <Input 
+                            id="mercadoPagoAccessToken"
+                            type="password"
+                            placeholder="Insira seu Access Token"
+                            value={paymentSettings.mercadoPagoAccessToken}
+                            onChange={(e) => setPaymentSettings(prev => ({
+                              ...prev, 
+                              mercadoPagoAccessToken: e.target.value
+                            }))}
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="mercadoPagoPublicKey">Chave Pública</Label>
+                          <Input 
+                            id="mercadoPagoPublicKey"
+                            type="password"
+                            placeholder="Insira sua Chave Pública"
+                            value={paymentSettings.mercadoPagoPublicKey}
+                            onChange={(e) => setPaymentSettings(prev => ({
+                              ...prev, 
+                              mercadoPagoPublicKey: e.target.value
+                            }))}
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="mercadoPagoClientId">Client ID</Label>
+                          <Input 
+                            id="mercadoPagoClientId"
+                            type="text"
+                            placeholder="Insira seu Client ID"
+                            value={paymentSettings.mercadoPagoClientId}
+                            onChange={(e) => setPaymentSettings(prev => ({
+                              ...prev, 
+                              mercadoPagoClientId: e.target.value
+                            }))}
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="mercadoPagoClientSecret">Client Secret</Label>
+                          <Input 
+                            id="mercadoPagoClientSecret"
+                            type="password"
+                            placeholder="Insira seu Client Secret"
+                            value={paymentSettings.mercadoPagoClientSecret}
+                            onChange={(e) => setPaymentSettings(prev => ({
+                              ...prev, 
+                              mercadoPagoClientSecret: e.target.value
+                            }))}
+                          />
+                        </div>
+                        
+                        <div className="flex justify-end">
+                          <Button 
+                            onClick={handleSavePaymentSettings}
+                            className="mt-2"
+                          >
+                            <Save className="mr-2 h-4 w-4" />
+                            Salvar Configurações
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="text-sm text-muted-foreground">
+                        <p>📌 Dica: Encontre suas credenciais no painel do Mercado Pago</p>
+                        <p>🔒 Mantenha suas chaves em segurança e não as compartilhe</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Configurações de Integração */}
+            <TabsContent value="integracao">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Integrações de API</CardTitle>
+                  <CardDescription>Conecte e gerencie suas contas de redes sociais</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {renderApiIntegrationSection('instagram', 'Instagram')}
+                  {renderApiIntegrationSection('facebook', 'Facebook')}
+                  {renderApiIntegrationSection('tiktok', 'TikTok')}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Configurações de Aparência */}
+            <TabsContent value="aparencia">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Personalização de Aparência</CardTitle>
+                  <CardDescription>Escolha o tema e personalize a interface</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label>Tema</Label>
+                    <Select 
+                      value={theme} 
+                      onValueChange={setTheme}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tema" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="light">Claro</SelectItem>
+                        <SelectItem value="dark">Escuro</SelectItem>
+                        <SelectItem value="system">Sistema</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Opções Adicionais</Label>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="compact-mode" />
+                      <Label htmlFor="compact-mode">Modo Compacto</Label>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+
+          {/* Preços e Planos */}
+          {(activeTab === "precos-planos" || activeTab === "configuracoes-gerais") && (
+            <div className='mb-8'>
+              <h2 className='text-xl font-semibold mb-4'>
+                Gestão de Preços e Planos
+              </h2>
+
+              <div className='bg-white border border-gray-200 rounded-lg shadow-sm'>
+                <div className='p-4 md:p-6'>
+                  <div className='mb-4 sm:mb-6'>
+                    <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2'>
+                      <h3 className='text-base font-medium'>
+                        Pacotes de Seguidores
+                      </h3>
+                      <button className='flex items-center text-primary-600 hover:text-primary-700 text-sm font-medium transition-all'>
+                        <svg
+                          xmlns='http://www.w3.org/2000/svg'
+                          className='h-4 w-4 mr-1'
+                          viewBox='0 0 20 20'
+                          fill='currentColor'
+                        >
+                          <path
+                            fillRule='evenodd'
+                            d='M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z'
+                            clipRule='evenodd'
+                          />
+                        </svg>
+                        Adicionar Pacote
+                      </button>
+                    </div>
+
+                    <div className='overflow-x-auto -mx-4 sm:-mx-6 md:mx-0'>
+                      <table className='min-w-full'>
+                        <thead>
+                          <tr className='border-b border-gray-200'>
+                            <th className='px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              Descrição
+                            </th>
+                            <th className='px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              Quantidade
+                            </th>
+                            <th className='px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              Preço
+                            </th>
+                            <th className='px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              Status
+                            </th>
+                            <th className='px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              Ações
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className='bg-white divide-y divide-gray-200'>
+                          <tr className='hover:bg-gray-50 transition-all'>
+                            <td className='px-3 py-4 whitespace-nowrap text-sm'>
+                              Pacote Básico - Instagram
+                            </td>
+                            <td className='px-3 py-4 whitespace-nowrap text-sm'>
+                              100 seguidores
+                            </td>
+                            <td className='px-3 py-4 whitespace-nowrap text-sm'>
+                              R$ 9,90
+                            </td>
+                            <td className='px-3 py-4 whitespace-nowrap'>
+                              <span className='px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full'>
+                                Ativo
+                              </span>
+                            </td>
+                            <td className='px-3 py-4 whitespace-nowrap text-right text-sm'>
+                              <button className='text-gray-500 hover:text-gray-700 transition-all mr-2'>
+                                <svg
+                                  xmlns='http://www.w3.org/2000/svg'
+                                  className='h-5 w-5'
+                                  viewBox='0 0 20 20'
+                                  fill='currentColor'
+                                >
+                                  <path d='M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z' />
+                                </svg>
+                              </button>
+                              <button className='text-gray-500 hover:text-red-600 transition-all'>
+                                <svg
+                                  xmlns='http://www.w3.org/2000/svg'
+                                  className='h-5 w-5'
+                                  viewBox='0 0 20 20'
+                                  fill='currentColor'
+                                >
+                                  <path
+                                    fillRule='evenodd'
+                                    d='M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z'
+                                    clipRule='evenodd'
+                                  />
+                                </svg>
+                              </button>
+                            </td>
+                          </tr>
+                          <tr className='hover:bg-gray-50 transition-all'>
+                            <td className='px-3 py-4 whitespace-nowrap text-sm'>
+                              Pacote Premium - Instagram
+                            </td>
+                            <td className='px-3 py-4 whitespace-nowrap text-sm'>
+                              500 seguidores
+                            </td>
+                            <td className='px-3 py-4 whitespace-nowrap text-sm'>
+                              R$ 39,90
+                            </td>
+                            <td className='px-3 py-4 whitespace-nowrap'>
+                              <span className='px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full'>
+                                Ativo
+                              </span>
+                            </td>
+                            <td className='px-3 py-4 whitespace-nowrap text-right text-sm'>
+                              <button className='text-gray-500 hover:text-gray-700 transition-all mr-2'>
+                                <svg
+                                  xmlns='http://www.w3.org/2000/svg'
+                                  className='h-5 w-5'
+                                  viewBox='0 0 20 20'
+                                  fill='currentColor'
+                                >
+                                  <path d='M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z' />
+                                </svg>
+                              </button>
+                              <button className='text-gray-500 hover:text-red-600 transition-all'>
+                                <svg
+                                  xmlns='http://www.w3.org/2000/svg'
+                                  className='h-5 w-5'
+                                  viewBox='0 0 20 20'
+                                  fill='currentColor'
+                                >
+                                  <path
+                                    fillRule='evenodd'
+                                    d='M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z'
+                                    clipRule='evenodd'
+                                  />
+                                </svg>
+                              </button>
+                            </td>
+                          </tr>
+                          <tr className='hover:bg-gray-50 transition-all'>
+                            <td className='px-3 py-4 whitespace-nowrap text-sm'>
+                              Pacote VIP - TikTok
+                            </td>
+                            <td className='px-3 py-4 whitespace-nowrap text-sm'>
+                              1000 seguidores
+                            </td>
+                            <td className='px-3 py-4 whitespace-nowrap text-sm'>
+                              R$ 69,90
+                            </td>
+                            <td className='px-3 py-4 whitespace-nowrap'>
+                              <span className='px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full'>
+                                Inativo
+                              </span>
+                            </td>
+                            <td className='px-3 py-4 whitespace-nowrap text-right text-sm'>
+                              <button className='text-gray-500 hover:text-gray-700 transition-all mr-2'>
+                                <svg
+                                  xmlns='http://www.w3.org/2000/svg'
+                                  className='h-5 w-5'
+                                  viewBox='0 0 20 20'
+                                  fill='currentColor'
+                                >
+                                  <path d='M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z' />
+                                </svg>
+                              </button>
+                              <button className='text-gray-500 hover:text-red-600 transition-all'>
+                                <svg
+                                  xmlns='http://www.w3.org/2000/svg'
+                                  className='h-5 w-5'
+                                  viewBox='0 0 20 20'
+                                  fill='currentColor'
+                                >
+                                  <path
+                                    fillRule='evenodd'
+                                    d='M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z'
+                                    clipRule='evenodd'
+                                  />
+                                </svg>
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Aqui seriam implementadas as outras tabs (integrações-api, pagamentos, segurança, personalização) */}
+          {activeTab === "integracoes-api" && (
+            <div>
+              <h2 className='text-xl font-semibold mb-4'>Integrações e API</h2>
+              <p>Implemente aqui a seção de integrações e API.</p>
+            </div>
+          )}
+          
+          {activeTab === "pagamentos" && (
+            <div>
+              <h2 className='text-xl font-semibold mb-4'>Pagamentos</h2>
+              <p>Implemente aqui a seção de pagamentos.</p>
+            </div>
+          )}
+          
+          {activeTab === "seguranca" && (
+            <div>
+              <h2 className='text-xl font-semibold mb-4'>Segurança</h2>
+              <p>Implemente aqui a seção de segurança.</p>
+            </div>
+          )}
+          
+          {activeTab === "personalizacao" && (
+            <div>
+              <h2 className='text-xl font-semibold mb-4'>Personalização</h2>
+              <p>Implemente aqui a seção de personalização.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Settings; 
