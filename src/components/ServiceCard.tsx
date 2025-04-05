@@ -29,11 +29,16 @@ const ServiceCard = ({
 }: ServiceCardProps) => {
   const navigate = useNavigate();
   const [showRatingModal, setShowRatingModal] = useState(false);
+  const [isSubscriptionClicked, setIsSubscriptionClicked] = useState(false);
   
   // Check if this is a subscription plan
   const isSubscription = title.toLowerCase().includes('plano') || price.includes('/mês');
 
   const handleSelectPlan = () => {
+    if (isSubscription) {
+      setIsSubscriptionClicked(true);
+    }
+    
     const priceValue = parseFloat(price.replace("R$", "").trim());
     const originalPriceValue = originalPrice 
       ? parseFloat(originalPrice.replace("R$", "").trim()) 
@@ -72,9 +77,7 @@ const ServiceCard = ({
       cardBg: isSubscription 
         ? 'bg-gradient-to-br from-primary/5 via-white to-accent/5' 
         : 'bg-white hover:bg-gray-50',
-      borderAccent: isSubscription 
-        ? 'before:border-primary/40' 
-        : 'before:border-transparent',
+      borderAccent: 'before:border-transparent',  // Removed conditional for subscription
       badge: 'from-primary to-accent'
     };
 
@@ -144,8 +147,7 @@ const ServiceCard = ({
         ${styles.cardBg} 
         hover:shadow-xl 
         before:absolute before:inset-0 before:rounded-xl before:border-2 ${styles.borderAccent} before:transition-all before:duration-300 before:opacity-80
-        ${isSubscription ? 'scale-[1.05] z-40 shadow-lg' : popular ? 'scale-[1.02] z-30' : 'hover:scale-[1.01] z-20'}
-        ${isSubscription ? 'ring-2 ring-primary/20' : ''}
+        ${isSubscription ? 'z-40 shadow-lg' : popular ? 'scale-[1.02] z-30' : 'hover:scale-[1.01] z-20'}
       `}
       style={{ animationDelay: `${delay}ms` }}
     >
@@ -154,7 +156,7 @@ const ServiceCard = ({
         <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-50">
           <BadgeCustom 
             variant="default" 
-            className={`shadow-lg px-3 py-0.5 bg-gradient-to-r ${styles.badge} text-white border-0 ${isSubscription ? 'animate-pulse-slow' : ''}`}
+            className={`shadow-lg px-3 py-0.5 bg-gradient-to-r ${styles.badge} text-white border-0 ${isSubscription && !isSubscriptionClicked ? 'animate-pulse-slow' : ''}`}
           >
             {isSubscription ? (
               <>
@@ -263,38 +265,62 @@ const ServiceCard = ({
       {/* Botão de Compra */}
       <div className="space-y-3">
         <Button 
-          variant={popular ? "default" : "outline"} 
-          className={`w-full rounded-full group relative overflow-hidden ${
-            popular 
-              ? "bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 border-0" 
-              : "hover:bg-primary/10 hover:text-primary border-primary/30"
+          variant={popular ? "default" : "default"} 
+          className={`w-full rounded-full group relative overflow-hidden transition-all duration-300 ${
+            isSubscription 
+              ? "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 border-0 text-white shadow-xl hover:shadow-2xl hover:scale-[1.02] animate-pulse-slow" 
+              : popular 
+                ? "bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 border-0 text-white shadow-lg hover:shadow-xl"
+                : "bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 shadow hover:shadow-md"
           }`}
           onClick={handleSelectPlan}
         >
-          <span className="absolute inset-0 w-full h-full bg-white/0 group-hover:bg-white/10 transition-colors"></span>
-          <span className="relative flex items-center">
-            Selecionar Plano
-            {popular && (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
+          <span className={`absolute inset-0 w-full h-full transition-colors duration-300 ${
+            isSubscription 
+              ? "bg-white/20 group-hover:bg-white/30" 
+              : "bg-white/0 group-hover:bg-white/10"
+          }`}></span>
+          <span className={`relative flex items-center justify-center gap-2 ${
+            isSubscription ? "font-semibold" : "font-medium"
+          }`}>
+            {isSubscription ? (
+              <>
+                <Star className="w-4 h-4" />
+                Assinar Agora
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" 
+                  className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </>
+            ) : (
+              <>
+                Selecionar Plano
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" 
+                  className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </>
             )}
           </span>
         </Button>
-        
+
         <Button 
           variant="outline" 
-          className="w-full transition-all duration-300 mt-2"
+          className="w-full transition-all duration-300 mt-2 text-muted-foreground hover:text-foreground"
           onClick={() => setShowRatingModal(true)}
         >
           <MessageSquare className="h-4 w-4 mr-2" />
           Avaliar
         </Button>
       </div>
-      
-      {/* Elemento decorativo para cards populares */}
-      {popular && (
-        <div className="absolute -z-10 top-6 right-6 w-24 h-24 rounded-full bg-gradient-to-br from-primary/10 to-accent/5 blur-xl"></div>
+
+      {/* Elemento decorativo para cards populares e assinaturas */}
+      {(popular || isSubscription) && (
+        <div className={`absolute -z-10 top-6 right-6 w-24 h-24 rounded-full blur-xl ${
+          isSubscription 
+            ? "bg-gradient-to-br from-violet-400/30 via-indigo-400/30 to-violet-400/30 animate-pulse-slow"
+            : "bg-gradient-to-br from-primary/10 to-accent/5"
+        }`}></div>
       )}
 
       {/* Modal de Avaliação */}

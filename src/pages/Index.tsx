@@ -13,13 +13,13 @@ import InstagramIcon from "@/assets/icons/instagram";
 import FacebookIcon from "@/assets/icons/facebook";
 import YoutubeIcon from "@/assets/icons/youtube";
 import TikTokIcon from "@/assets/icons/tiktok";
-import { ChevronDown, Check, X, Clock, Flame, Shield, UserCheck, Headset, BadgeCheck, Calendar, Award } from "lucide-react";
+import { ChevronDown, Check, X, Clock, Flame, Shield, UserCheck, Headset, BadgeCheck, Calendar, Award, Star } from "lucide-react";
 import ServiceCard from "@/components/ServiceCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("instagram");
-  const [activeServiceType, setActiveServiceType] = useState("seguidores");
+  const [activeServiceType, setActiveServiceType] = useState("assinatura");
   const [isNetworkMenuOpen, setIsNetworkMenuOpen] = useState(false);
   
   // Este useEffect executará apenas quando o componente for montado, não quando activeTab ou activeServiceType mudarem
@@ -1166,19 +1166,44 @@ const Index = () => {
                 
                 <div className="mb-8">
                   <div className="flex flex-wrap gap-2 md:gap-4 mb-6">
-                    {activeTab === "youtube" ? <button className={`px-5 py-2 rounded-full ${activeServiceType === 'inscritos' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} font-medium transition-colors`} onClick={() => setActiveServiceType("inscritos")}>
+                    <button 
+                      className={`px-5 py-2.5 rounded-full relative group transition-all duration-300 transform hover:scale-105 ${
+                        activeServiceType === 'assinatura' 
+                          ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg hover:shadow-xl animate-pulse-slow' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      } font-medium`} 
+                      onClick={() => setActiveServiceType("assinatura")}
+                    >
+                      <span className="relative flex items-center gap-1.5">
+                        {activeServiceType === 'assinatura' && (
+                          <Star className="w-4 h-4" />
+                        )}
+                        <span className={`${activeServiceType === 'assinatura' ? 'font-semibold' : ''}`}>Assinatura</span>
+                        {activeServiceType === 'assinatura' && (
+                          <span className="absolute -top-1 -right-2 flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                          </span>
+                        )}
+                      </span>
+                      {activeServiceType === 'assinatura' && (
+                        <span className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-400/20 to-indigo-400/20 blur-lg"></span>
+                      )}
+                    </button>
+                    {activeTab === "youtube" ? (
+                      <button className={`px-5 py-2 rounded-full ${activeServiceType === 'inscritos' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} font-medium transition-colors`} onClick={() => setActiveServiceType("inscritos")}>
                         Inscritos
-                      </button> : <button className={`px-5 py-2 rounded-full ${activeServiceType === 'seguidores' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} font-medium transition-colors`} onClick={() => setActiveServiceType("seguidores")}>
+                      </button>
+                    ) : (
+                      <button className={`px-5 py-2 rounded-full ${activeServiceType === 'seguidores' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} font-medium transition-colors`} onClick={() => setActiveServiceType("seguidores")}>
                         Seguidores
-                      </button>}
+                      </button>
+                    )}
                     <button className={`px-5 py-2 rounded-full ${activeServiceType === 'curtidas' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} font-medium transition-colors`} onClick={() => setActiveServiceType("curtidas")}>
                       Curtidas
                     </button>
                     <button className={`px-5 py-2 rounded-full ${activeServiceType === 'visualizacoes' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} font-medium transition-colors`} onClick={() => setActiveServiceType("visualizacoes")}>
                       Visualizações
-                    </button>
-                    <button className={`px-5 py-2 rounded-full ${activeServiceType === 'assinatura' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} font-medium transition-colors`} onClick={() => setActiveServiceType("assinatura")}>
-                      Assinatura
                     </button>
                   </div>
                   
