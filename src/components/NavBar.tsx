@@ -171,7 +171,7 @@ const NavBar = () => {
               asChild
             >
               <a href="/login">
-                Comprar
+                Login
                 <span className="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-10 transition-opacity"></span>
               </a>
             </Button>
