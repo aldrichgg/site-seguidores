@@ -50,9 +50,12 @@ function AppContent() {
         <Route path="/login" element={<Login />} />
         <Route path="/criar-conta" element={<Register />} />
         <Route path="/termos-e-privacidade" element={<TermsAndPrivacy />} />
+        
 
         {/* Rota protegida para usuário comum */}
-        <Route
+        <Route path="/payment" element={<Payment />} />
+        <Route path="/acompanhar-pedido" element={<OrderStatus />} />
+        {/* <Route
           path="/payment"
           element={
             <UserProtectedRoute>
@@ -68,7 +71,7 @@ function AppContent() {
               <OrderStatus />
             </UserProtectedRoute>
           }
-        />
+        /> */}
 
         {/* Rotas de administração */}
         <Route path="/admin/login" element={<AdminLogin />} />

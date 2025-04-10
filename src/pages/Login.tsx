@@ -40,7 +40,7 @@ const Login = () => {
     const { email, password } = values;
 
     try {
-      const response = await axios.post(`http://localhost:3000/auth/login`, {
+      const response = await axios.post(`https://new-back-end-phi.vercel.app/auth/login`, {
         email,
         password,
       });
