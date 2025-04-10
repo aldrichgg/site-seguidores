@@ -1,18 +1,25 @@
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
+
 import Index from "@/pages/Index";
 import Payment from "@/pages/Payment";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import NotFound from "@/pages/NotFound";
-import OrderStatus from "./pages/OrderStatus";
+import OrderStatus from "@/pages/OrderStatus";
 import TermsAndPrivacy from "@/pages/TermsAndPrivacy";
 import ScrollToTop from "@/components/ScrollToTop";
 import FloatingReviews from "@/components/FloatingReviews";
 import SupportChat from "@/components/SupportChat";
 import { ThemeProvider } from "@/components/ui/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
 
-// Importação das páginas de administração
 import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminLogin from "@/pages/admin/AdminLogin";
 import Dashboard from "@/pages/admin/Dashboard";
@@ -22,24 +29,15 @@ import Services from "@/pages/admin/Services";
 import Analytics from "@/pages/admin/Analytics";
 import Settings from "@/pages/admin/Settings";
 
-// Componente para rotas protegidas
-const ProtectedRoute = ({ children }) => {
-  // Simulação de autenticação - em produção, verificar token JWT ou estado de autenticação real
-  const isAuthenticated = localStorage.getItem("adminAuth") === "true";
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/admin/login" replace />;
-  }
-
-  return children;
-};
+import { AuthProvider } from "./contexts/AuthContext";
+import { ProtectedRoute } from "./components/ProtectedRoute"; // admin
+import { UserProtectedRoute } from "./components/UserProtectedRoutes"; // usuário comum
 
 function AppContent() {
   const location = useLocation();
-  const isPaymentPage = location.pathname === '/payment';
-  const isAdminPage = location.pathname.startsWith('/admin');
+  const isPaymentPage = location.pathname === "/payment";
+  const isAdminPage = location.pathname.startsWith("/admin");
 
-  // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -47,20 +45,37 @@ function AppContent() {
   return (
     <>
       <Routes>
-        {/* Rotas do cliente */}
+        {/* Rotas públicas */}
         <Route path="/" element={<Index />} />
-        <Route path="/payment" element={<Payment />} />
         <Route path="/login" element={<Login />} />
         <Route path="/criar-conta" element={<Register />} />
-        <Route path="/acompanhar-pedido" element={<OrderStatus />} />
         <Route path="/termos-e-privacidade" element={<TermsAndPrivacy />} />
-        
+
+        {/* Rota protegida para usuário comum */}
+        <Route
+          path="/payment"
+          element={
+            <UserProtectedRoute>
+              <Payment />
+            </UserProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/acompanhar-pedido"
+          element={
+            <UserProtectedRoute>
+              <OrderStatus />
+            </UserProtectedRoute>
+          }
+        />
+
         {/* Rotas de administração */}
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route 
-          path="/admin" 
+        <Route
+          path="/admin"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute redirectTo="/admin/login">
               <AdminLayout />
             </ProtectedRoute>
           }
@@ -72,12 +87,15 @@ function AppContent() {
           <Route path="analytics" element={<Analytics />} />
           <Route path="configuracoes" element={<Settings />} />
         </Route>
-        
+
         {/* Rota 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+
+      <Toaster />
+
       {!isPaymentPage && !isAdminPage && <ScrollToTop />}
-      {!isAdminPage && !isPaymentPage && <FloatingReviews />}
+      {!isPaymentPage && !isAdminPage && <FloatingReviews />}
       {!isPaymentPage && !isAdminPage && <SupportChat />}
     </>
   );
@@ -87,7 +105,9 @@ function App() {
   return (
     <ThemeProvider defaultTheme="light">
       <BrowserRouter>
-        <AppContent />
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
   );

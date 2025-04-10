@@ -6,11 +6,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
+import axios from "axios"
+import { useAuth } from "../contexts/AuthContext";
 
 const formSchema = z.object({
   email: z.string().email("Digite um email válido"),
@@ -18,13 +20,14 @@ const formSchema = z.object({
 });
 
 const Login = () => {
+  const navigate = useNavigate()
   const { toast } = useToast();
-  
-  // Garantir que a página seja exibida do topo
+  const { login } = useAuth();
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-  
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -33,13 +36,42 @@ const Login = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    // Aqui será implementada a lógica de autenticação no futuro
-    console.log(values);
-    toast({
-      title: "Tentativa de login",
-      description: "Funcionalidade ainda em desenvolvimento",
-    });
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const { email, password } = values;
+
+    try {
+      const response = await axios.post(`http://localhost:3000/auth/login`, {
+        email,
+        password,
+      });
+
+      const { token, user } = response.data;
+
+      login(token);
+      navigate('/')
+
+      toast({
+        title: `Bem-vindo, ${user.name}!`,
+        description: "Login realizado com sucesso.",
+      });
+    } catch (error: any) {
+      const status = error.response?.status;
+      const message = error.response?.data?.message || "Erro ao fazer login";
+    
+      if (status === 401) {
+        toast({
+          title: "Credenciais inválidas",
+          description: "Verifique seu e-mail e senha e tente novamente.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao fazer login",
+          description: message,
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   return (
