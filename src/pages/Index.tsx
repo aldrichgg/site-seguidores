@@ -372,55 +372,112 @@ const Index = () => {
                 serviceId: 250
               },
             ];
-          case "assinatura":
-            return [
-              {
-                icon,
-                title: "Plano Básico",
-                platform,
-                price: "R$99,90/mês",
-                originalPrice: "R$149,90",
-                features: [
-                  "500 seguidores por mês",
-                  "1000 curtidas mensais",
-                  "Crescimento orgânico",
-                  "Suporte prioritário 24/7",
-                ],
-                popular: false,
-                delay: 100,
-              },
-              {
-                icon,
-                title: "Plano Premium",
-                platform,
-                price: "R$199,90/mês",
-                originalPrice: "R$299,90",
-                features: [
-                  "2000 seguidores por mês",
-                  "3000 curtidas mensais",
-                  "Crescimento orgânico",
-                  "Suporte VIP 24/7",
-                ],
-                popular: true,
-                delay: 200,
-              },
-              {
-                icon,
-                title: "Plano Profissional",
-                platform,
-                price: "R$399,90/mês",
-                originalPrice: "R$599,90",
-                features: [
-                  "5000 seguidores por mês",
-                  "10000 curtidas mensais",
-                  "Crescimento orgânico",
-                  "Gerente de conta dedicado",
-                ],
-                popular: false,
-                delay: 300,
-              },
-            ];
-          default:
+            case "assinatura":
+              return [
+                {
+                  icon,
+                  title: "Plano Iniciante",
+                  platform,
+                  price: "R$27/mês",
+                  originalPrice: "R$39",
+                  features: [
+                    "Ganhe entre 360 e 510 seguidores por mês",
+                    "12 a 17 seguidores por dia",
+                    "Não inclui curtidas",
+                    "Não inclui visualizações nos stories",
+                    "Não inclui visualizações em vídeos",
+                    "Cancele a qualquer momento",
+                  ],
+                  popular: false,
+                  delay: 50,
+                },
+                {
+                  icon,
+                  title: "Plano Básico",
+                  platform,
+                  price: "R$47/mês",
+                  originalPrice: "R$67",
+                  features: [
+                    "Ganhe entre 510 e 900 seguidores por mês",
+                    "17 a 30 seguidores por dia",
+                    "30 curtidas em cada nova postagem",
+                    "25 visualizações em cada novo story",
+                    "100 visualizações em cada novo vídeo",
+                    "Cancele a qualquer momento",
+                  ],
+                  popular: false,
+                  delay: 100,
+                },
+                {
+                  icon,
+                  title: "Plano Standard",
+                  platform,
+                  price: "R$97/mês",
+                  originalPrice: "R$137",
+                  features: [
+                    "Ganhe entre 1.500 e 2.190 seguidores por mês",
+                    "50 a 73 seguidores por dia",
+                    "100 curtidas em cada nova postagem",
+                    "70 visualizações em cada novo story",
+                    "250 visualizações em cada novo vídeo",
+                    "Cancele a qualquer momento",
+                  ],
+                  popular: false,
+                  delay: 150,
+                },
+                {
+                  icon,
+                  title: "Plano Profissional",
+                  platform,
+                  price: "R$297/mês",
+                  originalPrice: "R$397",
+                  features: [
+                    "Ganhe entre 3.510 e 6.660 seguidores por mês",
+                    "177 a 220 seguidores por dia",
+                    "250 curtidas em cada nova postagem",
+                    "180 visualizações em cada novo story",
+                    "750 visualizações em cada novo vídeo",
+                    "Cancele a qualquer momento",
+                  ],
+                  popular: false,
+                  delay: 200,
+                },
+                {
+                  icon,
+                  title: "Plano Business",
+                  platform,
+                  price: "R$597/mês",
+                  originalPrice: "R$749",
+                  features: [
+                    "Ganhe entre 7.200 e 10.500 seguidores por mês",
+                    "240 a 350 seguidores por dia",
+                    "500 curtidas em cada nova postagem",
+                    "360 visualizações em cada novo story",
+                    "2.000 visualizações em cada novo vídeo",
+                    "Cancele a qualquer momento",
+                  ],
+                  popular: false,
+                  delay: 250,
+                },
+                {
+                  icon,
+                  title: "Plano Influenciador",
+                  platform,
+                  price: "R$1.497/mês",
+                  originalPrice: "R$1.997",
+                  features: [
+                    "Ganhe entre 25.000 e 35.550 seguidores por mês",
+                    "835 a 1.185 seguidores por dia",
+                    "1.500 curtidas em cada nova postagem",
+                    "1.000 visualizações em cada novo story",
+                    "5.000 visualizações em cada novo vídeo",
+                    "Cancele a qualquer momento",
+                  ],
+                  popular: true,
+                  delay: 300,
+                },
+              ];
+            default:
             return [];
         }
       case "facebook":

@@ -72,13 +72,21 @@ const NavBar = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav className="flex items-center justify-between">
+
           {/* Logo */}
           <Link 
-            to="/" 
-            className="flex items-center gap-2 text-xl font-bold relative z-10"
+           to="/" 
+  className="flex items-center gap-2 text-xl font-bold relative z-10"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-accent relative overflow-hidden">
-            <span className="absolute inset-0 bg-white/20 transform rotate-45 translate-y-2/3"></span>
+             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-accent relative overflow-hidden">
+    <span className="absolute inset-0 bg-white/20 transform rotate-45 translate-y-2/3"></span>
+    
+    <img 
+      src="https://media.discordapp.net/attachments/1103422412093128746/1360058510788001813/perfil.jpg?ex=67f9bcb1&is=67f86b31&hm=80a387b193ee300759a128335e3b94d8f40ace944c19e31f80c72d1b0c8ac6b5&=&format=webp&width=930&height=930" 
+      alt="Logo ImpulseGram"
+      className="absolute inset-0 w-full h-full object-cover z-0 rounded-xl"
+    />
+
               {/* Indicador de notificação animado */}
               <span className="absolute top-1 right-1 w-2 h-2 bg-white rounded-full animate-pulse"></span>
             </div>
