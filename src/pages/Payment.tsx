@@ -53,8 +53,8 @@ interface OrderDetailsType {
   features?: string[];
   isSubscription?: boolean; // Added for subscription plans
   billingCycle?: string;
-  serviceId: number; 
-  platform: string// Added for subscription plans
+  serviceId: number;
+  platform: string; // Added for subscription plans
 }
 
 // Interface para os dados do cliente
@@ -63,7 +63,7 @@ interface CustomerData {
   name: string;
   document: string;
   linkPerfil: string;
-  phone: string
+  phone: string;
 }
 
 const Payment = () => {
@@ -77,12 +77,13 @@ const Payment = () => {
   const [acceptTerms, setAcceptTerms] = useState<boolean>(false);
   const [paymentRequest, setPaymentRequest] = useState<boolean>(false);
   const [qrCode, setQrCode] = useState<string>("");
+  /* console.log(qrCode); */
   const [customerData, setCustomerData] = useState<CustomerData>({
     email: "",
     name: "",
     document: "",
     linkPerfil: "",
-    phone: ""
+    phone: "",
   });
   const [orderDetails, setOrderDetails] = useState<OrderDetailsType>({
     title: "5000 Seguidores Instagram",
@@ -92,7 +93,7 @@ const Payment = () => {
     deliveryTime: "Entrega em 2-3 dias",
     savePercentage: 11,
     serviceId: 0,
-    platform: 'Instagram'
+    platform: "Instagram",
   });
   const [addExtraOffer, setAddExtraOffer] = useState<boolean>(false);
   const [timer, setTimer] = useState<number>(900); // 15 minutes in seconds
@@ -217,17 +218,20 @@ const Payment = () => {
           email: customerData.email,
           celular: customerData.phone.replace(/\D/g, ""),
           first_name: customerData.name.split(" "),
-          platform: orderDetails.platform
+          platform: orderDetails.platform,
         },
       };
 
-      const response = await fetch("https://new-back-end-phi.vercel.app/payments/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      });
+      const response = await fetch(
+        "https://new-back-end-phi.vercel.app/payments/create",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        }
+      );
 
       const result = await response.json();
 
@@ -247,7 +251,6 @@ const Payment = () => {
       setIsProcessing(false);
     }
   };
-
 
   const getStepClass = (step: string) => {
     if (currentStep === step) {
@@ -645,7 +648,6 @@ const Payment = () => {
                           </span>
                         </div>
                       </div>
-
 
                       <div className="space-y-2">
                         <Label
@@ -1422,7 +1424,6 @@ const Payment = () => {
                     </CardHeader>
 
                     <CardContent className="p-6 space-y-6">
-                      
                       {/* Detalhes do Produto */}
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl overflow-hidden shadow-sm border border-blue-100">
                         <div className="border-b border-blue-100 p-4">
@@ -1648,21 +1649,18 @@ const Payment = () => {
                             </span>
                           </div>
 
-                          {paymentMethod === "pix" &&
-                            (qrCode ? (
-                              <div className="mt-4 text-center">
-                                <img
-                                  src={`data:image/png;base64,${qrCode}`}
-                                  alt="QR Code"
-                                  className="w-48 h-48 mx-auto rounded-md border shadow-md"
-                                />
-                                <p className="text-xs text-center text-gray-600 mt-2 max-w-xs mx-auto">
-                                  Escaneie o QR Code com seu aplicativo bancário
-                                  para realizar o pagamento.
-                                </p>
-                              </div>
-                            ) : (
-                              <div className="mt-4 relative">
+                          {paymentMethod === "pix" && (
+                            <div className="mt-4 relative">
+                              {qrCode ? (
+                                <div className="w-48 h-48 mx-auto bg-white rounded-lg flex items-center justify-center mb-4 border-2 border-solid border-green-400 p-2 shadow-md">
+                                  <img
+                                    src={`data:image/png;base64,${qrCode}`}
+                                    alt="QR Code"
+                                    className="w-full h-full object-contain max-h-48"
+                                    style={{ imageRendering: "pixelated" }}
+                                  />
+                                </div>
+                              ) : (
                                 <div className="w-48 h-48 mx-auto bg-white rounded-lg flex items-center justify-center mb-4 border-2 border-dashed border-green-300 p-3 shadow-sm">
                                   <div className="w-full h-full bg-green-50 rounded-lg flex items-center justify-center relative overflow-hidden">
                                     <QrCodeIcon className="w-28 h-28 text-green-500" />
@@ -1673,12 +1671,13 @@ const Payment = () => {
                                     </div>
                                   </div>
                                 </div>
-                                <p className="text-xs text-center text-gray-600 mt-2 max-w-xs mx-auto">
-                                  Após confirmar, você receberá o QR Code para
-                                  escanear com seu aplicativo bancário
-                                </p>
-                              </div>
-                            ))}
+                              )}
+                              <p className="text-xs text-center text-gray-600 mt-2 max-w-xs mx-auto">
+                                Após confirmar, você receberá o QR Code para
+                                escanear com seu aplicativo bancário
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </CardContent>
