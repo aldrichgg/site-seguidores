@@ -53,7 +53,8 @@ interface OrderDetailsType {
   features?: string[];
   isSubscription?: boolean; // Added for subscription plans
   billingCycle?: string;
-  serviceId: number; // Added for subscription plans
+  serviceId: number; 
+  platform: string// Added for subscription plans
 }
 
 // Interface para os dados do cliente
@@ -91,6 +92,7 @@ const Payment = () => {
     deliveryTime: "Entrega em 2-3 dias",
     savePercentage: 11,
     serviceId: 0,
+    platform: 'Instagram'
   });
   const [addExtraOffer, setAddExtraOffer] = useState<boolean>(false);
   const [timer, setTimer] = useState<number>(900); // 15 minutes in seconds
@@ -214,7 +216,8 @@ const Payment = () => {
           quantity: quantityFromTitle,
           email: customerData.email,
           celular: customerData.phone.replace(/\D/g, ""),
-          first_name: customerData.name.split(" ")
+          first_name: customerData.name.split(" "),
+          platform: orderDetails.platform
         },
       };
 

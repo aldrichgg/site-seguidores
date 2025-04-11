@@ -68,7 +68,8 @@ const ServiceCard = ({
       serviceId: serviceId,
       deliveryTime,
       savePercentage,
-      features
+      features,
+      platform
     };
     
     if (platform === "YouTube" || platform === "Facebook") {
