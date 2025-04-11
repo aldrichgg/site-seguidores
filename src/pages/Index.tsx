@@ -146,7 +146,7 @@ const Index = () => {
                 features: followerFeatures,
                 popular: false,
                 delay: 100,
-                serviceId: 298
+                serviceId: 298,
               },
               {
                 icon,
@@ -157,7 +157,7 @@ const Index = () => {
                 features: followerFeatures,
                 popular: false,
                 delay: 150,
-                serviceId: 298
+                serviceId: 298,
               },
               {
                 icon,
@@ -168,7 +168,7 @@ const Index = () => {
                 features: followerFeatures,
                 popular: false,
                 delay: 200,
-                serviceId: 298
+                serviceId: 298,
               },
               {
                 icon,
@@ -179,7 +179,7 @@ const Index = () => {
                 features: followerFeatures,
                 popular: true,
                 delay: 250,
-                serviceId: 298
+                serviceId: 298,
               },
               {
                 icon,
@@ -190,7 +190,7 @@ const Index = () => {
                 features: followerFeatures,
                 popular: false,
                 delay: 300,
-                serviceId: 298
+                serviceId: 298,
               },
               {
                 icon,
@@ -201,7 +201,7 @@ const Index = () => {
                 features: followerFeatures,
                 popular: false,
                 delay: 350,
-                serviceId: 298
+                serviceId: 298,
                 },
             ];
           case "curtidas":
@@ -215,7 +215,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 100,
-                serviceId: 309
+                serviceId: 309,
               },
               {
                 icon,
@@ -226,7 +226,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 150,
-                serviceId: 309
+                serviceId: 309,
               },
               {
                 icon,
@@ -237,7 +237,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 200,
-                serviceId: 309
+                serviceId: 309,
               },
               {
                 icon,
@@ -248,7 +248,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 250,
-                serviceId: 309
+                serviceId: 309,
               },
               {
                 icon,
@@ -259,7 +259,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 300,
-                serviceId: 309
+                serviceId: 309,
               },
               {
                 icon,
@@ -270,7 +270,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 350,
-                serviceId: 309
+                serviceId: 309,
               },
             ];
           case "visualizacoes":
@@ -289,7 +289,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 100,
-                serviceId: 250
+                serviceId: 250,
               },
               {
                 icon,
@@ -305,7 +305,8 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 150,
-                serviceId: 250
+                serviceId: 250,
+                
               },
               {
                 icon,
@@ -321,7 +322,8 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 200,
-                serviceId: 250
+                serviceId: 250,
+                
               },
               {
                 icon,
@@ -337,7 +339,8 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 250,
-                serviceId: 250
+                serviceId: 250,
+                
               },
               {
                 icon,
@@ -353,7 +356,8 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 300,
-                serviceId: 250
+                serviceId: 250,
+                
               },
               {
                 icon,
@@ -369,7 +373,8 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 350,
-                serviceId: 250
+                serviceId: 250,
+                
               },
             ];
             case "assinatura":
@@ -390,6 +395,7 @@ const Index = () => {
                   ],
                   popular: false,
                   delay: 50,
+                  type: type
                 },
                 {
                   icon,
@@ -407,6 +413,7 @@ const Index = () => {
                   ],
                   popular: false,
                   delay: 100,
+                  type: type
                 },
                 {
                   icon,
@@ -424,6 +431,7 @@ const Index = () => {
                   ],
                   popular: false,
                   delay: 150,
+                  type: type
                 },
                 {
                   icon,
@@ -441,6 +449,7 @@ const Index = () => {
                   ],
                   popular: false,
                   delay: 200,
+                  type: type
                 },
                 {
                   icon,
@@ -458,6 +467,7 @@ const Index = () => {
                   ],
                   popular: false,
                   delay: 250,
+                  type: type
                 },
                 {
                   icon,
@@ -475,6 +485,7 @@ const Index = () => {
                   ],
                   popular: true,
                   delay: 300,
+                  type: type
                 },
               ];
             default:
@@ -719,6 +730,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 100,
+                type: type
               },
               {
                 icon,
@@ -734,6 +746,7 @@ const Index = () => {
                 ],
                 popular: true,
                 delay: 200,
+                type: type
               },
               {
                 icon,
@@ -749,6 +762,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 300,
+                type: type
               },
             ];
           default:
@@ -1053,6 +1067,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 100,
+                type: type
               },
               {
                 icon,
@@ -1068,6 +1083,7 @@ const Index = () => {
                 ],
                 popular: true,
                 delay: 200,
+                type: type
               },
               {
                 icon,
@@ -1083,6 +1099,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 300,
+                type: type
               },
             ];
           default:
@@ -1342,6 +1359,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 100,
+                type: type
               },
               {
                 icon,
@@ -1357,6 +1375,7 @@ const Index = () => {
                 ],
                 popular: true,
                 delay: 200,
+                type: type
               },
               {
                 icon,
@@ -1372,6 +1391,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 300,
+                type: type
               },
             ];
           default:
@@ -1717,6 +1737,7 @@ const Index = () => {
                             popular={pkg.popular}
                             delay={pkg.delay}
                             serviceId={pkg.serviceId}
+                            type={pkg.type}
                           />
                         </div>
                       ))}

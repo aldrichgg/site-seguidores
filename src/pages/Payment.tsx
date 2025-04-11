@@ -213,7 +213,8 @@ const Payment = () => {
           link: customerData.linkPerfil,
           quantity: quantityFromTitle,
           email: customerData.email,
-          celular: customerData.phone.replace(/\D/g, "")
+          celular: customerData.phone.replace(/\D/g, ""),
+          first_name: customerData.name.split(" ")
         },
       };
 
@@ -232,20 +233,19 @@ const Payment = () => {
 
         setQrCode(result.point_of_interaction.transaction_data.qr_code_base64);
         setPaymentRequest(true);
-        // ✅ Aqui você pode exibir o QR Code
       } else {
         console.error("❌ Erro ao criar pedido:", result.message);
         alert("Erro ao criar pedido. Tente novamente.");
       }
     } catch (error) {
-      console.error("🚨 Erro inesperado:", error);
+      console.error("🚨 Erro inesperado na hora de enviar o email:", error);
       alert("Erro ao processar pagamento. Tente novamente.");
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Função para retornar a classe com base na etapa atual
+
   const getStepClass = (step: string) => {
     if (currentStep === step) {
       return "bg-primary text-white shadow-md shadow-primary/30";
