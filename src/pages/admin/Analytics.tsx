@@ -113,7 +113,7 @@ const Analytics = () => {
 
   // Função para exportar relatório
   const exportReport = () => {
-    console.log("Exportando relatório de analytics");
+    /* console.log("Exportando relatório de analytics"); */
   };
 
   // Dados específicos por plataforma

@@ -136,13 +136,13 @@ const Transactions = () => {
   // Função para exportar transações
   const exportTransactions = () => {
     // Lógica de exportação de transações
-    console.log("Exportando transações...");
+    /* console.log("Exportando transações..."); */
   };
 
   // Função para reembolsar transação
   const refundTransaction = (transaction) => {
     // Lógica de reembolso
-    console.log(`Reembolsando transação ${transaction.id}`);
+    /* console.log(`Reembolsando transação ${transaction.id}`); */
   };
 
   return (

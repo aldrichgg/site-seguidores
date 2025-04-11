@@ -142,13 +142,13 @@ const Settings = () => {
   // Função para salvar configurações
   const saveSettings = () => {
     // Lógica para salvar configurações
-    console.log("Salvando configurações...", {
+    /* console.log("Salvando configurações...", {
       companyInfo,
       securitySettings,
       notificationPreferences,
       paymentSettings,
       apiIntegrations
-    });
+    }); */
     
     toast({
       title: "Configurações Salvas",
@@ -364,7 +364,7 @@ const Settings = () => {
       }
 
       // Simulação de salvamento (substitua por chamada de API real)
-      console.log("Salvando configurações do Mercado Pago:", paymentSettings);
+      /* console.log("Salvando configurações do Mercado Pago:", paymentSettings); */
       
       toast({
         title: "Configurações Salvas",

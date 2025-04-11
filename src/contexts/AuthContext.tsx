@@ -23,11 +23,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // 🔁 Carrega token e decodifica ao iniciar app
   useEffect(() => {
     const token = localStorage.getItem("token");
-    console.log("🔐 Token no localStorage:", token);
+    /* console.log("🔐 Token no localStorage:", token); */
 
     if (token) {
       const decoded = getUserFromToken(token);
-      console.log("📦 Token decodificado:", decoded);
+      /* console.log("📦 Token decodificado:", decoded); */
 
       if (decoded) {
         setUser(decoded);
@@ -37,15 +37,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // 🔁 Log para acompanhar mudanças no user
   useEffect(() => {
-    console.log("👤 Usuário atualizado:", user);
-    console.log("🔒 Está autenticado:", !!user);
+    /* console.log("👤 Usuário atualizado:", user);
+    console.log("🔒 Está autenticado:", !!user); */
   }, [user]);
 
   // ✅ Faz login e salva user no contexto
   const login = (token: string) => {
     localStorage.setItem("token", token);
     const decoded = getUserFromToken(token);
-    console.log("✅ Login efetuado com token decodificado:", decoded);
+    /* console.log("✅ Login efetuado com token decodificado:", decoded); */
 
     if (decoded) {
       setUser(decoded);

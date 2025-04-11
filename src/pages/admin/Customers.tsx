@@ -358,7 +358,7 @@ const Customers = () => {
   
   const confirmDelete = () => {
     // Aqui seria implementada a lógica real de exclusão
-    console.log(`Deletando cliente ID: ${selectedCustomer.id}`);
+    /* console.log(`Deletando cliente ID: ${selectedCustomer.id}`); */
     setIsDeleteDialogOpen(false);
   };
 

@@ -43,7 +43,7 @@ const Register = () => {
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     // Aqui será implementada a lógica de criação de conta no futuro
-    console.log(values);
+    /* console.log(values); */
     toast({
       title: "Conta criada com sucesso!",
       description: "Você será redirecionado para a página de login.",

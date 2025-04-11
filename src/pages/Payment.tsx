@@ -229,7 +229,7 @@ const Payment = () => {
       const result = await response.json();
 
       if (response.ok) {
-        console.log("💰 Pedido criado com sucesso:", result);
+        /* console.log("💰 Pedido criado com sucesso:", result); */
 
         setQrCode(result.point_of_interaction.transaction_data.qr_code_base64);
         setPaymentRequest(true);

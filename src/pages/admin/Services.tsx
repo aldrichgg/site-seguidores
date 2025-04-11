@@ -86,7 +86,7 @@ const Services = () => {
   // Função para adicionar serviço
   const handleAddService = () => {
     // Lógica para adicionar serviço
-    console.log("Adicionando serviço");
+    /* console.log("Adicionando serviço"); */
     setIsAddServiceDialogOpen(false);
   };
 
@@ -94,13 +94,13 @@ const Services = () => {
   const handleEditService = (service) => {
     setSelectedService(service);
     // Lógica para editar serviço
-    console.log(`Editando serviço ${service.id}`);
+    /* console.log(`Editando serviço ${service.id}`); */
   };
 
   // Função para excluir serviço
   const handleDeleteService = (service) => {
     // Lógica para excluir serviço
-    console.log(`Excluindo serviço ${service.id}`);
+    /* console.log(`Excluindo serviço ${service.id}`); */
     setServices(services.filter(s => s.id !== service.id));
   };
 
