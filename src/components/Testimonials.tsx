@@ -16,7 +16,7 @@ const testimonials: Testimonial[] = [
     id: 1,
     name: "Ana Silva",
     position: "Influenciadora Digital",
-    image: "https://i.pravatar.cc/150?img=1",
+    image: "https://i.pravatar.cc/150?img=9",
     rating: 5,
     text: "Desde que comecei a usar este serviço, meu engajamento aumentou em mais de 200%! Os seguidores são reais e interagem com meu conteúdo regularmente."
   },
@@ -33,7 +33,7 @@ const testimonials: Testimonial[] = [
     name: "Bianca Oliveira",
     position: "Artista",
     image: "https://i.pravatar.cc/150?img=5",
-    rating: 4,
+    rating: 5,
     text: "Consegui expandir meu alcance e vender mais obras através do meu perfil. O atendimento ao cliente é excelente e sempre respondem rapidamente."
   },
   {

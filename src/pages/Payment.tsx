@@ -1419,6 +1419,7 @@ const Payment = () => {
                     </CardHeader>
 
                     <CardContent className="p-6 space-y-6">
+                      
                       {/* Detalhes do Produto */}
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl overflow-hidden shadow-sm border border-blue-100">
                         <div className="border-b border-blue-100 p-4">
