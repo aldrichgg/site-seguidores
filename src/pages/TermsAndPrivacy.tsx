@@ -285,8 +285,8 @@ const TermsAndPrivacy = () => {
                             Se você tiver dúvidas sobre esta Política de Privacidade, entre em contato conosco em:
                           </p>
                           <p className="text-muted-foreground pl-5">
-                            E-mail: privacidade@growthboost.com<br />
-                            Telefone: (11) 91234-5678
+                            E-mail: contato@impulsegram.com<br />
+                            Telefone: (12) 12 98145-7975
                           </p>
                         </div>
 
