@@ -77,6 +77,7 @@ const Payment = () => {
   const [acceptTerms, setAcceptTerms] = useState<boolean>(false);
   const [paymentRequest, setPaymentRequest] = useState<boolean>(false);
   const [qrCode, setQrCode] = useState<string>("");
+  const [pixCode, setPixCode] = useState<string>("");
   /* console.log(qrCode); */
   const [customerData, setCustomerData] = useState<CustomerData>({
     email: "",
@@ -239,6 +240,7 @@ const Payment = () => {
         /* console.log("💰 Pedido criado com sucesso:", result); */
 
         setQrCode(result.point_of_interaction.transaction_data.qr_code_base64);
+        setPixCode(result.point_of_interaction.transaction_data.qr_code);
         setPaymentRequest(true);
       } else {
         console.error("❌ Erro ao criar pedido:", result.message);
@@ -1672,10 +1674,51 @@ const Payment = () => {
                                   </div>
                                 </div>
                               )}
+
+                              {/* Texto explicativo */}
                               <p className="text-xs text-center text-gray-600 mt-2 max-w-xs mx-auto">
                                 Após confirmar, você receberá o QR Code para
                                 escanear com seu aplicativo bancário
                               </p>
+
+                              {/* Linha digitável com botão de cópia */}
+                              {pixCode && (
+                                <div className="mt-4 max-w-md mx-auto px-4">
+                                  <label className="block text-sm text-gray-600 mb-1">
+                                    Copie o código Pix abaixo:
+                                  </label>
+                                  <div className="relative">
+                                    <input
+                                      readOnly
+                                      value={pixCode}
+                                      className="w-full pr-10 pl-3 py-2 text-sm rounded-md border border-gray-300 shadow-sm bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(pixCode);
+                                        alert("Código copiado!");
+                                      }}
+                                      className="absolute inset-y-0 right-2 flex items-center text-green-600 hover:text-green-800"
+                                    >
+                                      <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-5 w-5"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8l6 6v8a2 2 0 01-2 2h-2M8 16v4a2 2 0 002 2h8M8 16h8"
+                                        />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
