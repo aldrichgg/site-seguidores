@@ -1786,10 +1786,10 @@ const Index = () => {
       </section>
 
       <a
-        href="https://api.whatsapp.com/send?phone=5512981457975&text=Olá%20ImpulseGram%2C%20vim%20do%20seu%20site%20e%20gostaria%20de%20mais%20informações"
+        href="https://api.whatsapp.com/send?phone=5512981457975&text=Olá%20ImpulseGram%2C%20acabei%20de%20visitar%20o%20site%20e%20gostaria%20de%20tirar%20algumas%20dúvidas%20sobre%20os%20serviços."
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-10 right-7 z-50 bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition-all duration-300"
+        className="fixed bottom-6 right-7 z-50 bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition-all duration-300"
         aria-label="Fale conosco no WhatsApp"
       >
         <svg
