@@ -70,7 +70,7 @@ const Payment = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentStep, setCurrentStep] = useState<string>("personalData");
-  const [paymentMethod, setPaymentMethod] = useState<string>("creditcard");
+  const [paymentMethod, setPaymentMethod] = useState<string>("pix");
   const [promocode, setPromocode] = useState<string>("");
   const [isApplying, setIsApplying] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -1087,7 +1087,7 @@ const Payment = () => {
                         onValueChange={setPaymentMethod}
                         className="space-y-4"
                       >
-                        <div
+                        {/* <div
                           className={`flex items-start space-x-4 border rounded-xl p-5 cursor-pointer transition-all hover:shadow-md 
                           ${
                             paymentMethod === "creditcard"
@@ -1124,7 +1124,7 @@ const Payment = () => {
                               </span>
                             </div>
                           </Label>
-                        </div>
+                        </div> */}
 
                         <div
                           className={`flex items-start space-x-4 border rounded-xl p-5 cursor-pointer transition-all hover:shadow-md
@@ -1626,7 +1626,7 @@ const Payment = () => {
                         </div>
 
                         <div className="p-4">
-                          <div className="flex justify-between text-sm mb-3">
+                         {/*  <div className="flex justify-between text-sm mb-3">
                             <span className="text-gray-600">
                               Forma de pagamento:
                             </span>
@@ -1649,7 +1649,7 @@ const Payment = () => {
                                 </>
                               )}
                             </span>
-                          </div>
+                          </div> */}
 
                           {paymentMethod === "pix" && (
                             <div className="mt-4 relative">
