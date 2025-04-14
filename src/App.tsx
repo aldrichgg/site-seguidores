@@ -97,7 +97,7 @@ function AppContent() {
 
       <Toaster />
 
-      {!isPaymentPage && !isAdminPage && <ScrollToTop />}
+      {/* {!isPaymentPage && !isAdminPage && <ScrollToTop />} */}
       {!isPaymentPage && !isAdminPage && <FloatingReviews />}
       {!isPaymentPage && !isAdminPage && <SupportChat />}
     </>

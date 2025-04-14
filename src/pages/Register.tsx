@@ -52,7 +52,7 @@ const Register = () => {
 
   return (
     <main className="min-h-screen flex flex-col">
-      <NavBar />
+      {/* <NavBar /> */}
       
       <div className="flex-grow bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center p-4 pt-24 md:pt-16">
         <div className="absolute top-20 left-4 sm:top-24 sm:left-8">
@@ -198,7 +198,7 @@ const Register = () => {
         </div>
       </div>
       
-      <Footer />
+      {/* <Footer /> */}
     </main>
   );
 };

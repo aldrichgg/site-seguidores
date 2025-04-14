@@ -178,10 +178,10 @@ const NavBar = () => {
               className="rounded-full px-5 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 relative group"
               asChild
             >
-              <a href="/login">
+              <p onClick={()=> navigate("/login")}>
                 Login
                 <span className="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-10 transition-opacity"></span>
-              </a>
+              </p>
             </Button>
           </div>
 

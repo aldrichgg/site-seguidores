@@ -202,7 +202,7 @@ const Index = () => {
                 popular: false,
                 delay: 350,
                 serviceId: 298,
-                },
+              },
             ];
           case "curtidas":
             return [
@@ -306,7 +306,6 @@ const Index = () => {
                 popular: false,
                 delay: 150,
                 serviceId: 250,
-                
               },
               {
                 icon,
@@ -323,7 +322,6 @@ const Index = () => {
                 popular: false,
                 delay: 200,
                 serviceId: 250,
-                
               },
               {
                 icon,
@@ -340,7 +338,6 @@ const Index = () => {
                 popular: false,
                 delay: 250,
                 serviceId: 250,
-                
               },
               {
                 icon,
@@ -357,7 +354,6 @@ const Index = () => {
                 popular: false,
                 delay: 300,
                 serviceId: 250,
-                
               },
               {
                 icon,
@@ -374,121 +370,120 @@ const Index = () => {
                 popular: false,
                 delay: 350,
                 serviceId: 250,
-                
               },
             ];
-            case "assinatura":
-              return [
-                {
-                  icon,
-                  title: "Plano Iniciante",
-                  platform,
-                  price: "R$27/mês",
-                  originalPrice: "R$39",
-                  features: [
-                    "Ganhe entre 360 e 510 seguidores por mês",
-                    "12 a 17 seguidores por dia",
-                    "Não inclui curtidas",
-                    "Não inclui visualizações nos stories",
-                    "Não inclui visualizações em vídeos",
-                    "Cancele a qualquer momento",
-                  ],
-                  popular: false,
-                  delay: 50,
-                  type: type
-                },
-                {
-                  icon,
-                  title: "Plano Básico",
-                  platform,
-                  price: "R$47/mês",
-                  originalPrice: "R$67",
-                  features: [
-                    "Ganhe entre 510 e 900 seguidores por mês",
-                    "17 a 30 seguidores por dia",
-                    "30 curtidas em cada nova postagem",
-                    "25 visualizações em cada novo story",
-                    "100 visualizações em cada novo vídeo",
-                    "Cancele a qualquer momento",
-                  ],
-                  popular: false,
-                  delay: 100,
-                  type: type
-                },
-                {
-                  icon,
-                  title: "Plano Standard",
-                  platform,
-                  price: "R$97/mês",
-                  originalPrice: "R$137",
-                  features: [
-                    "Ganhe entre 1.500 e 2.190 seguidores por mês",
-                    "50 a 73 seguidores por dia",
-                    "100 curtidas em cada nova postagem",
-                    "70 visualizações em cada novo story",
-                    "250 visualizações em cada novo vídeo",
-                    "Cancele a qualquer momento",
-                  ],
-                  popular: false,
-                  delay: 150,
-                  type: type
-                },
-                {
-                  icon,
-                  title: "Plano Profissional",
-                  platform,
-                  price: "R$297/mês",
-                  originalPrice: "R$397",
-                  features: [
-                    "Ganhe entre 3.510 e 6.660 seguidores por mês",
-                    "177 a 220 seguidores por dia",
-                    "250 curtidas em cada nova postagem",
-                    "180 visualizações em cada novo story",
-                    "750 visualizações em cada novo vídeo",
-                    "Cancele a qualquer momento",
-                  ],
-                  popular: false,
-                  delay: 200,
-                  type: type
-                },
-                {
-                  icon,
-                  title: "Plano Business",
-                  platform,
-                  price: "R$597/mês",
-                  originalPrice: "R$749",
-                  features: [
-                    "Ganhe entre 7.200 e 10.500 seguidores por mês",
-                    "240 a 350 seguidores por dia",
-                    "500 curtidas em cada nova postagem",
-                    "360 visualizações em cada novo story",
-                    "2.000 visualizações em cada novo vídeo",
-                    "Cancele a qualquer momento",
-                  ],
-                  popular: false,
-                  delay: 250,
-                  type: type
-                },
-                {
-                  icon,
-                  title: "Plano Influenciador",
-                  platform,
-                  price: "R$1.497/mês",
-                  originalPrice: "R$1.997",
-                  features: [
-                    "Ganhe entre 25.000 e 35.550 seguidores por mês",
-                    "835 a 1.185 seguidores por dia",
-                    "1.500 curtidas em cada nova postagem",
-                    "1.000 visualizações em cada novo story",
-                    "5.000 visualizações em cada novo vídeo",
-                    "Cancele a qualquer momento",
-                  ],
-                  popular: true,
-                  delay: 300,
-                  type: type
-                },
-              ];
-            default:
+          case "assinatura":
+            return [
+              {
+                icon,
+                title: "Plano Iniciante",
+                platform,
+                price: "R$27/mês",
+                originalPrice: "R$39",
+                features: [
+                  "Ganhe entre 360 e 510 seguidores por mês",
+                  "12 a 17 seguidores por dia",
+                  "Não inclui curtidas",
+                  "Não inclui visualizações nos stories",
+                  "Não inclui visualizações em vídeos",
+                  "Cancele a qualquer momento",
+                ],
+                popular: false,
+                delay: 50,
+                type: type,
+              },
+              {
+                icon,
+                title: "Plano Básico",
+                platform,
+                price: "R$47/mês",
+                originalPrice: "R$67",
+                features: [
+                  "Ganhe entre 510 e 900 seguidores por mês",
+                  "17 a 30 seguidores por dia",
+                  "30 curtidas em cada nova postagem",
+                  "25 visualizações em cada novo story",
+                  "100 visualizações em cada novo vídeo",
+                  "Cancele a qualquer momento",
+                ],
+                popular: false,
+                delay: 100,
+                type: type,
+              },
+              {
+                icon,
+                title: "Plano Standard",
+                platform,
+                price: "R$97/mês",
+                originalPrice: "R$137",
+                features: [
+                  "Ganhe entre 1.500 e 2.190 seguidores por mês",
+                  "50 a 73 seguidores por dia",
+                  "100 curtidas em cada nova postagem",
+                  "70 visualizações em cada novo story",
+                  "250 visualizações em cada novo vídeo",
+                  "Cancele a qualquer momento",
+                ],
+                popular: false,
+                delay: 150,
+                type: type,
+              },
+              {
+                icon,
+                title: "Plano Profissional",
+                platform,
+                price: "R$297/mês",
+                originalPrice: "R$397",
+                features: [
+                  "Ganhe entre 3.510 e 6.660 seguidores por mês",
+                  "177 a 220 seguidores por dia",
+                  "250 curtidas em cada nova postagem",
+                  "180 visualizações em cada novo story",
+                  "750 visualizações em cada novo vídeo",
+                  "Cancele a qualquer momento",
+                ],
+                popular: false,
+                delay: 200,
+                type: type,
+              },
+              {
+                icon,
+                title: "Plano Business",
+                platform,
+                price: "R$597/mês",
+                originalPrice: "R$749",
+                features: [
+                  "Ganhe entre 7.200 e 10.500 seguidores por mês",
+                  "240 a 350 seguidores por dia",
+                  "500 curtidas em cada nova postagem",
+                  "360 visualizações em cada novo story",
+                  "2.000 visualizações em cada novo vídeo",
+                  "Cancele a qualquer momento",
+                ],
+                popular: false,
+                delay: 250,
+                type: type,
+              },
+              {
+                icon,
+                title: "Plano Influenciador",
+                platform,
+                price: "R$1.497/mês",
+                originalPrice: "R$1.997",
+                features: [
+                  "Ganhe entre 25.000 e 35.550 seguidores por mês",
+                  "835 a 1.185 seguidores por dia",
+                  "1.500 curtidas em cada nova postagem",
+                  "1.000 visualizações em cada novo story",
+                  "5.000 visualizações em cada novo vídeo",
+                  "Cancele a qualquer momento",
+                ],
+                popular: true,
+                delay: 300,
+                type: type,
+              },
+            ];
+          default:
             return [];
         }
       case "facebook":
@@ -730,7 +725,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 100,
-                type: type
+                type: type,
               },
               {
                 icon,
@@ -746,7 +741,7 @@ const Index = () => {
                 ],
                 popular: true,
                 delay: 200,
-                type: type
+                type: type,
               },
               {
                 icon,
@@ -762,7 +757,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 300,
-                type: type
+                type: type,
               },
             ];
           default:
@@ -1067,7 +1062,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 100,
-                type: type
+                type: type,
               },
               {
                 icon,
@@ -1083,7 +1078,7 @@ const Index = () => {
                 ],
                 popular: true,
                 delay: 200,
-                type: type
+                type: type,
               },
               {
                 icon,
@@ -1099,7 +1094,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 300,
-                type: type
+                type: type,
               },
             ];
           default:
@@ -1125,7 +1120,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 100,
-                serviceId: 302
+                serviceId: 302,
               },
               {
                 icon,
@@ -1141,7 +1136,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 150,
-                serviceId: 302
+                serviceId: 302,
               },
               {
                 icon,
@@ -1157,7 +1152,7 @@ const Index = () => {
                 ],
                 popular: true,
                 delay: 200,
-                serviceId: 302
+                serviceId: 302,
               },
               {
                 icon,
@@ -1173,7 +1168,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 250,
-                serviceId: 302
+                serviceId: 302,
               },
               {
                 icon,
@@ -1189,7 +1184,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 300,
-                serviceId: 302
+                serviceId: 302,
               },
               {
                 icon,
@@ -1205,7 +1200,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 350,
-                serviceId: 302
+                serviceId: 302,
               },
             ];
           case "curtidas":
@@ -1224,7 +1219,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 100,
-                serviceId: 45
+                serviceId: 45,
               },
               {
                 icon,
@@ -1240,7 +1235,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 150,
-                serviceId: 45
+                serviceId: 45,
               },
               {
                 icon,
@@ -1256,7 +1251,7 @@ const Index = () => {
                 ],
                 popular: true,
                 delay: 200,
-                serviceId: 45
+                serviceId: 45,
               },
               {
                 icon,
@@ -1272,7 +1267,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 250,
-                serviceId: 45
+                serviceId: 45,
               },
               {
                 icon,
@@ -1288,7 +1283,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 300,
-                serviceId: 45
+                serviceId: 45,
               },
               {
                 icon,
@@ -1304,7 +1299,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 350,
-                serviceId: 45
+                serviceId: 45,
               },
             ];
           case "visualizacoes":
@@ -1318,7 +1313,7 @@ const Index = () => {
                 features: viewFeatures,
                 popular: false,
                 delay: 100,
-                serviceId: 334
+                serviceId: 334,
               },
               {
                 icon,
@@ -1329,7 +1324,7 @@ const Index = () => {
                 features: viewFeatures,
                 popular: true,
                 delay: 200,
-                serviceId: 334
+                serviceId: 334,
               },
               {
                 icon,
@@ -1340,7 +1335,7 @@ const Index = () => {
                 features: viewFeatures,
                 popular: false,
                 delay: 300,
-                serviceId: 334
+                serviceId: 334,
               },
             ];
           case "assinatura":
@@ -1359,7 +1354,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 100,
-                type: type
+                type: type,
               },
               {
                 icon,
@@ -1375,7 +1370,7 @@ const Index = () => {
                 ],
                 popular: true,
                 delay: 200,
-                type: type
+                type: type,
               },
               {
                 icon,
@@ -1391,7 +1386,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 300,
-                type: type
+                type: type,
               },
             ];
           default:
@@ -1789,6 +1784,23 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      <a
+        href="https://api.whatsapp.com/send?phone=5512981457975&text=Olá%20ImpulseGram%2C%20vim%20do%20seu%20site%20e%20gostaria%20de%20mais%20informações"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-10 right-7 z-50 bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition-all duration-300"
+        aria-label="Fale conosco no WhatsApp"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-8 h-8"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path d="M20.52 3.48A11.929 11.929 0 0012 0C5.37 0 .01 5.37 0 12a11.9 11.9 0 001.84 6.31L0 24l5.84-1.83A11.93 11.93 0 0012 24c6.63 0 12-5.37 12-12a11.92 11.92 0 00-3.48-8.52zM12 22a9.77 9.77 0 01-5.19-1.5l-.37-.23-3.47 1.09 1.13-3.39-.25-.39A9.908 9.908 0 012 12c0-5.51 4.49-10 10-10s10 4.49 10 10-4.49 10-10 10zm5.28-7.7c-.29-.15-1.7-.84-1.96-.93-.26-.1-.45-.15-.64.15s-.74.93-.9 1.12-.33.22-.62.07a8.05 8.05 0 01-2.37-1.46 8.896 8.896 0 01-1.64-2.06c-.17-.29-.02-.45.13-.6.14-.14.29-.36.44-.53s.19-.3.29-.5.05-.37-.03-.52c-.08-.15-.64-1.55-.88-2.12-.23-.55-.47-.47-.64-.47s-.35 0-.53 0a1.03 1.03 0 00-.75.35 3.14 3.14 0 00-.98 2.34c0 1.38 1.01 2.72 1.15 2.9.15.2 1.98 3.02 4.8 4.23 2.24.96 2.7.77 3.19.72.48-.05 1.56-.63 1.78-1.24.22-.6.22-1.11.15-1.23-.07-.12-.27-.2-.56-.35z" />
+        </svg>
+      </a>
 
       <section id="benefits">
         <BenefitsSection />
