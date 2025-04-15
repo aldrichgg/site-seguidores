@@ -172,7 +172,7 @@ const Payment = () => {
     }
 
     // Avançar para a etapa de pagamento
-    setCurrentStep("paymentMethod");
+    setCurrentStep("confirmation");
   };
 
   const handleContinueToConfirmation = () => {
@@ -254,7 +254,7 @@ const Payment = () => {
     }
   };
 
-  const getStepClass = (step: string) => {
+  /* const getStepClass = (step: string) => {
     if (currentStep === step) {
       return "bg-primary text-white shadow-md shadow-primary/30";
     } else if (
@@ -262,6 +262,15 @@ const Payment = () => {
       (step === "personalData" && currentStep === "paymentMethod") ||
       (step === "personalData" && currentStep === "confirmation")
     ) {
+      return "bg-primary/20 text-primary border border-primary/40";
+    }
+    return "bg-gray-100 text-gray-500 border border-gray-200";
+  }; */
+
+  const getStepClass = (step: string) => {
+    if (currentStep === step) {
+      return "bg-primary text-white shadow-md shadow-primary/30";
+    } else if (step === "personalData" && currentStep === "confirmation") {
       return "bg-primary/20 text-primary border border-primary/40";
     }
     return "bg-gray-100 text-gray-500 border border-gray-200";
@@ -314,7 +323,7 @@ const Payment = () => {
           {/* Etapa de progresso - Versão melhorada */}
           <div className="max-w-3xl mx-auto mb-10 relative">
             <div className="hidden md:block absolute h-1 bg-gray-200 top-1/2 left-[10%] right-[10%] -translate-y-1/2"></div>
-            <div
+            {/* <div
               className={`absolute h-1 top-1/2 left-[10%] -translate-y-1/2 transition-all duration-500 bg-primary ${
                 currentStep === "personalData"
                   ? "w-0"
@@ -322,7 +331,12 @@ const Payment = () => {
                   ? "w-[40%]"
                   : "w-[80%]"
               }`}
-            ></div>
+            ></div> */}
+            <div
+              className={`absolute h-1 top-1/2 left-[10%] -translate-y-1/2 transition-all duration-500 bg-primary ${
+                currentStep === "personalData" ? "w-0" : "w-[80%]"
+              }`}
+            />
 
             <div className="flex justify-between relative z-10">
               <div className="flex flex-col items-center gap-2">
@@ -521,7 +535,7 @@ const Payment = () => {
                       </span>
                       <span className="text-sm">R$ 0,00</span>
                     </div>
-                    {(currentStep === "confirmation" ||
+                    {/* {(currentStep === "confirmation" ||
                       currentStep === "personalData") &&
                       addExtraOffer && (
                         <div className="flex justify-between">
@@ -533,7 +547,18 @@ const Payment = () => {
                             + R$ 9,90
                           </span>
                         </div>
-                      )}
+                      )} */}
+                    {addExtraOffer && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-primary flex items-center gap-1.5">
+                          <Rocket size={14} />
+                          Impulsionamento (IA)
+                        </span>
+                        <span className="text-sm font-medium text-primary">
+                          + R$ 9,90
+                        </span>
+                      </div>
+                    )}
                     <Separator className="my-2" />
                     <div className="flex justify-between font-bold">
                       <span className="flex items-center gap-1.5">
@@ -1626,7 +1651,7 @@ const Payment = () => {
                         </div>
 
                         <div className="p-4">
-                         {/*  <div className="flex justify-between text-sm mb-3">
+                          {/*  <div className="flex justify-between text-sm mb-3">
                             <span className="text-gray-600">
                               Forma de pagamento:
                             </span>
