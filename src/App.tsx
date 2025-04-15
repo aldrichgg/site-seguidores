@@ -19,6 +19,7 @@ import FloatingReviews from "@/components/FloatingReviews";
 import SupportChat from "@/components/SupportChat";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 
 import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminLogin from "@/pages/admin/AdminLogin";
@@ -32,7 +33,6 @@ import Settings from "@/pages/admin/Settings";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute"; // admin
 import { UserProtectedRoute } from "./components/UserProtectedRoutes"; // usuário comum
-
 function AppContent() {
   const location = useLocation();
   const isPaymentPage = location.pathname === "/payment";
@@ -50,7 +50,6 @@ function AppContent() {
         <Route path="/login" element={<Login />} />
         <Route path="/criar-conta" element={<Register />} />
         <Route path="/termos-e-privacidade" element={<TermsAndPrivacy />} />
-        
 
         {/* Rota protegida para usuário comum */}
         <Route path="/payment" element={<Payment />} />
@@ -112,6 +111,7 @@ function App() {
           <AppContent />
         </AuthProvider>
       </BrowserRouter>
+      <VercelAnalytics />
     </ThemeProvider>
   );
 }
