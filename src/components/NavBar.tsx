@@ -7,6 +7,7 @@ import InstagramIcon from "@/assets/icons/instagram";
 import FacebookIcon from "@/assets/icons/facebook";
 import YoutubeIcon from "@/assets/icons/youtube";
 import TikTokIcon from "@/assets/icons/tiktok";
+import perfil from "../assets/imgs/perfil.jpg"
 
 const NavBar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -82,7 +83,7 @@ const NavBar = () => {
     <span className="absolute inset-0 bg-white/20 transform rotate-45 translate-y-2/3"></span>
     
     <img 
-      src="https://media.discordapp.net/attachments/1103422412093128746/1360058510788001813/perfil.jpg?ex=67f9bcb1&is=67f86b31&hm=80a387b193ee300759a128335e3b94d8f40ace944c19e31f80c72d1b0c8ac6b5&=&format=webp&width=930&height=930" 
+      src={perfil}
       alt="Logo ImpulseGram"
       className="absolute inset-0 w-full h-full object-cover z-0 rounded-xl"
     />
