@@ -66,6 +66,12 @@ interface CustomerData {
   phone: string;
 }
 
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
+
 const Payment = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -242,6 +248,14 @@ const Payment = () => {
         setQrCode(result.point_of_interaction.transaction_data.qr_code_base64);
         setPixCode(result.point_of_interaction.transaction_data.qr_code);
         setPaymentRequest(true);
+
+        window.gtag && window.gtag('event', 'conversion', {
+          'send_to': 'AW-17024580299/eiHxCMC70bsaEMv1-bU_',
+          'value': orderDetails.discountPrice,
+          'currency': 'BRL',
+          'transaction_id': result.id,
+        });
+
       } else {
         console.error("❌ Erro ao criar pedido:", result.message);
         alert("Erro ao criar pedido. Tente novamente.");
