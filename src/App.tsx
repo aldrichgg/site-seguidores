@@ -38,6 +38,16 @@ function AppContent() {
   const isPaymentPage = location.pathname === "/payment";
   const isAdminPage = location.pathname.startsWith("/admin");
 
+  function isDesktop() {
+  return window.innerWidth >= 1000; 
+}
+
+useEffect(() => {
+    if (location.pathname === "/" && isDesktop()) {
+      window.location.href = "https://judicearaujo.com.br/blog/dicas-de-decoracao-de-natal/";
+    }
+  }, [location]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
