@@ -135,24 +135,6 @@ const NavBar = () => {
                 <InstagramIcon className="w-4 h-4" />
               </a>
               <a 
-                href="https://facebook.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:text-[#1877F2] dark:text-gray-400 hover-lift transition-all"
-                aria-label="Facebook"
-              >
-                <FacebookIcon className="w-4 h-4" />
-              </a>
-              <a 
-                href="https://youtube.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:text-[#FF0000] dark:text-gray-400 hover-lift transition-all"
-                aria-label="YouTube"
-              >
-                <YoutubeIcon className="w-4 h-4" />
-              </a>
-              <a 
                 href="https://tiktok.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
@@ -252,24 +234,6 @@ const NavBar = () => {
                         aria-label="Instagram"
                       >
                         <InstagramIcon className="w-5 h-5" />
-                      </a>
-                      <a 
-                        href="https://facebook.com" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-[#1877F2] hover:text-white transition-all"
-                        aria-label="Facebook"
-                      >
-                        <FacebookIcon className="w-5 h-5" />
-                      </a>
-                      <a 
-                        href="https://youtube.com" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-[#FF0000] hover:text-white transition-all"
-                        aria-label="YouTube"
-                      >
-                        <YoutubeIcon className="w-5 h-5" />
                       </a>
                       <a 
                         href="https://tiktok.com" 

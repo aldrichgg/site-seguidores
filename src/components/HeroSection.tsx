@@ -21,6 +21,15 @@ import {
   Award,
 } from "lucide-react";
 import perfilImg from "../assets/imgs/perfil.jpg";
+import pub1 from "@/assets/imgs/publicacoes/impulsegram.marketing_1703633281_3266635188094817232_63279927382.jpg";
+import pub2 from "@/assets/imgs/publicacoes/impulsegram.marketing_1703633195_3266634468008204008_63279927382.jpg";
+import pub3 from "@/assets/imgs/publicacoes/impulsegram.marketing_1703631852_3266623201478506688_63279927382.jpg";
+import pub4 from "@/assets/imgs/publicacoes/impulsegram.marketing_1703630290_3266610094186410093_63279927382_1.jpg";
+import pub5 from "@/assets/imgs/publicacoes/impulsegram.marketing_1703630162_3266609023917245638_63279927382.jpg";
+import pub6 from "@/assets/imgs/publicacoes/impulsegram.marketing_1703629987_3266607555105731231_63279927382.jpg";
+import pub7 from "@/assets/imgs/publicacoes/impulsegram.marketing_1703629598_3266604288246178086_63279927382.jpg";
+import pub8 from "@/assets/imgs/publicacoes/impulsegram.marketing_1703629177_3266600757054243338_63279927382_2.jpg";
+import pub9 from "@/assets/imgs/publicacoes/impulsegram.marketing_1703628814_3266597717442137079_63279927382.jpg";
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -194,22 +203,6 @@ const HeroSection = () => {
 
               <div className="flex items-center gap-3 transform hover:scale-105 transition-transform">
                 <div className="w-12 h-12 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-white shadow-md relative overflow-hidden">
-                  <div className="absolute inset-0 bg-[#1877F2]/10"></div>
-                  <FacebookIcon className="w-6 h-6 sm:w-6 sm:h-6 text-[#1877F2]" />
-                </div>
-                <span className="text-sm font-medium">Facebook</span>
-              </div>
-
-              <div className="flex items-center gap-3 transform hover:scale-105 transition-transform">
-                <div className="w-12 h-12 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-white shadow-md relative overflow-hidden">
-                  <div className="absolute inset-0 bg-[#FF0000]/10"></div>
-                  <YoutubeIcon className="w-6 h-6 sm:w-6 sm:h-6 text-[#FF0000]" />
-                </div>
-                <span className="text-sm font-medium">YouTube</span>
-              </div>
-
-              <div className="flex items-center gap-3 transform hover:scale-105 transition-transform">
-                <div className="w-12 h-12 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-white shadow-md relative overflow-hidden">
                   <div className="absolute inset-0 bg-black/5"></div>
                   <TikTokIcon className="w-6 h-6 sm:w-6 sm:h-6 text-[#000000]" />
                 </div>
@@ -270,7 +263,7 @@ const HeroSection = () => {
           </div>
 
           {/* Conteúdo à direita - Ilustração ou Hero Image */}
-          <div className="hidden lg:block relative slide-up stagger-5">
+          <div className="hidden lg:block relative slide-up stagger-5 -mt-16">
             <div className="w-full aspect-[4/3] relative z-10">
               {/* Smartphone simulando perfil de rede social */}
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden">
@@ -327,39 +320,16 @@ const HeroSection = () => {
 
                 {/* Publicações */}
                 <div className="grid grid-cols-3 gap-1 p-1">
-                  {[...Array(9)].map((_, i) => (
+                  {[pub1, pub2, pub3, pub4, pub5, pub6, pub7, pub8, pub9].map((imgSrc, i) => (
                     <div
                       key={i}
-                      className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-sm overflow-hidden"
+                      className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-sm overflow-hidden relative"
                     >
-                      {i % 3 === 0 && (
-                        <div className="absolute top-1 right-1 bg-white/80 rounded-full p-0.5 text-pink-500">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            className="w-3 h-3"
-                          >
-                            <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
-                          </svg>
-                        </div>
-                      )}
-                      {i % 5 === 0 && (
-                        <div className="absolute top-1 right-1 bg-white/80 rounded-full p-0.5 text-blue-500">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            className="w-3 h-3"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M5.337 21.718a6.707 6.707 0 01-.533-.074.75.75 0 01-.44-1.223 3.73 3.73 0 00.814-1.686c.023-.115-.022-.317-.254-.543C3.274 16.587 2.25 14.41 2.25 12c0-5.03 4.428-9 9.75-9s9.75 3.97 9.75 9c0 5.03-4.428 9-9.75 9-.833 0-1.643-.097-2.417-.279a6.721 6.721 0 01-4.246.997z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </div>
-                      )}
+                      <img
+                        src={imgSrc}
+                        alt={`Publicação ${i + 1}`}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   ))}
                 </div>

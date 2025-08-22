@@ -63,7 +63,10 @@ const ClientChatCarousel = () => {
           className="absolute -left-3 md:-left-6 top-1/2 -translate-y-1/2 z-10 rounded-full bg-white/90 p-3 shadow ring-1 ring-black/5 hover:bg-white disabled:opacity-40"
           aria-label="Anterior"
         >
-          &#8592;
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" 
+                  className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-300">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
         </button>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
@@ -88,7 +91,10 @@ const ClientChatCarousel = () => {
           className="absolute -right-3 md:-right-6 top-1/2 -translate-y-1/2 z-10 rounded-full bg-white/90 p-3 shadow ring-1 ring-black/5 hover:bg-white disabled:opacity-40"
           aria-label="Próximo"
         >
-          &#8594;
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" 
+                  className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
         </button>
       </div>
 

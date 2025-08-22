@@ -1115,10 +1115,6 @@ const Index = () => {
         <HowItWorks />
       </section>
 
-      <section id="testimonials" className="bg-gray-50 py-10 md:py-16">
-        <Testimonials />
-      </section>
-
       <section id="faq">
         <FAQSection />
       </section>
