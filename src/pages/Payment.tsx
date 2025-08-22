@@ -199,7 +199,7 @@ const Payment = () => {
     try {
       const priceWithFee = Number((totalAmount * 1.01).toFixed(2));
       const quantityFromTitle = parseInt(
-        orderDetails.title.match(/\d+/)?.[0] || "1",
+        (orderDetails.title.match(/[\d.]+/)?.[0] || "1").replace(/\./g, ""),
         10
       );
 
@@ -249,13 +249,13 @@ const Payment = () => {
         setPixCode(result.point_of_interaction.transaction_data.qr_code);
         setPaymentRequest(true);
 
-        window.gtag && window.gtag('event', 'conversion', {
-          'send_to': 'AW-17024580299/eiHxCMC70bsaEMv1-bU_',
-          'value': orderDetails.discountPrice,
-          'currency': 'BRL',
-          'transaction_id': result.id,
-        });
-
+        window.gtag &&
+          window.gtag("event", "conversion", {
+            send_to: "AW-17024580299/eiHxCMC70bsaEMv1-bU_",
+            value: orderDetails.discountPrice,
+            currency: "BRL",
+            transaction_id: result.id,
+          });
       } else {
         console.error("❌ Erro ao criar pedido:", result.message);
         alert("Erro ao criar pedido. Tente novamente.");
