@@ -177,8 +177,8 @@ const Payment = () => {
       return;
     }
 
-    // Avançar para a etapa de pagamento
-    setCurrentStep("confirmation");
+    // Avançar para a etapa de escolha do método de pagamento
+    setCurrentStep("paymentMethod");
   };
 
   const handleContinueToConfirmation = () => {
@@ -284,7 +284,11 @@ const Payment = () => {
   const getStepClass = (step: string) => {
     if (currentStep === step) {
       return "bg-primary text-white shadow-md shadow-primary/30";
-    } else if (step === "personalData" && currentStep === "confirmation") {
+    } else if (
+      (step === "paymentMethod" && currentStep === "confirmation") ||
+      (step === "personalData" && currentStep === "paymentMethod") ||
+      (step === "personalData" && currentStep === "confirmation")
+    ) {
       return "bg-primary/20 text-primary border border-primary/40";
     }
     return "bg-gray-100 text-gray-500 border border-gray-200";
@@ -337,7 +341,7 @@ const Payment = () => {
           {/* Etapa de progresso - Versão melhorada */}
           <div className="max-w-3xl mx-auto mb-10 relative">
             <div className="hidden md:block absolute h-1 bg-gray-200 top-1/2 left-[10%] right-[10%] -translate-y-1/2"></div>
-            {/* <div
+            <div
               className={`absolute h-1 top-1/2 left-[10%] -translate-y-1/2 transition-all duration-500 bg-primary ${
                 currentStep === "personalData"
                   ? "w-0"
@@ -345,7 +349,7 @@ const Payment = () => {
                   ? "w-[40%]"
                   : "w-[80%]"
               }`}
-            ></div> */}
+            ></div>
             <div
               className={`absolute h-1 top-1/2 left-[10%] -translate-y-1/2 transition-all duration-500 bg-primary ${
                 currentStep === "personalData" ? "w-0" : "w-[80%]"

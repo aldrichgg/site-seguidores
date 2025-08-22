@@ -157,7 +157,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "1.000 Seguidores",
+                title: "1000 Seguidores",
                 platform,
                 price: "R$39,00",
                 originalPrice: "R$59,90",
@@ -168,7 +168,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "2.000 Seguidores",
+                title: "2000 Seguidores",
                 platform,
                 price: "R$45,00",
                 originalPrice: "R$69,90",
@@ -179,7 +179,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "5.000 Seguidores",
+                title: "5000 Seguidores",
                 platform,
                 price: "R$179,00",
                 originalPrice: "R$199,90",
@@ -190,7 +190,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "10.000 Seguidores",
+                title: "10000 Seguidores",
                 platform,
                 price: "R$307,00",
                 originalPrice: "R$349,90",
@@ -237,7 +237,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "1.000 Curtidas",
+                title: "1000 Curtidas",
                 platform,
                 price: "R$10,00",
                 originalPrice: "R$18,90",
@@ -248,7 +248,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "2.000 Curtidas",
+                title: "2000 Curtidas",
                 platform,
                 price: "R$18,00",
                 originalPrice: "R$29,90",
@@ -259,7 +259,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "6.000 Curtidas",
+                title: "6000 Curtidas",
                 platform,
                 price: "R$35,00",
                 originalPrice: "R$59,90",
@@ -289,7 +289,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "1.000 Visualizações",
+                title: "1000 Visualizações",
                 platform,
                 price: "R$6,00",
                 originalPrice: "R$9,90",
@@ -305,7 +305,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "3.000 Visualizações",
+                title: "3000 Visualizações",
                 platform,
                 price: "R$16,00",
                 originalPrice: "R$24,90",
@@ -321,7 +321,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "5.000 Visualizações",
+                title: "5000 Visualizações",
                 platform,
                 price: "R$25,00",
                 originalPrice: "R$39,90",
@@ -337,7 +337,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "10.000 Visualizações",
+                title: "10000 Visualizações",
                 platform,
                 price: "R$50,00",
                 originalPrice: "R$79,90",
@@ -353,7 +353,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "30.000 Visualizações",
+                title: "30000 Visualizações",
                 platform,
                 price: "R$130,00",
                 originalPrice: "R$199,90",
@@ -379,7 +379,7 @@ const Index = () => {
             return [
               {
                 icon,
-                title: "1.000 Inscritos",
+                title: "1000 Inscritos",
                 platform,
                 price: "R$180,00",
                 originalPrice: "R$250,00",
@@ -394,7 +394,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "3.000 Inscritos",
+                title: "3000 Inscritos",
                 platform,
                 price: "R$540,00",
                 originalPrice: "R$700,00",
@@ -409,7 +409,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "5.000 Inscritos",
+                title: "5000 Inscritos",
                 platform,
                 price: "R$900,00",
                 originalPrice: "R$1.200,00",
@@ -424,7 +424,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "10.000 Inscritos",
+                title: "10000 Inscritos",
                 platform,
                 price: "R$1.800,00",
                 originalPrice: "R$2.300,00",
@@ -439,7 +439,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "30.000 Inscritos",
+                title: "30000 Inscritos",
                 platform,
                 price: "R$5.400,00",
                 originalPrice: "R$6.800,00",
@@ -454,7 +454,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "100.000 Inscritos",
+                title: "100000 Inscritos",
                 platform,
                 price: "R$12.600,00",
                 originalPrice: "R$16.000,00",
@@ -472,7 +472,7 @@ const Index = () => {
             return [
               {
                 icon,
-                title: "1.000 Curtidas",
+                title: "1000 Curtidas",
                 platform,
                 price: "R$25,00",
                 originalPrice: "R$39,90",
@@ -487,7 +487,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "3.000 Curtidas",
+                title: "3000 Curtidas",
                 platform,
                 price: "R$75,00",
                 originalPrice: "R$99,90",
@@ -502,7 +502,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "5.000 Curtidas",
+                title: "5000 Curtidas",
                 platform,
                 price: "R$125,00",
                 originalPrice: "R$169,90",
@@ -517,7 +517,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "6.000 Curtidas",
+                title: "6000 Curtidas",
                 platform,
                 price: "R$150,00",
                 originalPrice: "R$199,90",
@@ -532,7 +532,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "9.000 Curtidas",
+                title: "9000 Curtidas",
                 platform,
                 price: "R$225,00",
                 originalPrice: "R$289,90",
@@ -547,7 +547,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "10.000 Curtidas",
+                title: "10000 Curtidas",
                 platform,
                 price: "R$250,00",
                 originalPrice: "R$329,90",
@@ -604,7 +604,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "1.000 Seguidores",
+                title: "1000 Seguidores",
                 platform,
                 price: "R$99,70",
                 originalPrice: "R$149,90",
@@ -620,7 +620,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "2.000 Seguidores",
+                title: "2000 Seguidores",
                 platform,
                 price: "R$199,40",
                 originalPrice: "R$299,00",
@@ -636,7 +636,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "4.000 Seguidores",
+                title: "4000 Seguidores",
                 platform,
                 price: "R$398,80",
                 originalPrice: "R$597,00",
@@ -652,7 +652,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "10.000 Seguidores",
+                title: "10000 Seguidores",
                 platform,
                 price: "R$997,00",
                 originalPrice: "R$1.490,00",
@@ -703,7 +703,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "1.000 Curtidas",
+                title: "1000 Curtidas",
                 platform,
                 price: "R$18,00",
                 originalPrice: "R$29,90",
@@ -719,7 +719,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "4.000 Curtidas",
+                title: "4000 Curtidas",
                 platform,
                 price: "R$35,00",
                 originalPrice: "R$59,90",
@@ -735,7 +735,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "10.000 Curtidas",
+                title: "10000 Curtidas",
                 platform,
                 price: "R$91,00",
                 originalPrice: "R$139,90",
@@ -751,7 +751,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "30.000 Curtidas",
+                title: "30000 Curtidas",
                 platform,
                 price: "R$170,00",
                 originalPrice: "R$259,90",
@@ -770,7 +770,7 @@ const Index = () => {
             return [
               {
                 icon,
-                title: "1.000 Visualizações",
+                title: "1000 Visualizações",
                 platform,
                 price: "R$14,90",
                 originalPrice: "R$19,90",
@@ -781,7 +781,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "5.000 Visualizações",
+                title: "5000 Visualizações",
                 platform,
                 price: "R$49,90",
                 originalPrice: "R$69,90",
@@ -792,7 +792,7 @@ const Index = () => {
               },
               {
                 icon,
-                title: "10.000 Visualizações",
+                title: "10000 Visualizações",
                 platform,
                 price: "R$89,90",
                 originalPrice: "R$119,90",
