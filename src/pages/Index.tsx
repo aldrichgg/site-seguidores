@@ -10,7 +10,6 @@ import Footer from "@/components/Footer";
 import { BadgeCustom } from "@/components/ui/badge-custom";
 import { Button } from "@/components/ui/button";
 import InstagramIcon from "@/assets/icons/instagram";
-import FacebookIcon from "@/assets/icons/facebook";
 import YoutubeIcon from "@/assets/icons/youtube";
 import TikTokIcon from "@/assets/icons/tiktok";
 import {
@@ -29,10 +28,11 @@ import {
 } from "lucide-react";
 import ServiceCard from "@/components/ServiceCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import ClientChatCarousel from "@/components/ClientChatCarousel";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("instagram");
-  const [activeServiceType, setActiveServiceType] = useState("assinatura");
+  const [activeServiceType, setActiveServiceType] = useState("seguidores");
   const [isNetworkMenuOpen, setIsNetworkMenuOpen] = useState(false);
   /* const { user } = useAuth(); */
   // Este useEffect executará apenas quando o componente for montado, não quando activeTab ou activeServiceType mudarem
@@ -80,10 +80,6 @@ const Index = () => {
     switch (network) {
       case "instagram":
         return <InstagramIcon className="w-6 h-6 text-[#E1306C]" />;
-      case "facebook":
-        return <FacebookIcon className="w-6 h-6 text-[#1877F2]" />;
-      case "youtube":
-        return <YoutubeIcon className="w-6 h-6 text-[#FF0000]" />;
       case "tiktok":
         return <TikTokIcon className="w-6 h-6" />;
       default:
@@ -141,67 +137,67 @@ const Index = () => {
                 icon,
                 title: "200 Seguidores",
                 platform,
-                price: "R$9,90",
-                originalPrice: "R$15,90",
+                price: "R$19,90",
+                originalPrice: "R$29,90",
                 features: followerFeatures,
                 popular: false,
                 delay: 150,
-                serviceId: 298,
+                serviceId: 498,
               },
               {
                 icon,
                 title: "500 Seguidores",
                 platform,
-                price: "R$18,90",
-                originalPrice: "R$25,90",
+                price: "R$28,90",
+                originalPrice: "R$48,90",
                 features: followerFeatures,
                 popular: false,
                 delay: 200,
-                serviceId: 298,
+                serviceId: 498,
               },
               {
                 icon,
                 title: "1.000 Seguidores",
                 platform,
-                price: "R$29,00",
-                originalPrice: "R$39,90",
+                price: "R$39,00",
+                originalPrice: "R$59,90",
                 features: followerFeatures,
                 popular: true,
                 delay: 250,
-                serviceId: 298,
+                serviceId: 498,
               },
               {
                 icon,
                 title: "2.000 Seguidores",
                 platform,
-                price: "R$35,00",
-                originalPrice: "R$49,90",
+                price: "R$45,00",
+                originalPrice: "R$69,90",
                 features: followerFeatures,
                 popular: false,
                 delay: 300,
-                serviceId: 298,
+                serviceId: 498,
               },
               {
                 icon,
                 title: "5.000 Seguidores",
                 platform,
-                price: "R$169,00",
+                price: "R$179,00",
                 originalPrice: "R$199,90",
                 features: followerFeatures,
                 popular: false,
                 delay: 350,
-                serviceId: 298,
+                serviceId: 498,
               },
               {
                 icon,
                 title: "10.000 Seguidores",
                 platform,
-                price: "R$297,00",
+                price: "R$307,00",
                 originalPrice: "R$349,90",
                 features: followerFeatures,
                 popular: false,
                 delay: 350,
-                serviceId: 298,
+                serviceId: 498,
               },
             ];
           case "curtidas":
@@ -215,7 +211,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 100,
-                serviceId: 309,
+                serviceId: 531,
               },
               {
                 icon,
@@ -226,7 +222,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 150,
-                serviceId: 309,
+                serviceId: 531,
               },
               {
                 icon,
@@ -237,7 +233,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 200,
-                serviceId: 309,
+                serviceId: 531,
               },
               {
                 icon,
@@ -248,7 +244,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 250,
-                serviceId: 309,
+                serviceId: 531,
               },
               {
                 icon,
@@ -259,7 +255,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 300,
-                serviceId: 309,
+                serviceId: 531,
               },
               {
                 icon,
@@ -270,7 +266,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 350,
-                serviceId: 309,
+                serviceId: 531,
               },
             ];
           case "visualizacoes":
@@ -370,394 +366,6 @@ const Index = () => {
                 popular: false,
                 delay: 350,
                 serviceId: 250,
-              },
-            ];
-          case "assinatura":
-            return [
-              {
-                icon,
-                title: "Plano Iniciante",
-                platform,
-                price: "R$27/mês",
-                originalPrice: "R$39",
-                features: [
-                  "Ganhe entre 360 e 510 seguidores por mês",
-                  "12 a 17 seguidores por dia",
-                  "Não inclui curtidas",
-                  "Não inclui visualizações nos stories",
-                  "Não inclui visualizações em vídeos",
-                  "Cancele a qualquer momento",
-                ],
-                popular: false,
-                delay: 50,
-                type: type,
-              },
-              {
-                icon,
-                title: "Plano Básico",
-                platform,
-                price: "R$47/mês",
-                originalPrice: "R$67",
-                features: [
-                  "Ganhe entre 510 e 900 seguidores por mês",
-                  "17 a 30 seguidores por dia",
-                  "30 curtidas em cada nova postagem",
-                  "25 visualizações em cada novo story",
-                  "100 visualizações em cada novo vídeo",
-                  "Cancele a qualquer momento",
-                ],
-                popular: false,
-                delay: 100,
-                type: type,
-              },
-              {
-                icon,
-                title: "Plano Standard",
-                platform,
-                price: "R$97/mês",
-                originalPrice: "R$137",
-                features: [
-                  "Ganhe entre 1.500 e 2.190 seguidores por mês",
-                  "50 a 73 seguidores por dia",
-                  "100 curtidas em cada nova postagem",
-                  "70 visualizações em cada novo story",
-                  "250 visualizações em cada novo vídeo",
-                  "Cancele a qualquer momento",
-                ],
-                popular: false,
-                delay: 150,
-                type: type,
-              },
-              {
-                icon,
-                title: "Plano Profissional",
-                platform,
-                price: "R$297/mês",
-                originalPrice: "R$397",
-                features: [
-                  "Ganhe entre 3.510 e 6.660 seguidores por mês",
-                  "177 a 220 seguidores por dia",
-                  "250 curtidas em cada nova postagem",
-                  "180 visualizações em cada novo story",
-                  "750 visualizações em cada novo vídeo",
-                  "Cancele a qualquer momento",
-                ],
-                popular: false,
-                delay: 200,
-                type: type,
-              },
-              {
-                icon,
-                title: "Plano Business",
-                platform,
-                price: "R$597/mês",
-                originalPrice: "R$749",
-                features: [
-                  "Ganhe entre 7.200 e 10.500 seguidores por mês",
-                  "240 a 350 seguidores por dia",
-                  "500 curtidas em cada nova postagem",
-                  "360 visualizações em cada novo story",
-                  "2.000 visualizações em cada novo vídeo",
-                  "Cancele a qualquer momento",
-                ],
-                popular: false,
-                delay: 250,
-                type: type,
-              },
-              {
-                icon,
-                title: "Plano Influenciador",
-                platform,
-                price: "R$1.497/mês",
-                originalPrice: "R$1.997",
-                features: [
-                  "Ganhe entre 25.000 e 35.550 seguidores por mês",
-                  "835 a 1.185 seguidores por dia",
-                  "1.500 curtidas em cada nova postagem",
-                  "1.000 visualizações em cada novo story",
-                  "5.000 visualizações em cada novo vídeo",
-                  "Cancele a qualquer momento",
-                ],
-                popular: true,
-                delay: 300,
-                type: type,
-              },
-            ];
-          default:
-            return [];
-        }
-      case "facebook":
-        icon = <FacebookIcon className="w-6 h-6 text-[#1877F2]" />;
-        platform = "Facebook";
-        switch (type) {
-          case "seguidores":
-            return [
-              {
-                icon,
-                title: "100 Seguidores",
-                platform,
-                price: "R$5,00",
-                originalPrice: "R$9,90",
-                features: [
-                  "Seguidores reais",
-                  "Entrega gradual",
-                  "Garantia de reposição",
-                  "Perfis ativos",
-                ],
-                popular: false,
-                delay: 100,
-              },
-              {
-                icon,
-                title: "500 Seguidores",
-                platform,
-                price: "R$19,00",
-                originalPrice: "R$29,90",
-                features: [
-                  "Seguidores reais",
-                  "Entrega gradual",
-                  "Garantia de reposição",
-                  "Perfis ativos",
-                ],
-                popular: false,
-                delay: 150,
-              },
-              {
-                icon,
-                title: "1.000 Seguidores",
-                platform,
-                price: "R$26,00",
-                originalPrice: "R$39,90",
-                features: [
-                  "Seguidores reais",
-                  "Entrega gradual",
-                  "Garantia de reposição",
-                  "Perfis ativos",
-                ],
-                popular: true,
-                delay: 200,
-              },
-              {
-                icon,
-                title: "2.000 Seguidores",
-                platform,
-                price: "R$40,00",
-                originalPrice: "R$69,90",
-                features: [
-                  "Seguidores reais",
-                  "Entrega gradual",
-                  "Garantia de reposição",
-                  "Perfis ativos",
-                ],
-                popular: false,
-                delay: 250,
-              },
-              {
-                icon,
-                title: "3.000 Seguidores",
-                platform,
-                price: "R$55,00",
-                originalPrice: "R$89,90",
-                features: [
-                  "Seguidores reais",
-                  "Entrega gradual",
-                  "Garantia de reposição",
-                  "Perfis ativos",
-                ],
-                popular: false,
-                delay: 300,
-              },
-              {
-                icon,
-                title: "5.000 Seguidores",
-                platform,
-                price: "R$85,00",
-                originalPrice: "R$149,90",
-                features: [
-                  "Seguidores reais",
-                  "Entrega gradual",
-                  "Garantia de reposição",
-                  "Perfis ativos",
-                ],
-                popular: false,
-                delay: 350,
-              },
-            ];
-          case "curtidas":
-            return [
-              {
-                icon,
-                title: "100 Curtidas",
-                platform,
-                price: "R$3,00",
-                originalPrice: "R$6,90",
-                features: [
-                  "Curtidas reais",
-                  "Entrega rápida",
-                  "Sem queda",
-                  "Aumento de alcance",
-                ],
-                popular: false,
-                delay: 100,
-              },
-              {
-                icon,
-                title: "400 Curtidas",
-                platform,
-                price: "R$9,00",
-                originalPrice: "R$14,90",
-                features: [
-                  "Curtidas reais",
-                  "Entrega rápida",
-                  "Sem queda",
-                  "Aumento de alcance",
-                ],
-                popular: false,
-                delay: 150,
-              },
-              {
-                icon,
-                title: "800 Curtidas",
-                platform,
-                price: "R$15,00",
-                originalPrice: "R$22,90",
-                features: [
-                  "Curtidas reais",
-                  "Entrega rápida",
-                  "Sem queda",
-                  "Aumento de alcance",
-                ],
-                popular: false,
-                delay: 200,
-              },
-              {
-                icon,
-                title: "1.000 Curtidas",
-                platform,
-                price: "R$12,00",
-                originalPrice: "R$24,90",
-                features: [
-                  "Curtidas reais",
-                  "Entrega rápida",
-                  "Sem queda",
-                  "Aumento de alcance",
-                ],
-                popular: true,
-                delay: 250,
-              },
-              {
-                icon,
-                title: "2.000 Curtidas",
-                platform,
-                price: "R$21,00",
-                originalPrice: "R$39,90",
-                features: [
-                  "Curtidas reais",
-                  "Entrega rápida",
-                  "Sem queda",
-                  "Aumento de alcance",
-                ],
-                popular: false,
-                delay: 300,
-              },
-              {
-                icon,
-                title: "6.000 Curtidas",
-                platform,
-                price: "R$50,00",
-                originalPrice: "R$89,90",
-                features: [
-                  "Curtidas reais",
-                  "Entrega rápida",
-                  "Sem queda",
-                  "Aumento de alcance",
-                ],
-                popular: false,
-                delay: 350,
-              },
-            ];
-          case "visualizacoes":
-            return [
-              {
-                icon,
-                title: "1.000 Visualizações",
-                platform,
-                price: "R$12,90",
-                originalPrice: "R$17,90",
-                features: viewFeatures,
-                popular: false,
-                delay: 100,
-              },
-              {
-                icon,
-                title: "5.000 Visualizações",
-                platform,
-                price: "R$39,90",
-                originalPrice: "R$49,90",
-                features: viewFeatures,
-                popular: true,
-                delay: 200,
-              },
-              {
-                icon,
-                title: "10.000 Visualizações",
-                platform,
-                price: "R$69,90",
-                originalPrice: "R$89,90",
-                features: viewFeatures,
-                popular: false,
-                delay: 300,
-              },
-            ];
-          case "assinatura":
-            return [
-              {
-                icon,
-                title: "Plano Básico",
-                platform,
-                price: "R$89,90/mês",
-                originalPrice: "R$129,90",
-                features: [
-                  "400 seguidores por mês",
-                  "800 curtidas mensais",
-                  "Análise de métricas",
-                  "Suporte prioritário",
-                ],
-                popular: false,
-                delay: 100,
-                type: type,
-              },
-              {
-                icon,
-                title: "Plano Premium",
-                platform,
-                price: "R$179,90/mês",
-                originalPrice: "R$259,90",
-                features: [
-                  "1500 seguidores por mês",
-                  "2500 curtidas mensais",
-                  "Análise de métricas",
-                  "Suporte VIP",
-                ],
-                popular: true,
-                delay: 200,
-                type: type,
-              },
-              {
-                icon,
-                title: "Plano Profissional",
-                platform,
-                price: "R$349,90/mês",
-                originalPrice: "R$499,90",
-                features: [
-                  "4000 seguidores por mês",
-                  "8000 curtidas mensais",
-                  "Análise avançada",
-                  "Gerente dedicado",
-                ],
-                popular: false,
-                delay: 300,
-                type: type,
               },
             ];
           default:
@@ -953,150 +561,6 @@ const Index = () => {
                 delay: 350,
               },
             ];
-          case "visualizacoes":
-            return [
-              {
-                icon,
-                title: "5.000 Visualizações",
-                platform,
-                price: "R$180,00",
-                originalPrice: "R$220,00",
-                features: [
-                  "Visualizações de alta qualidade",
-                  "Retenção no vídeo",
-                  "Impulsiona algoritmo",
-                  "Entrega gradual",
-                ],
-                popular: false,
-                delay: 100,
-              },
-              {
-                icon,
-                title: "10.000 Visualizações",
-                platform,
-                price: "R$253,10",
-                originalPrice: "R$310,00",
-                features: [
-                  "Visualizações de alta qualidade",
-                  "Retenção no vídeo",
-                  "Impulsiona algoritmo",
-                  "Entrega gradual",
-                ],
-                popular: true,
-                delay: 150,
-              },
-              {
-                icon,
-                title: "20.000 Visualizações",
-                platform,
-                price: "R$363,50",
-                originalPrice: "R$430,00",
-                features: [
-                  "Visualizações de alta qualidade",
-                  "Retenção no vídeo",
-                  "Impulsiona algoritmo",
-                  "Entrega gradual",
-                ],
-                popular: false,
-                delay: 200,
-              },
-              {
-                icon,
-                title: "30.000 Visualizações",
-                platform,
-                price: "R$473,80",
-                originalPrice: "R$550,00",
-                features: [
-                  "Visualizações de alta qualidade",
-                  "Retenção no vídeo",
-                  "Impulsiona algoritmo",
-                  "Entrega gradual",
-                ],
-                popular: false,
-                delay: 250,
-              },
-              {
-                icon,
-                title: "50.000 Visualizações",
-                platform,
-                price: "R$694,60",
-                originalPrice: "R$850,00",
-                features: [
-                  "Visualizações de alta qualidade",
-                  "Retenção no vídeo",
-                  "Impulsiona algoritmo",
-                  "Entrega gradual",
-                ],
-                popular: false,
-                delay: 300,
-              },
-              {
-                icon,
-                title: "100.000 Visualizações",
-                platform,
-                price: "R$1.318,30",
-                originalPrice: "R$1.590,00",
-                features: [
-                  "Visualizações de alta qualidade",
-                  "Retenção no vídeo",
-                  "Impulsiona algoritmo",
-                  "Entrega gradual",
-                ],
-                popular: false,
-                delay: 350,
-              },
-            ];
-          case "assinatura":
-            return [
-              {
-                icon,
-                title: "Plano Básico",
-                platform,
-                price: "R$299,90/mês",
-                originalPrice: "R$399,90",
-                features: [
-                  "300 inscritos por mês",
-                  "1000 visualizações mensais",
-                  "Otimização SEO básica",
-                  "Suporte prioritário",
-                ],
-                popular: false,
-                delay: 100,
-                type: type,
-              },
-              {
-                icon,
-                title: "Plano Premium",
-                platform,
-                price: "R$599,90/mês",
-                originalPrice: "R$799,90",
-                features: [
-                  "1000 inscritos por mês",
-                  "5000 visualizações mensais",
-                  "Otimização SEO avançada",
-                  "Suporte VIP",
-                ],
-                popular: true,
-                delay: 200,
-                type: type,
-              },
-              {
-                icon,
-                title: "Plano Profissional",
-                platform,
-                price: "R$1199,90/mês",
-                originalPrice: "R$1599,90",
-                features: [
-                  "3000 inscritos por mês",
-                  "15000 visualizações mensais",
-                  "Consultoria personalizada",
-                  "Gerente dedicado",
-                ],
-                popular: false,
-                delay: 300,
-                type: type,
-              },
-            ];
           default:
             return [];
         }
@@ -1120,7 +584,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 100,
-                serviceId: 302,
+                serviceId: 396,
               },
               {
                 icon,
@@ -1136,7 +600,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 150,
-                serviceId: 302,
+                serviceId: 396,
               },
               {
                 icon,
@@ -1152,7 +616,7 @@ const Index = () => {
                 ],
                 popular: true,
                 delay: 200,
-                serviceId: 302,
+                serviceId: 396,
               },
               {
                 icon,
@@ -1168,7 +632,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 250,
-                serviceId: 302,
+                serviceId: 396,
               },
               {
                 icon,
@@ -1184,7 +648,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 300,
-                serviceId: 302,
+                serviceId: 396,
               },
               {
                 icon,
@@ -1200,7 +664,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 350,
-                serviceId: 302,
+                serviceId: 396,
               },
             ];
           case "curtidas":
@@ -1219,7 +683,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 100,
-                serviceId: 45,
+                serviceId: 50,
               },
               {
                 icon,
@@ -1235,7 +699,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 150,
-                serviceId: 45,
+                serviceId: 50,
               },
               {
                 icon,
@@ -1251,7 +715,7 @@ const Index = () => {
                 ],
                 popular: true,
                 delay: 200,
-                serviceId: 45,
+                serviceId: 50,
               },
               {
                 icon,
@@ -1267,7 +731,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 250,
-                serviceId: 45,
+                serviceId: 50,
               },
               {
                 icon,
@@ -1283,7 +747,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 300,
-                serviceId: 45,
+                serviceId: 50,
               },
               {
                 icon,
@@ -1299,7 +763,7 @@ const Index = () => {
                 ],
                 popular: false,
                 delay: 350,
-                serviceId: 45,
+                serviceId: 50,
               },
             ];
           case "visualizacoes":
@@ -1338,57 +802,6 @@ const Index = () => {
                 serviceId: 334,
               },
             ];
-          case "assinatura":
-            return [
-              {
-                icon,
-                title: "Plano Básico",
-                platform,
-                price: "R$129,90/mês",
-                originalPrice: "R$179,90",
-                features: [
-                  "600 seguidores por mês",
-                  "2000 curtidas mensais",
-                  "Análise de tendências",
-                  "Suporte prioritário",
-                ],
-                popular: false,
-                delay: 100,
-                type: type,
-              },
-              {
-                icon,
-                title: "Plano Premium",
-                platform,
-                price: "R$249,90/mês",
-                originalPrice: "R$349,90",
-                features: [
-                  "2000 seguidores por mês",
-                  "6000 curtidas mensais",
-                  "Análise de tendências",
-                  "Suporte VIP",
-                ],
-                popular: true,
-                delay: 200,
-                type: type,
-              },
-              {
-                icon,
-                title: "Plano Profissional",
-                platform,
-                price: "R$499,90/mês",
-                originalPrice: "R$699,90",
-                features: [
-                  "5000 seguidores por mês",
-                  "15000 curtidas mensais",
-                  "Consultoria de conteúdo",
-                  "Gerente dedicado",
-                ],
-                popular: false,
-                delay: 300,
-                type: type,
-              },
-            ];
           default:
             return [];
         }
@@ -1409,6 +822,8 @@ const Index = () => {
 
       <section id="services" className="bg-gray-50 py-10 md:py-16">
         <div className="container mx-auto px-4">
+          {/* Carrossel de conversas de clientes satisfeitos */}
+          <ClientChatCarousel />
           <div className="max-w-3xl mx-auto text-center mb-8">
             <BadgeCustom variant="outline" className="mb-3">
               Nossos Serviços
@@ -1464,16 +879,6 @@ const Index = () => {
                       <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 p-2 bg-white rounded-lg shadow-lg z-10 w-full sm:w-96">
                         <div className="grid grid-cols-2 gap-3">
                           <button
-                            className={`flex items-center justify-center gap-3 p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors border border-blue-200 font-medium text-blue-800`}
-                            onClick={() => {
-                              setActiveTab("facebook");
-                              setIsNetworkMenuOpen(false);
-                            }}
-                          >
-                            <FacebookIcon className="w-6 h-6 text-[#1877F2]" />
-                            Facebook
-                          </button>
-                          <button
                             className={`flex items-center justify-center gap-3 p-3 rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 transition-colors border border-pink-200 font-medium text-pink-800`}
                             onClick={() => {
                               setActiveTab("instagram");
@@ -1482,16 +887,6 @@ const Index = () => {
                           >
                             <InstagramIcon className="w-6 h-6 text-[#E1306C]" />
                             Instagram
-                          </button>
-                          <button
-                            className={`flex items-center justify-center gap-3 p-3 rounded-lg bg-red-50 hover:bg-red-100 transition-colors border border-red-200 font-medium text-red-800`}
-                            onClick={() => {
-                              setActiveTab("youtube");
-                              setIsNetworkMenuOpen(false);
-                            }}
-                          >
-                            <YoutubeIcon className="w-6 h-6 text-[#FF0000]" />
-                            YouTube
                           </button>
                           <button
                             className={`flex items-center justify-center gap-3 p-3 rounded-lg bg-black/5 hover:bg-black/10 transition-colors border border-black/20 font-medium`}
@@ -1541,64 +936,6 @@ const Index = () => {
 
                   <button
                     className={`py-2.5 px-3 rounded-lg shadow-sm transition-all duration-300 ease-in-out ${
-                      activeTab === "facebook"
-                        ? "bg-blue-100 border border-blue-200 text-blue-800 shadow-md transform -translate-y-0.5"
-                        : "bg-white border border-gray-100 text-gray-600 hover:bg-gray-50 hover:border-gray-200 hover:-translate-y-0.5"
-                    } font-medium flex items-center justify-start gap-2.5 relative`}
-                    onClick={() => setActiveTab("facebook")}
-                  >
-                    {activeTab === "facebook" && (
-                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-600 rounded-full border-2 border-white"></span>
-                    )}
-                    <div
-                      className={`rounded-full p-1.5 flex-shrink-0 ${
-                        activeTab === "facebook"
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100"
-                      }`}
-                    >
-                      <FacebookIcon
-                        className={`w-4 h-4 ${
-                          activeTab === "facebook"
-                            ? "text-white"
-                            : "text-[#1877F2]"
-                        }`}
-                      />
-                    </div>
-                    <span className="text-sm font-medium">Facebook</span>
-                  </button>
-
-                  <button
-                    className={`py-2.5 px-3 rounded-lg shadow-sm transition-all duration-300 ease-in-out ${
-                      activeTab === "youtube"
-                        ? "bg-red-100 border border-red-200 text-red-800 shadow-md transform -translate-y-0.5"
-                        : "bg-white border border-gray-100 text-gray-600 hover:bg-gray-50 hover:border-gray-200 hover:-translate-y-0.5"
-                    } font-medium flex items-center justify-start gap-2.5 relative`}
-                    onClick={() => setActiveTab("youtube")}
-                  >
-                    {activeTab === "youtube" && (
-                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 rounded-full border-2 border-white"></span>
-                    )}
-                    <div
-                      className={`rounded-full p-1.5 flex-shrink-0 ${
-                        activeTab === "youtube"
-                          ? "bg-red-600 text-white"
-                          : "bg-gray-100"
-                      }`}
-                    >
-                      <YoutubeIcon
-                        className={`w-4 h-4 ${
-                          activeTab === "youtube"
-                            ? "text-white"
-                            : "text-[#FF0000]"
-                        }`}
-                      />
-                    </div>
-                    <span className="text-sm font-medium">YouTube</span>
-                  </button>
-
-                  <button
-                    className={`py-2.5 px-3 rounded-lg shadow-sm transition-all duration-300 ease-in-out ${
                       activeTab === "tiktok"
                         ? "bg-gray-100 border border-gray-300 text-gray-800 shadow-md transform -translate-y-0.5"
                         : "bg-white border border-gray-100 text-gray-600 hover:bg-gray-50 hover:border-gray-200 hover:-translate-y-0.5"
@@ -1627,38 +964,6 @@ const Index = () => {
 
                 <div className="mb-8">
                   <div className="flex flex-wrap gap-2 md:gap-4 mb-6">
-                    <button
-                      className={`px-5 py-2.5 rounded-full relative group transition-all duration-300 transform hover:scale-105 ${
-                        activeServiceType === "assinatura"
-                          ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg hover:shadow-xl animate-pulse-slow"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      } font-medium`}
-                      onClick={() => setActiveServiceType("assinatura")}
-                    >
-                      <span className="relative flex items-center gap-1.5">
-                        {activeServiceType === "assinatura" && (
-                          <Star className="w-4 h-4" />
-                        )}
-                        <span
-                          className={`${
-                            activeServiceType === "assinatura"
-                              ? "font-semibold"
-                              : ""
-                          }`}
-                        >
-                          Assinatura
-                        </span>
-                        {activeServiceType === "assinatura" && (
-                          <span className="absolute -top-1 -right-2 flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                          </span>
-                        )}
-                      </span>
-                      {activeServiceType === "assinatura" && (
-                        <span className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-400/20 to-indigo-400/20 blur-lg"></span>
-                      )}
-                    </button>
                     {activeTab === "youtube" ? (
                       <button
                         className={`px-5 py-2 rounded-full ${
