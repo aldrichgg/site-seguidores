@@ -142,7 +142,7 @@ const Index = () => {
                 features: followerFeatures,
                 popular: false,
                 delay: 150,
-                serviceId: 542,
+                serviceId: 543,
               },
               {
                 icon,
@@ -153,7 +153,7 @@ const Index = () => {
                 features: followerFeatures,
                 popular: false,
                 delay: 200,
-                serviceId: 542,
+                serviceId: 543,
               },
               {
                 icon,
@@ -164,7 +164,7 @@ const Index = () => {
                 features: followerFeatures,
                 popular: true,
                 delay: 250,
-                serviceId: 542,
+                serviceId: 543,
               },
               {
                 icon,
@@ -175,7 +175,7 @@ const Index = () => {
                 features: followerFeatures,
                 popular: false,
                 delay: 300,
-                serviceId: 542,
+                serviceId: 543,
               },
               {
                 icon,
@@ -186,7 +186,7 @@ const Index = () => {
                 features: followerFeatures,
                 popular: false,
                 delay: 350,
-                serviceId: 542,
+                serviceId: 543,
               },
               {
                 icon,
@@ -197,7 +197,7 @@ const Index = () => {
                 features: followerFeatures,
                 popular: false,
                 delay: 350,
-                serviceId: 542,
+                serviceId: 543,
               },
             ];
           case "curtidas":
