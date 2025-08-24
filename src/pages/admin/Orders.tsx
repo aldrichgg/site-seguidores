@@ -25,7 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@radix-ui/react-select";
 
 const statusMap = {
-  approved: "Completo",
+  approved: "Pago",
   pending: "Pendente",
   processing: "Processando",
   canceled: "Cancelado",
@@ -55,6 +55,8 @@ const Orders = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "Completo":
+        return "bg-green-100 text-green-700";
+      case "Pago":
         return "bg-green-100 text-green-700";
       case "Processando":
         return "bg-yellow-100 text-yellow-700";
@@ -222,7 +224,7 @@ const Orders = () => {
                 >
                   <option value="all">Todos os Status</option>
                   <option value="pending">Pendente</option>
-                  <option value="completed">Concluído</option>
+                  <option value="completed">Pago</option>
                   <option value="canceled">Cancelado</option>
                 </select>
               </div>

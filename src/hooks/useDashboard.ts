@@ -10,7 +10,6 @@ export function useDashboard(period: "week" | "month" | "year") {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    console.log(`${base}/analytics/overview?period=${period}`);
     fetch(`${base}/analytics/overview?period=${period}`)
       .then(async (res) => {
         if (!res.ok) throw new Error("Erro ao buscar dados");

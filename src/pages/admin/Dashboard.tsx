@@ -47,14 +47,13 @@ const Dashboard = () => {
   const donut = data?.statusDonut || { labels: [], series: [] };
   const topChannels = data?.topChannels || [];
   const metrics = data?.metrics || {};
-  console.log(data)
   // Para gráfico de área
   const areaCategories = chart.categories.length > 0 ? chart.categories.map(weekdayPt) : ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
   const areaSales = chart.sales.length > 0 ? chart.sales.map(v => Math.round(v / 100)) : [0,0,0,0,0,0,0];
   const areaOrders = chart.orders.length > 0 ? chart.orders : [0,0,0,0,0,0,0];
 
   // Para donut
-  const donutLabels = donut.labels.length > 0 ? donut.labels : ["Concluído", "Pendente", "Cancelado"];
+  const donutLabels = donut.labels.length > 0 ? donut.labels : ["Pago", "Pendente", "Cancelado"];
   const donutSeries = donut.series.length > 0 ? donut.series : [0,0,0];
   const donutTotal = donutSeries.reduce((a,b) => a+b, 0);
 
@@ -125,7 +124,7 @@ const Dashboard = () => {
           <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-green-500 hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm text-gray-500">Pedidos Realizados</p>
+                <p className="text-sm text-gray-500">Pedidos Pagos</p>
                 <h3 className="text-2xl font-bold">{loading ? "—" : fmtInt(kpis.completedOrders)}</h3>
                 <p className="text-sm text-green-500 flex items-center mt-1">
                   <span className="material-symbols-outlined text-sm">arrow_upward</span>

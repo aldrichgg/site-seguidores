@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { fetchCustomers, fetchCustomerDetail, encodeEmailId } from '@/services/customers';
+import { formatBRL, formatDateTime } from '@/utils/format';
 import { 
   Search, 
   Mail, 
@@ -208,7 +210,26 @@ const MOCK_CUSTOMER_ORDERS = [
   },
 ];
 
-const CustomerDetailsDialog = ({ customer, isOpen, setIsOpen }) => {
+
+const CustomerDetailsDialog = ({ customerId, isOpen, setIsOpen }) => {
+  const [customer, setCustomer] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!customerId || !isOpen) return;
+    setLoading(true);
+    setError(null);
+    fetchCustomerDetail(customerId)
+      .then((data) => {
+        console.log(data)
+        setCustomer(data)
+      
+      })
+      .catch(() => setError('Erro ao carregar detalhes do cliente.'))
+      .finally(() => setLoading(false));
+  }, [customerId, isOpen]);
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -218,104 +239,78 @@ const CustomerDetailsDialog = ({ customer, isOpen, setIsOpen }) => {
             Informações completas e histórico do cliente.
           </DialogDescription>
         </DialogHeader>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-4">
-          {/* Informações do cliente */}
-          <div className="col-span-1">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Informações Pessoais</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center mb-4">
-                  <Avatar className="h-24 w-24 mb-3">
-                    <AvatarFallback className="text-xl">{customer.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <h3 className="text-lg font-semibold">{customer.name}</h3>
-                  <Badge variant={customer.status === "active" ? "default" : "secondary"} className="mt-1">
-                    {customer.status === "active" ? "Ativo" : "Inativo"}
-                  </Badge>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{customer.email}</span>
+        {loading ? (
+          <div className="p-8 text-center text-muted-foreground">Carregando...</div>
+        ) : error ? (
+          <div className="p-8 text-center text-red-500">{error}</div>
+        ) : customer ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-4">
+            <div className="col-span-1">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Informações Pessoais</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col items-center mb-4">
+                    <Avatar className="h-24 w-24 mb-3">
+                      <AvatarFallback className="text-xl">{customer.fullName.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <h3 className="text-lg font-semibold">{customer.fullName}</h3>
+                    <Badge variant={customer.status === "active" ? "default" : "secondary"} className="mt-1">
+                      {customer.status === "active" ? "Ativo" : "Inativo"}
+                    </Badge>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{customer.phone}</span>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{customer.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{customer.phone || '—'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">Cliente desde {formatDateTime(customer.createdAt)}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Cliente desde {new Date(customer.registeredDate).toLocaleDateString('pt-BR')}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="mt-4">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Estatísticas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Total gasto:</span>
-                    <span className="font-medium">R$ {customer.totalSpent.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Número de pedidos:</span>
-                    <span className="font-medium">{customer.ordersCount}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Último pedido:</span>
-                    <span className="font-medium">{new Date(customer.lastOrder).toLocaleDateString('pt-BR')}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          {/* Histórico de pedidos */}
-          <div className="col-span-1 md:col-span-2">
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle className="text-lg">Histórico de Pedidos</CardTitle>
-                <CardDescription>Lista de todos os pedidos feitos pelo cliente</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Serviço</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Valor</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {MOCK_CUSTOMER_ORDERS.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell className="font-medium">{order.id}</TableCell>
-                        <TableCell>{new Date(order.date).toLocaleDateString('pt-BR')}</TableCell>
-                        <TableCell>{order.service}</TableCell>
-                        <TableCell>
-                          <Badge variant={order.status === "completed" ? "default" : "secondary"} className={order.status === "completed" ? "bg-green-500 hover:bg-green-600" : ""}>
-                            {order.status === "completed" ? "Concluído" : "Em andamento"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">R$ {order.amount.toFixed(2)}</TableCell>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="col-span-1 md:col-span-2">
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle className="text-lg">Pedidos</CardTitle>
+                  <CardDescription>Lista de pedidos do cliente</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Valor</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {customer.orders.slice(0, 50).map((order) => (
+                        <TableRow key={order.id}>
+                          <TableCell>{order.id}</TableCell>
+                          <TableCell>
+                            <Badge variant={order.status === "completed" ? "default" : order.status === "pending" ? "secondary" : "destructive"}>
+                              {order.status === "completed" ? "Concluído" : order.status === "pending" ? "Pendente" : "Cancelado"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{formatBRL(order.amount)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-        </div>
-        
+        ) : null}
         <DialogFooter>
           <Button variant="outline" onClick={() => setIsOpen(false)}>Fechar</Button>
         </DialogFooter>
@@ -330,35 +325,47 @@ const Customers = () => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  
-  // Filtrar clientes com base na pesquisa e filtro de status
-  const filteredCustomers = MOCK_CUSTOMERS.filter((customer) => {
-    const matchesSearch = 
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.phone.includes(searchTerm);
-      
-    const matchesStatus = 
-      statusFilter === "all" || 
-      customer.status === statusFilter;
-      
-    return matchesSearch && matchesStatus;
-  });
-  
-  // Manipuladores de ações
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10;
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    fetchCustomers({
+      search: searchTerm,
+      page,
+      limit,
+      sort: 'createdAt_desc',
+    })
+      .then((res) => {
+        let filtered = res.data;
+        if (statusFilter !== 'all') {
+          filtered = filtered.filter(c => c.status === statusFilter);
+        }
+        setCustomers(filtered);
+        setTotal(res.meta.total);
+        setTotalPages(res.meta.totalPages);
+      })
+      .catch(() => setError('Erro ao carregar clientes.'))
+      .finally(() => setLoading(false));
+  }, [searchTerm, statusFilter, page]);
+
   const handleViewDetails = (customer) => {
     setSelectedCustomer(customer);
     setIsDetailsOpen(true);
   };
-  
+
   const handleDeleteCustomer = (customer) => {
     setSelectedCustomer(customer);
     setIsDeleteDialogOpen(true);
   };
-  
+
   const confirmDelete = () => {
-    // Aqui seria implementada a lógica real de exclusão
-    /* console.log(`Deletando cliente ID: ${selectedCustomer.id}`); */
     setIsDeleteDialogOpen(false);
   };
 
@@ -366,10 +373,6 @@ const Customers = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
-        <Button>
-          <PlusSquare className="mr-2 h-4 w-4" />
-          Adicionar Cliente
-        </Button>
       </div>
       
       {/* Filtros e pesquisa */}
@@ -411,119 +414,118 @@ const Customers = () => {
       {/* Tabela de clientes */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Contato</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Pedidos</TableHead>
-                <TableHead>Total Gasto</TableHead>
-                <TableHead>Último Pedido</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCustomers.length > 0 ? (
-                filteredCustomers.map((customer) => (
-                  <TableRow key={customer.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9">
-                          <AvatarFallback>
-                            {customer.name.substring(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{customer.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Desde {new Date(customer.registeredDate).toLocaleDateString('pt-BR')}
-                          </p>
+          {loading ? (
+            <div className="p-8 text-center text-muted-foreground">Carregando...</div>
+          ) : error ? (
+            <div className="p-8 text-center text-red-500">{error}</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Contato</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Pedidos</TableHead>
+                  <TableHead>Total Gasto</TableHead>
+                  <TableHead>Primeira Compra</TableHead>
+                  <TableHead>Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {customers.length > 0 ? (
+                  customers.map((customer) => (
+                    <TableRow key={customer.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-9 w-9">
+                            <AvatarFallback>
+                              {customer.fullName.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{customer.fullName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Desde {customer.createdAt ? formatDateTime(customer.createdAt) : '—'}
+                            </p>
+                          </div>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1 text-sm">
+                            <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span>{customer.email}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-sm">
+                            <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span>{customer.phone || '—'}</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={customer.status === "active" ? "default" : "secondary"} className="mt-1">
+                          {customer.status === "active" ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{customer.orders.length}</TableCell>
+                      <TableCell>{formatBRL(customer.orders.reduce((acc, o) => acc + o.amount, 0))}</TableCell>
+                      <TableCell>{customer.createdAt ? formatDateTime(customer.createdAt) : '—'}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleViewDetails(customer)}>
+                              <FileText className="mr-2 h-4 w-4" />
+                              Ver detalhes
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-6">
+                      <div className="flex flex-col items-center justify-center text-muted-foreground">
+                        <AlertCircle className="h-6 w-6 mb-2" />
+                        <p>Nenhum cliente encontrado com os filtros aplicados.</p>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1 text-sm">
-                          <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>{customer.email}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-sm">
-                          <Phone className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>{customer.phone}</span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={customer.status === "active" ? "default" : "secondary"} className="mt-1">
-                        {customer.status === "active" ? "Ativo" : "Inativo"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{customer.ordersCount}</TableCell>
-                    <TableCell>R$ {customer.totalSpent.toFixed(2)}</TableCell>
-                    <TableCell>{new Date(customer.lastOrder).toLocaleDateString('pt-BR')}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleViewDetails(customer)}>
-                            <FileText className="mr-2 h-4 w-4" />
-                            Ver detalhes
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            className="text-destructive focus:text-destructive"
-                            onClick={() => handleDeleteCustomer(customer)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <AlertCircle className="h-6 w-6 mb-2" />
-                      <p>Nenhum cliente encontrado com os filtros aplicados.</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
       
       {/* Paginação */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          Exibindo <span className="font-medium">{filteredCustomers.length}</span> de <span className="font-medium">{MOCK_CUSTOMERS.length}</span> clientes
+          Exibindo <span className="font-medium">{customers.length}</span> de <span className="font-medium">{total}</span> clientes
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="icon">
+          <Button variant="outline" size="icon" disabled={page === 1} onClick={() => setPage(page - 1)}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" className="bg-primary text-primary-foreground hover:bg-primary/90">
-            1
-          </Button>
-          <Button variant="outline" size="icon">
-            2
-          </Button>
-          <Button variant="outline" size="icon">
+          {[...Array(totalPages)].map((_, idx) => (
+            <Button
+              key={idx}
+              variant={page === idx + 1 ? "outline" : "ghost"}
+              size="icon"
+              className={page === idx + 1 ? "bg-primary text-primary-foreground hover:bg-primary/90" : ""}
+              onClick={() => setPage(idx + 1)}
+            >
+              {idx + 1}
+            </Button>
+          ))}
+          <Button variant="outline" size="icon" disabled={page === totalPages} onClick={() => setPage(page + 1)}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -532,7 +534,7 @@ const Customers = () => {
       {/* Modal de detalhes do cliente */}
       {selectedCustomer && (
         <CustomerDetailsDialog 
-          customer={selectedCustomer} 
+          customerId={selectedCustomer.id} 
           isOpen={isDetailsOpen} 
           setIsOpen={setIsDetailsOpen} 
         />

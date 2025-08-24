@@ -54,11 +54,6 @@ const navItems = [
     path: "/admin/servicos",
   },
   { 
-    icon: BarChart, 
-    label: "Análises",
-    path: "/admin/analytics",
-  },
-  { 
     icon: SettingsIcon, 
     label: "Configurações", 
     path: "/admin/configuracoes",

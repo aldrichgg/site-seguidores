@@ -18,5 +18,5 @@ export function getApiBase() {
   // Fallback: mesma origem (quando o backend está no mesmo host)
   const sameOrigin = typeof window !== 'undefined' ? '' : 'http://localhost:3000';
 
-  return vite || next || cra || sameOrigin;
+  return vite || next || cra 
 }
