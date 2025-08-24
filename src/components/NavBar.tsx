@@ -1,13 +1,18 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose,
+} from "@/components/ui/sheet";
 import { Menu, X, SearchIcon } from "lucide-react";
 import InstagramIcon from "@/assets/icons/instagram";
 import FacebookIcon from "@/assets/icons/facebook";
 import YoutubeIcon from "@/assets/icons/youtube";
 import TikTokIcon from "@/assets/icons/tiktok";
-import perfil from "../assets/imgs/perfil.jpg"
+import perfil from "../assets/imgs/perfil.jpg";
 
 const NavBar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -24,7 +29,13 @@ const NavBar = () => {
       }
 
       // Detectar seção ativa para navegação
-      const sections = ["services", "benefits", "how-it-works", "faq", "contact"];
+      const sections = [
+        "services",
+        "benefits",
+        "how-it-works",
+        "faq",
+        "contact",
+      ];
       let current = "home";
 
       for (const section of sections) {
@@ -36,7 +47,7 @@ const NavBar = () => {
 
       setActiveSection(current);
     };
-    
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -52,7 +63,10 @@ const NavBar = () => {
   ];
 
   // Função para navegação suave
-  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+  const scrollToSection = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    id: string
+  ) => {
     e.preventDefault();
     const element = document.getElementById(id);
     if (element) {
@@ -66,27 +80,26 @@ const NavBar = () => {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? "py-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-md" 
+        isScrolled
+          ? "py-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-md"
           : "py-4 bg-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav className="flex items-center justify-between">
-
           {/* Logo */}
-          <Link 
-           to="/" 
-  className="flex items-center gap-2 text-xl font-bold relative z-10"
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-xl font-bold relative z-10"
           >
-             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-accent relative overflow-hidden">
-    <span className="absolute inset-0 bg-white/20 transform rotate-45 translate-y-2/3"></span>
-    
-    <img 
-      src={perfil}
-      alt="Logo ImpulseGram"
-      className="absolute inset-0 w-full h-full object-cover z-0 rounded-xl"
-    />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-accent relative overflow-hidden">
+              <span className="absolute inset-0 bg-white/20 transform rotate-45 translate-y-2/3"></span>
+
+              <img
+                src={perfil}
+                alt="Logo ImpulseGram"
+                className="absolute inset-0 w-full h-full object-cover z-0 rounded-xl"
+              />
 
               {/* Indicador de notificação animado */}
               <span className="absolute top-1 right-1 w-2 h-2 bg-white rounded-full animate-pulse"></span>
@@ -94,11 +107,9 @@ const NavBar = () => {
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
               ImpulseGram
             </span>
-            
+
             {/* Emblema de tendência */}
-            
-            
-        </Link>
+          </Link>
 
           {/* Links de navegação para telas maiores */}
           <div className="hidden md:flex items-center gap-1">
@@ -125,18 +136,18 @@ const NavBar = () => {
           <div className="hidden md:flex items-center gap-2">
             {/* Ícones de redes sociais */}
             <div className="flex items-center gap-1 mr-2">
-              <a 
-                href="https://instagram.com" 
-                target="_blank" 
+              <a
+                href="https://instagram.com"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:text-[#E1306C] dark:text-gray-400 hover-lift transition-all"
                 aria-label="Instagram"
               >
                 <InstagramIcon className="w-4 h-4" />
               </a>
-              <a 
-                href="https://tiktok.com" 
-                target="_blank" 
+              <a
+                href="https://tiktok.com"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:text-black dark:text-gray-400 hover-lift transition-all"
                 aria-label="TikTok"
@@ -146,7 +157,7 @@ const NavBar = () => {
             </div>
 
             {/* Botões de ação */}
-            <Button 
+            <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate("/acompanhar-pedido")}
@@ -155,13 +166,13 @@ const NavBar = () => {
               <SearchIcon className="w-4 h-4" />
               Acompanhar Pedido
             </Button>
-            
-            <Button 
-              size="sm" 
+
+            <Button
+              size="sm"
               className="rounded-full px-5 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 relative group"
               asChild
             >
-              <p onClick={()=> navigate("/login")}>
+              <p onClick={() => navigate("/login")}>
                 Login
                 <span className="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-10 transition-opacity"></span>
               </p>
@@ -180,8 +191,8 @@ const NavBar = () => {
               <SheetContent side="right" className="w-[85%] sm:w-80 pt-10">
                 <div className="flex flex-col h-full">
                   <div className="flex items-center justify-between mb-8">
-                    <Link 
-                      to="/" 
+                    <Link
+                      to="/"
                       className="flex items-center gap-2 text-lg font-bold"
                     >
                       <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary to-accent relative overflow-hidden">
@@ -192,7 +203,7 @@ const NavBar = () => {
                       </span>
                     </Link>
                   </div>
-      
+
                   <div className="space-y-1 flex-1">
                     {navLinks.map((link) => (
                       <SheetClose asChild key={link.id}>
@@ -213,6 +224,15 @@ const NavBar = () => {
                       </SheetClose>
                     ))}
 
+                    <SheetClose
+                      asChild
+                    >
+                      <Link
+                        to="/login"
+                        className="flex items-center gap-2 px-4 py-3 mt-2 rounded-lg border border-gray-100 bg-gray-50 text-gray-800 hover:bg-gray-100 transition-all"
+                      >Login</Link>
+                    </SheetClose>
+
                     <SheetClose asChild>
                       <Link
                         to="/acompanhar-pedido"
@@ -223,21 +243,21 @@ const NavBar = () => {
                       </Link>
                     </SheetClose>
                   </div>
-            
+
                   <div className="pt-6 mt-auto border-t">
                     <div className="flex justify-center gap-4 mb-6">
-                      <a 
-                        href="https://instagram.com" 
-                        target="_blank" 
+                      <a
+                        href="https://instagram.com"
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-[#E1306C] hover:text-white transition-all"
                         aria-label="Instagram"
                       >
                         <InstagramIcon className="w-5 h-5" />
                       </a>
-                      <a 
-                        href="https://tiktok.com" 
-                        target="_blank" 
+                      <a
+                        href="https://tiktok.com"
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-black hover:text-white transition-all"
                         aria-label="TikTok"
@@ -245,9 +265,9 @@ const NavBar = () => {
                         <TikTokIcon className="w-5 h-5" />
                       </a>
                     </div>
-                    
+
                     <div className="flex justify-center">
-                      <Button 
+                      <Button
                         onClick={() => navigate("/#services")}
                         className="rounded-full px-6 py-5 bg-gradient-to-r from-primary to-accent text-white hover:from-primary/90 hover:to-accent/90 hover:shadow-lg transition-all"
                       >

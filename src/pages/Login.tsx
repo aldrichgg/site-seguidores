@@ -48,7 +48,6 @@ const Login = () => {
       const { token, user } = response.data;
 
       login(token);
-      navigate('/')
 
       toast({
         title: `Bem-vindo, ${user.name}!`,

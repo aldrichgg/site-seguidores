@@ -107,12 +107,12 @@ const Orders = () => {
             phone: order.metadata?.phone || '',
           },
           quantity: order.quantity,
-          amount: order.amount,
+          amount: order.amount / 100,
           date: new Date(order.createdAt).toLocaleString('pt-BR'),
           instagramProfile: order.metadata?.link || '',
           paymentMethod: order.metadata?.payment_id ? 'PIX' : '',
         }));
-        setOrders(mappedOrders);
+  setOrders(mappedOrders);
         setMeta(
           json.meta || { page: 1, limit: itemsPerPage, total: 0, totalPages: 1 }
         );
@@ -329,27 +329,14 @@ const Orders = () => {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="p-4 font-semibold text-gray-600 text-sm">
-                      ID
-                    </th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">
-                      Cliente
-                    </th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">
-                      Tipo
-                    </th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">
-                      Quantidade
-                    </th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">
-                      Data
-                    </th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">
-                      Status
-                    </th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">
-                      Ações
-                    </th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">ID</th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">Cliente</th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">Tipo</th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">Quantidade</th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">Valor</th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">Data</th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">Status</th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -364,104 +351,46 @@ const Orders = () => {
                         }`}
                         onClick={() => handleViewDetails(order)}
                       >
-                        <td className="p-4 text-gray-800 font-medium">
-                          {order.id}
-                        </td>
+                        <td className="p-4 text-gray-800 font-medium">{order.id}</td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
-                            <img
-                              src={order.customer.avatar}
-                              alt="Cliente"
-                              className="w-8 h-8 rounded-full"
-                            />
+                            <img src={order.customer.avatar} alt="Cliente" className="w-8 h-8 rounded-full" />
                             <div>
-                              <p className="text-gray-800">
-                                {order.customer.name}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {order.customer.username}
-                              </p>
+                              <p className="text-gray-800">{order.customer.name}</p>
+                              <p className="text-xs text-gray-500">{order.customer.username}</p>
                             </div>
                           </div>
                         </td>
                         <td className="p-4 text-gray-600">{order.product}</td>
                         <td className="p-4 text-gray-600">{order.quantity}</td>
+                        <td className="p-4 text-gray-800 font-medium">{order.amount?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                         <td className="p-4 text-gray-600">{order.date}</td>
                         <td className="p-4">
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                              order.status
-                            )}`}
-                          >
-                            {order.status}
-                          </span>
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>{order.status}</span>
                         </td>
-                        <td
-                          className="p-4"
-                          onClick={(e) => e.stopPropagation()}
-                        >
+                        <td className="p-4">
                           <div className="flex gap-1">
-                            <button
-                              className="p-1.5 rounded hover:bg-gray-100 transition-colors group"
-                              onClick={() => {
-                                /* Editar pedido */
-                              }}
-                            >
-                              <span className="material-symbols-outlined text-sm text-gray-500 group-hover:text-primary-600">
-                                edit
-                              </span>
+                            <button className="p-1.5 rounded hover:bg-gray-100 transition-colors group" onClick={() => { /* Editar pedido */ }}>
+                              <span className="material-symbols-outlined text-sm text-gray-500 group-hover:text-primary-600">edit</span>
                             </button>
-                            <button
-                              className="p-1.5 rounded hover:bg-gray-100 transition-colors group"
-                              onClick={() => handleViewDetails(order)}
-                            >
-                              <span className="material-symbols-outlined text-sm text-gray-500 group-hover:text-primary-600">
-                                visibility
-                              </span>
+                            <button className="p-1.5 rounded hover:bg-gray-100 transition-colors group" onClick={() => handleViewDetails(order)}>
+                              <span className="material-symbols-outlined text-sm text-gray-500 group-hover:text-primary-600">visibility</span>
                             </button>
                             <details className="relative">
                               <summary className="p-1.5 rounded hover:bg-gray-100 transition-colors cursor-pointer list-none group">
-                                <span className="material-symbols-outlined text-sm text-gray-500 group-hover:text-primary-600">
-                                  expand_more
-                                </span>
+                                <span className="material-symbols-outlined text-sm text-gray-500 group-hover:text-primary-600">expand_more</span>
                               </summary>
                               <div className="absolute right-0 mt-1 bg-white shadow-lg rounded-lg border border-gray-100 z-10 w-44 py-1">
-                                <button
-                                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleChangeStatus(order.id, "Completo");
-                                  }}
-                                  disabled={
-                                    isStatusChanging ||
-                                    order.status === "Completo"
-                                  }
-                                >
-                                  <span className="material-symbols-outlined text-sm">
-                                    check_circle
-                                  </span>
+                                <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2" onClick={(e) => { e.stopPropagation(); handleChangeStatus(order.id, "Completo"); }} disabled={isStatusChanging || order.status === "Completo"}>
+                                  <span className="material-symbols-outlined text-sm">check_circle</span>
                                   Marcar Concluído
                                 </button>
-                                <button
-                                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleChangeStatus(order.id, "Pendente");
-                                  }}
-                                  disabled={
-                                    isStatusChanging ||
-                                    order.status === "Pendente"
-                                  }
-                                >
-                                  <span className="material-symbols-outlined text-sm">
-                                    hourglass_empty
-                                  </span>
+                                <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2" onClick={(e) => { e.stopPropagation(); handleChangeStatus(order.id, "Pendente"); }} disabled={isStatusChanging || order.status === "Pendente"}>
+                                  <span className="material-symbols-outlined text-sm">hourglass_empty</span>
                                   Marcar Pendente
                                 </button>
                                 <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 text-red-500">
-                                  <span className="material-symbols-outlined text-sm">
-                                    delete
-                                  </span>
+                                  <span className="material-symbols-outlined text-sm">delete</span>
                                   Excluir
                                 </button>
                               </div>
@@ -561,7 +490,7 @@ const Orders = () => {
                       Valor
                     </label>
                     <p className="text-gray-800 font-medium">
-                      {selectedOrder.amount}
+                      {selectedOrder.amount?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </p>
                   </div>
                   <div>
@@ -697,7 +626,7 @@ const Orders = () => {
                       <h3 className="text-sm font-medium text-muted-foreground mb-1">
                         Valor
                       </h3>
-                      <p className="font-semibold">{selectedOrder.amount}</p>
+                      <p className="font-semibold">{selectedOrder.amount?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                     </div>
                   </div>
 

@@ -38,7 +38,6 @@ const AdminLogin = () => {
       const { token, user } = response.data;
 
       login(token);
-      navigate('/admin')
 
       toast({
         title: `Bem-vindo, ${user.name}!`,

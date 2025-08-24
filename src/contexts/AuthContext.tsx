@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { getUserFromToken, FirebaseUserClaims } from "../utils/auth";
+import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   user: FirebaseUserClaims | null;
@@ -18,6 +19,7 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const navigate = useNavigate();
   const [user, setUser] = useState<FirebaseUserClaims | null>(null);
 
   // 🔁 Carrega token e decodifica ao iniciar app
@@ -50,21 +52,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     if (decoded) {
       setUser(decoded);
     }
+    if (decoded?.role === 1) {
+      navigate("/admin");
+    }
   };
 
   // 🔓 Faz logout
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
+    if (user?.role === 1) {
+      navigate("/login");
+    }
   };
 
   // ✅ Sempre reflete o estado mais recente
   const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider
-      value={{ user, isAuthenticated, login, logout }}
-    >
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

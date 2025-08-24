@@ -29,6 +29,7 @@ import {
   SheetClose
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Links de navegação
 const navItems = [
@@ -70,7 +71,7 @@ const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const currentPath = location.pathname;
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-
+const { logout } = useAuth();
   // Efeito para ajustar sidebar em diferentes tamanhos de tela
   useEffect(() => {
     const handleResize = () => {
@@ -93,8 +94,7 @@ const AdminLayout: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("adminAuth");
-    navigate("/admin/login");
+    logout()
   };
 
   return (
