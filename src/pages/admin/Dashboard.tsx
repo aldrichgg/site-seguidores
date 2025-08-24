@@ -1,28 +1,30 @@
 import React, { useState } from "react";
 import Chart from "react-apexcharts";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+import { useDashboard } from "@/hooks/useDashboard";
+import { fmtBRL, fmtInt, weekdayPt } from "@/lib/format";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  ArrowUpRight, 
-  ArrowDownRight, 
+import {
+  ArrowUpRight,
+  ArrowDownRight,
   ArrowRight,
   ChevronRight,
   HomeIcon,
   ThumbsUp,
   Users,
   ShoppingCart,
-  DollarSign, 
+  DollarSign,
   Clock,
   User,
   Settings,
-  BarChart2
+  BarChart2,
 } from "lucide-react";
 
 // Dados de exemplo para os gráficos
@@ -38,6 +40,33 @@ const salesData = [
 
 // Componente de dashboard
 const Dashboard = () => {
+  const [period, setPeriod] = useState<"week" | "month" | "year">("week");
+  const { data, loading, error } = useDashboard(period);
+  const kpis = data?.kpis || {};
+  const chart = data?.chart || { categories: [], sales: [], orders: [] };
+  const donut = data?.statusDonut || { labels: [], series: [] };
+  const topChannels = data?.topChannels || [];
+  const metrics = data?.metrics || {};
+  console.log(data)
+  // Para gráfico de área
+  const areaCategories = chart.categories.length > 0 ? chart.categories.map(weekdayPt) : ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+  const areaSales = chart.sales.length > 0 ? chart.sales.map(v => Math.round(v / 100)) : [0,0,0,0,0,0,0];
+  const areaOrders = chart.orders.length > 0 ? chart.orders : [0,0,0,0,0,0,0];
+
+  // Para donut
+  const donutLabels = donut.labels.length > 0 ? donut.labels : ["Concluído", "Pendente", "Cancelado"];
+  const donutSeries = donut.series.length > 0 ? donut.series : [0,0,0];
+  const donutTotal = donutSeries.reduce((a,b) => a+b, 0);
+
+  // Para métricas
+  const conversionRate = metrics.conversionRate != null ? `${Math.round(metrics.conversionRate*1000)/10}%` : "—";
+  const avgTicket = metrics.avgTicket != null ? fmtBRL(metrics.avgTicket) : "—";
+  const growthMoM = metrics.growthMoM != null ? `${Math.round(metrics.growthMoM*100)}%` : "—";
+  const retentionRate = metrics.retentionRate != null ? `${Math.round(metrics.retentionRate*100)}%` : "—";
+
+  // Para topChannels
+  const maxCount = topChannels.length > 0 ? Math.max(...topChannels.map(c => c.count)) : 1;
+
   return (
     <>
       <div className="mb-6 md:mb-8">
@@ -50,12 +79,16 @@ const Dashboard = () => {
                 <p className="text-sm text-gray-500">Vendas Totais</p>
                 <h3 className="text-2xl font-bold">R$25,431</h3>
                 <p className="text-sm text-green-500 flex items-center mt-1">
-                  <span className="material-symbols-outlined text-sm">arrow_upward</span>
+                  <span className="material-symbols-outlined text-sm">
+                    arrow_upward
+                  </span>
                   <span>12.5% da última semana</span>
                 </p>
               </div>
               <div className="p-2 bg-primary-100 rounded-full">
-                <span className="material-symbols-outlined text-primary-500">attach_money</span>
+                <span className="material-symbols-outlined text-primary-500">
+                  attach_money
+                </span>
               </div>
             </div>
           </div>
@@ -66,12 +99,16 @@ const Dashboard = () => {
                 <p className="text-sm text-gray-500">Novos Pedidos</p>
                 <h3 className="text-2xl font-bold">156</h3>
                 <p className="text-sm text-green-500 flex items-center mt-1">
-                  <span className="material-symbols-outlined text-sm">arrow_upward</span>
+                  <span className="material-symbols-outlined text-sm">
+                    arrow_upward
+                  </span>
                   <span>5.2% de ontem</span>
                 </p>
               </div>
               <div className="p-2 bg-indigo-100 rounded-full">
-                <span className="material-symbols-outlined text-indigo-500">shopping_cart</span>
+                <span className="material-symbols-outlined text-indigo-500">
+                  shopping_cart
+                </span>
               </div>
             </div>
           </div>
@@ -82,12 +119,16 @@ const Dashboard = () => {
                 <p className="text-sm text-gray-500">Pedidos Pendentes</p>
                 <h3 className="text-2xl font-bold">23</h3>
                 <p className="text-sm text-red-500 flex items-center mt-1">
-                  <span className="material-symbols-outlined text-sm">arrow_downward</span>
+                  <span className="material-symbols-outlined text-sm">
+                    arrow_downward
+                  </span>
                   <span>3.1% de ontem</span>
                 </p>
               </div>
               <div className="p-2 bg-amber-100 rounded-full">
-                <span className="material-symbols-outlined text-amber-500">pending</span>
+                <span className="material-symbols-outlined text-amber-500">
+                  pending
+                </span>
               </div>
             </div>
           </div>
@@ -98,12 +139,16 @@ const Dashboard = () => {
                 <p className="text-sm text-gray-500">Pedidos Realizados</p>
                 <h3 className="text-2xl font-bold">256K</h3>
                 <p className="text-sm text-green-500 flex items-center mt-1">
-                  <span className="material-symbols-outlined text-sm">arrow_upward</span>
+                  <span className="material-symbols-outlined text-sm">
+                    arrow_upward
+                  </span>
                   <span>8.7% do mês passado</span>
                 </p>
               </div>
               <div className="p-2 bg-green-100 rounded-full">
-                <span className="material-symbols-outlined text-green-500">group</span>
+                <span className="material-symbols-outlined text-green-500">
+                  group
+                </span>
               </div>
             </div>
           </div>
@@ -119,31 +164,18 @@ const Dashboard = () => {
               <option>Este Mês</option>
               <option>Este Ano</option>
             </select>
-            </div>
+          </div>
           <div className="h-[300px]">
             <Chart
               type="area"
               height={280}
               width="100%"
               series={[
-                {
-                  name: "Vendas",
-                  data: [30, 40, 35, 50, 49, 60, 70],
-                },
-                {
-                  name: "Pedidos",
-                  data: [20, 35, 40, 45, 40, 50, 60],
-                },
+                { name: "Vendas", data: areaSales },
+                { name: "Pedidos", data: areaOrders },
               ]}
               options={{
-                chart: {
-                  toolbar: {
-                    show: false,
-                  },
-                  zoom: {
-                    enabled: false,
-                  },
-                },
+                chart: { toolbar: { show: false }, zoom: { enabled: false } },
                 colors: ["#3b82f6", "#64748b"],
                 fill: {
                   type: "gradient",
@@ -165,15 +197,7 @@ const Dashboard = () => {
                   borderColor: "#e2e8f0",
                 },
                 xaxis: {
-                  categories: [
-                    "Seg",
-                    "Ter",
-                    "Qua",
-                    "Qui",
-                    "Sex",
-                    "Sáb",
-                    "Dom",
-                  ],
+                  categories: ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"],
                 },
                 tooltip: {
                   theme: "dark",
@@ -252,10 +276,13 @@ const Dashboard = () => {
               </div>
               <p className="text-2xl font-bold mt-2">12.5%</p>
               <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                <div className="bg-primary-500 h-1.5 rounded-full" style={{ width: "65%" }}></div>
+                <div
+                  className="bg-primary-500 h-1.5 rounded-full"
+                  style={{ width: "65%" }}
+                ></div>
               </div>
             </div>
-            
+
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="flex justify-between items-center">
                 <h4 className="text-gray-700 font-medium">Ticket Médio</h4>
@@ -266,10 +293,13 @@ const Dashboard = () => {
               </div>
               <p className="text-2xl font-bold mt-2">R$ 189,90</p>
               <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                <div className="bg-primary-500 h-1.5 rounded-full" style={{ width: "75%" }}></div>
+                <div
+                  className="bg-primary-500 h-1.5 rounded-full"
+                  style={{ width: "75%" }}
+                ></div>
               </div>
             </div>
-            
+
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="flex justify-between items-center">
                 <h4 className="text-gray-700 font-medium">Crescimento</h4>
@@ -280,9 +310,12 @@ const Dashboard = () => {
               </div>
               <p className="text-2xl font-bold mt-2">+15% MoM</p>
               <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                <div className="bg-green-500 h-1.5 rounded-full" style={{ width: "85%" }}></div>
+                <div
+                  className="bg-green-500 h-1.5 rounded-full"
+                  style={{ width: "85%" }}
+                ></div>
               </div>
-      </div>
+            </div>
 
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="flex justify-between items-center">
@@ -294,7 +327,10 @@ const Dashboard = () => {
               </div>
               <p className="text-2xl font-bold mt-2">68.7%</p>
               <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                <div className="bg-amber-500 h-1.5 rounded-full" style={{ width: "69%" }}></div>
+                <div
+                  className="bg-amber-500 h-1.5 rounded-full"
+                  style={{ width: "69%" }}
+                ></div>
               </div>
             </div>
           </div>
@@ -310,17 +346,15 @@ const Dashboard = () => {
           <div className="space-y-4 mt-4">
             <div className="flex items-center p-4 hover:bg-gray-50 rounded-lg transition-colors transform hover:scale-[1.02] cursor-pointer">
               <div className="p-2 bg-blue-100 rounded-full">
-                <span className="material-symbols-outlined text-blue-500">thumb_up</span>
+                <span className="material-symbols-outlined text-blue-500">
+                  thumb_up
+                </span>
               </div>
               <div className="ml-3 flex-1">
                 <h4 className="font-medium">Seguidores Instagram</h4>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">
-                    35% das vendas
-                  </span>
-                  <span className="text-sm font-medium">
-                    15.240 vendidos
-                  </span>
+                  <span className="text-xs text-gray-500">35% das vendas</span>
+                  <span className="text-sm font-medium">15.240 vendidos</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
                   <div
@@ -333,14 +367,14 @@ const Dashboard = () => {
 
             <div className="flex items-center p-3 md:p-4 hover:bg-gray-50 rounded-lg transition-colors transform hover:scale-[1.02] cursor-pointer">
               <div className="p-2 bg-red-100 rounded-full">
-                <span className="material-symbols-outlined text-red-500">subscriptions</span>
+                <span className="material-symbols-outlined text-red-500">
+                  subscriptions
+                </span>
               </div>
               <div className="ml-3 flex-1">
                 <h4 className="font-medium">Inscritos YouTube</h4>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">
-                    25% das vendas
-                  </span>
+                  <span className="text-xs text-gray-500">25% das vendas</span>
                   <span className="text-sm font-medium">8.670 vendidos</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
@@ -354,14 +388,14 @@ const Dashboard = () => {
 
             <div className="flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors">
               <div className="p-2 bg-cyan-100 rounded-full">
-                <span className="material-symbols-outlined text-cyan-500">music_note</span>
+                <span className="material-symbols-outlined text-cyan-500">
+                  music_note
+                </span>
               </div>
               <div className="ml-3 flex-1">
                 <h4 className="font-medium">Seguidores TikTok</h4>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">
-                    20% das vendas
-                  </span>
+                  <span className="text-xs text-gray-500">20% das vendas</span>
                   <span className="text-sm font-medium">7.450 vendidos</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
@@ -375,17 +409,15 @@ const Dashboard = () => {
 
             <div className="flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors">
               <div className="p-2 bg-sky-100 rounded-full">
-                <span className="material-symbols-outlined text-sky-500">tag</span>
+                <span className="material-symbols-outlined text-sky-500">
+                  tag
+                </span>
               </div>
               <div className="ml-3 flex-1">
                 <h4 className="font-medium">Seguidores Twitter</h4>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">
-                    15% das vendas
-                  </span>
-                  <span className="text-sm font-medium">
-                    5.890 vendidos
-                  </span>
+                  <span className="text-xs text-gray-500">15% das vendas</span>
+                  <span className="text-sm font-medium">5.890 vendidos</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
                   <div
@@ -398,31 +430,29 @@ const Dashboard = () => {
 
             <div className="flex items-center p-3 md:p-4 hover:bg-gray-50 rounded-lg transition-colors transform hover:scale-[1.02] cursor-pointer">
               <div className="p-2 bg-purple-100 rounded-full">
-                <span className="material-symbols-outlined text-purple-500">chat</span>
+                <span className="material-symbols-outlined text-purple-500">
+                  chat
+                </span>
               </div>
               <div className="ml-3 flex-1">
                 <h4 className="font-medium">Membros Discord</h4>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">
-                    5% das vendas
-                  </span>
-                  <span className="text-sm font-medium">
-                    2.350 vendidos
-                  </span>
+                  <span className="text-xs text-gray-500">5% das vendas</span>
+                  <span className="text-sm font-medium">2.350 vendidos</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
                   <div
                     className="bg-purple-500 h-1.5 rounded-full"
                     style={{ width: "5%" }}
                   ></div>
-                        </div>
-                        </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-    </div>
+      </div>
     </>
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

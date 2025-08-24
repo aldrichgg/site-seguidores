@@ -7,39 +7,61 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LockIcon, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useTheme } from "@/components/ui/theme-provider";
+import axios from "axios";
+import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AdminLogin = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const { login } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     // Verificar se os campos estão preenchidos
-    if (!username || !password) {
+    if (!email || !password) {
       setError("Por favor, preencha todos os campos.");
       return;
     }
+
+    try {
+      const response = await axios.post(`http://localhost:3000/auth/login`, {
+        email,
+        password,
+      });
+
+      const { token, user } = response.data;
+
+      login(token);
+      navigate('/admin')
+
+      toast({
+        title: `Bem-vindo, ${user.name}!`,
+        description: "Login realizado com sucesso.",
+      });
+    } catch (error: any) {
+      const status = error.response?.status;
+      const message = error.response?.data?.message || "Erro ao fazer login";
     
-    setIsLoading(true);
-    setError("");
-    
-    // Simulação de autenticação - em produção, conectar com API real
-    setTimeout(() => {
-      // Credenciais de demonstração
-      if (username === "admin" && password === "admin123") {
-        localStorage.setItem("adminAuth", "true");
-        navigate("/admin");
+      if (status === 401) {
+        toast({
+          title: "Credenciais inválidas",
+          description: "Verifique seu e-mail e senha e tente novamente.",
+          variant: "destructive",
+        });
       } else {
-        setError("Credenciais inválidas. Tente novamente.");
+        toast({
+          title: "Erro ao fazer login",
+          description: message,
+          variant: "destructive",
+        });
       }
-      setIsLoading(false);
-    }, 800);
+    }
   };
 
   const toggleShowPassword = () => {
@@ -80,14 +102,14 @@ const AdminLogin = () => {
               )}
               <div className="grid gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="username">Nome de usuário</Label>
+                  <Label htmlFor="username">Email</Label>
                   <Input
-                    id="username"
-                    type="text"
-                    placeholder="Seu nome de usuário"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    autoComplete="username"
+                    id="email"
+                    type="email"
+                    placeholder="Seu email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
                     required
                   />
                 </div>
