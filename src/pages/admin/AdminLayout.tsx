@@ -40,8 +40,8 @@ const navItems = [
   },
   { 
     icon: ShoppingCart, 
-    label: "Pedidos", 
-    path: "/admin/pedidos",
+    label: "Vendas", 
+    path: "/admin/vendas",
   },
   { 
     icon: Users, 

@@ -78,6 +78,7 @@ declare global {
 }
 
 const Payment = () => {
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
   const navigate = useNavigate();
   const location = useLocation();
   const [paymentMethod, setPaymentMethod] = useState<string>("pix");
@@ -210,15 +211,20 @@ const Payment = () => {
   };
 
   const handleSubmitPayment = async () => {
-    // Validação dos campos obrigatórios
-    if (!acceptTerms) return;
-    if (!customerData.email.trim() || !customerData.name.trim() || !customerData.document.trim() || !customerData.linkPerfil.trim() || !customerData.phone.trim()) {
-      alert("Preencha todos os campos obrigatórios antes de continuar.");
-      return;
-    }
+  // Validação dos campos obrigatórios
+  const errors: {[key: string]: string} = {};
+  if (!customerData.email.trim()) errors.email = "Preencha o e-mail";
+  if (!customerData.name.trim()) errors.name = "Preencha o nome completo";
+  if (!customerData.document.trim()) errors.document = "Preencha o CPF";
+  if (!customerData.linkPerfil.trim()) errors.linkPerfil = "Preencha o link do perfil";
+  if (!customerData.phone.trim()) errors.phone = "Preencha o celular";
+  if (!acceptTerms) errors.terms = "Você precisa aceitar os termos";
+  setFormErrors(errors);
+  if (Object.keys(errors).length > 0) return;
     setIsProcessing(true);
 
     try {
+      console.log("Valor:", totalAmount);
       const priceWithFee = Number((totalAmount * 1.01).toFixed(2));
       const quantityFromTitle = parseInt(
         (orderDetails.title.match(/[\d.]+/)?.[0] || "1").replace(/\./g, ""),
@@ -650,8 +656,11 @@ const Payment = () => {
                           value={customerData.email}
                           onChange={handleCustomerDataChange}
                           required
-                          className="w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base"
+                          className={`w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${formErrors.email ? 'border-red-500 ring-red-500' : ''}`}
                         />
+                        {formErrors.email && (
+                          <span className="text-xs text-red-500 mt-1 block">{formErrors.email}</span>
+                        )}
                       </div>
                     </div>
 
@@ -669,8 +678,11 @@ const Payment = () => {
                           value={customerData.name}
                           onChange={handleCustomerDataChange}
                           required
-                          className="w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base"
+                          className={`w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${formErrors.name ? 'border-red-500 ring-red-500' : ''}`}
                         />
+                        {formErrors.name && (
+                          <span className="text-xs text-red-500 mt-1 block">{formErrors.name}</span>
+                        )}
                       </div>
                     </div>
 
@@ -692,8 +704,11 @@ const Payment = () => {
                           value={customerData.phone}
                           onChange={handleCustomerDataChange}
                           required
-                          className="w-full pl-20 pr-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base"
+                          className={`w-full pl-20 pr-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${formErrors.phone ? 'border-red-500 ring-red-500' : ''}`}
                         />
+                        {formErrors.phone && (
+                          <span className="text-xs text-red-500 mt-1 block">{formErrors.phone}</span>
+                        )}
                       </div>
                     </div>
 
@@ -711,8 +726,11 @@ const Payment = () => {
                           value={customerData.document}
                           onChange={handleCustomerDataChange}
                           required
-                          className="w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base"
+                          className={`w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${formErrors.document ? 'border-red-500 ring-red-500' : ''}`}
                         />
+                        {formErrors.document && (
+                          <span className="text-xs text-red-500 mt-1 block">{formErrors.document}</span>
+                        )}
                       </div>
                     </div>
 
@@ -730,8 +748,11 @@ const Payment = () => {
                           value={customerData.linkPerfil}
                           onChange={handleCustomerDataChange}
                           required
-                          className="w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base"
+                          className={`w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${formErrors.linkPerfil ? 'border-red-500 ring-red-500' : ''}`}
                         />
+                        {formErrors.linkPerfil && (
+                          <span className="text-xs text-red-500 mt-1 block">{formErrors.linkPerfil}</span>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -1117,7 +1138,7 @@ const Payment = () => {
                         id="terms"
                         checked={acceptTerms}
                         onChange={(e) => setAcceptTerms(e.target.checked)}
-                        className="h-5 w-5 rounded border-2 border-blue-400 text-blue-600 focus:ring-blue-500 focus:ring-2 focus:ring-offset-2"
+                        className={`h-5 w-5 rounded border-2 border-blue-400 text-blue-600 focus:ring-blue-500 focus:ring-2 focus:ring-offset-2 ${formErrors.terms ? 'border-red-500 ring-red-500' : ''}`}
                       />
                     </div>
                     <div className="flex-1">
@@ -1146,12 +1167,11 @@ const Payment = () => {
                         . Esta confirmação é necessária para processar seu
                         pagamento com segurança.
                       </p>
-                      {!acceptTerms && (
-                        <div className="flex items-center gap-2 mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                          <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
-                          <span className="text-sm text-amber-700 font-medium">
-                            Você precisa aceitar os termos para continuar com o
-                            pagamento
+                      {formErrors.terms && (
+                        <div className="flex items-center gap-2 mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
+                          <span className="text-sm text-red-700 font-medium">
+                            {formErrors.terms}
                           </span>
                         </div>
                       )}

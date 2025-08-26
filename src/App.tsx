@@ -83,7 +83,7 @@ function AppContent() {
           }
         >
           <Route index element={<Dashboard />} />
-          <Route path="pedidos" element={<Orders />} />
+          <Route path="vendas" element={<Orders />} />
           <Route path="clientes" element={<Customers />} />
           <Route path="servicos" element={<Services />} />
           <Route path="analytics" element={<Analytics />} />

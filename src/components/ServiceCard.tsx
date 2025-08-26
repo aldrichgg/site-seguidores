@@ -55,9 +55,9 @@ const ServiceCard = ({
       setIsSubscriptionClicked(true);
     }
 
-    const priceValue = parseFloat(price.replace("R$", "").trim());
+    const priceValue = parseFloat(price.replace("R$", "").replace(",", ".").trim());
     const originalPriceValue = originalPrice
-      ? parseFloat(originalPrice.replace("R$", "").trim())
+      ? parseFloat(originalPrice.replace("R$", "").replace(",", ".").trim())
       : null;
 
     const savePercentage = originalPriceValue
