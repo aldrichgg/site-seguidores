@@ -222,9 +222,7 @@ const CustomerDetailsDialog = ({ customerId, isOpen, setIsOpen }) => {
     setError(null);
     fetchCustomerDetail(customerId)
       .then((data) => {
-        console.log(data)
-        setCustomer(data)
-      
+        setCustomer(data)      
       })
       .catch(() => setError('Erro ao carregar detalhes do cliente.'))
       .finally(() => setLoading(false));

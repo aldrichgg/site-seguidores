@@ -159,8 +159,8 @@ const Index = () => {
                 icon,
                 title: "1.000 Seguidores",
                 platform,
-                price: "R$39,00",
-                originalPrice: "R$59,90",
+                price: "R$47,30",
+                originalPrice: "R$83,90",
                 features: followerFeatures,
                 popular: true,
                 delay: 250,
@@ -170,8 +170,8 @@ const Index = () => {
                 icon,
                 title: "2.000 Seguidores",
                 platform,
-                price: "R$45,00",
-                originalPrice: "R$69,90",
+                price: "R$53,70",
+                originalPrice: "R$99,90",
                 features: followerFeatures,
                 popular: false,
                 delay: 300,
@@ -181,10 +181,11 @@ const Index = () => {
                 icon,
                 title: "5.000 Seguidores",
                 platform,
-                price: "R$179,00",
-                originalPrice: "R$199,90",
+                price: "R$139,90",
+                originalPrice: "R$179,90",
                 features: followerFeatures,
                 popular: false,
+                recomended: true,
                 delay: 350,
                 serviceId: 547,
               },
@@ -192,8 +193,8 @@ const Index = () => {
                 icon,
                 title: "10.000 Seguidores",
                 platform,
-                price: "R$307,00",
-                originalPrice: "R$349,90",
+                price: "R$239,90",
+                originalPrice: "R$283,70",
                 features: followerFeatures,
                 popular: false,
                 delay: 350,
@@ -1035,6 +1036,7 @@ const Index = () => {
                             originalPrice={pkg.originalPrice}
                             features={pkg.features}
                             popular={pkg.popular}
+                            recommended={pkg.recomended}
                             delay={pkg.delay}
                             serviceId={pkg.serviceId}
                             type={pkg.type}
