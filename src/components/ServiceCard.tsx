@@ -45,7 +45,7 @@ const ServiceCard = ({
   const navigate = useNavigate();
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [isSubscriptionClicked, setIsSubscriptionClicked] = useState(false);
-  console.log(recommended)
+  console.log(recommended);
   // Check if this is a subscription plan
   const isSubscription =
     title.toLowerCase().includes("plano") || price.includes("/mês");
@@ -55,7 +55,9 @@ const ServiceCard = ({
       setIsSubscriptionClicked(true);
     }
 
-    const priceValue = parseFloat(price.replace("R$", "").replace(",", ".").trim());
+    const priceValue = parseFloat(
+      price.replace("R$", "").replace(",", ".").trim()
+    );
     const originalPriceValue = originalPrice
       ? parseFloat(originalPrice.replace("R$", "").replace(",", ".").trim())
       : null;
@@ -429,57 +431,25 @@ const ServiceCard = ({
           onClick={handleSelectPlan}
         >
           <span
-            className={`absolute inset-0 w-full h-full transition-colors duration-300 ${
-              isSubscription
-                ? "bg-white/20 group-hover:bg-white/30"
-                : recommended
-                ? "bg-white/10 group-hover:bg-white/20"
-                : "bg-white/0 group-hover:bg-white/10"
-            }`}
-          ></span>
-          <span
             className={`relative flex items-center justify-center gap-2 ${
               isSubscription ? "font-semibold" : "font-medium"
             }`}
           >
-            {isSubscription ? (
-              <>
-                <Star className="w-4 h-4" />
-                Assinar Agora
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-                  />
-                </svg>
-              </>
-            ) : (
-              <>
-                Comprar
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-                  />
-                </svg>
-              </>
-            )}
+            Comprar
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+              />
+            </svg>
           </span>
         </Button>
 
