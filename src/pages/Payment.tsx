@@ -78,7 +78,7 @@ declare global {
 }
 
 const Payment = () => {
-  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const navigate = useNavigate();
   const location = useLocation();
   const [paymentMethod, setPaymentMethod] = useState<string>("pix");
@@ -117,7 +117,7 @@ const Payment = () => {
   const [qrCodeTimer, setQrCodeTimer] = useState<number>(300); // 5 minutos = 300 segundos
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [isOrderSummaryOpen, setIsOrderSummaryOpen] = useState<boolean>(false);
-  const URL = getApiBase()
+  const URL = getApiBase();
   // Carregar detalhes do pedido da navegação se disponíveis
   useEffect(() => {
     if (location.state && location.state.orderDetails) {
@@ -211,21 +211,26 @@ const Payment = () => {
   };
 
   const handleSubmitPayment = async () => {
-  // Validação dos campos obrigatórios
-  const errors: {[key: string]: string} = {};
-  if (!customerData.email.trim()) errors.email = "Preencha o e-mail";
-  if (!customerData.name.trim()) errors.name = "Preencha o nome completo";
-  if (!customerData.document.trim()) errors.document = "Preencha o CPF";
-  if (!customerData.linkPerfil.trim()) errors.linkPerfil = "Preencha o link do perfil";
-  if (!customerData.phone.trim()) errors.phone = "Preencha o celular";
-  if (!acceptTerms) errors.terms = "Você precisa aceitar os termos";
-  setFormErrors(errors);
-  if (Object.keys(errors).length > 0) return;
+    // Validação dos campos obrigatórios
+    const errors: { [key: string]: string } = {};
+    if (!customerData.email.trim()) errors.email = "Preencha o e-mail";
+    if (!customerData.name.trim()) errors.name = "Preencha o nome completo";
+    if (!customerData.document.trim()) errors.document = "Preencha o CPF";
+    if (!customerData.linkPerfil.trim())
+      errors.linkPerfil = "Preencha o link do perfil";
+    if (!customerData.phone.trim()) errors.phone = "Preencha o celular";
+    if (!acceptTerms) errors.terms = "Você precisa aceitar os termos";
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
     setIsProcessing(true);
 
     try {
       console.log("Valor:", totalAmount);
+      // você já tem:
       const priceWithFee = Number((totalAmount * 1.01).toFixed(2));
+
+      // em centavos:
+      const valueCents = Math.round(priceWithFee * 100);
       const quantityFromTitle = parseInt(
         (orderDetails.title.match(/[\d.]+/)?.[0] || "1").replace(/\./g, ""),
         10
@@ -262,7 +267,7 @@ const Payment = () => {
         },
       }; */
 
-      const body = {
+      /* const body = {
         amount: priceWithFee, // number, não string
         payment_type: "pix", // obrigatório em lowercase
         payer: {
@@ -278,26 +283,51 @@ const Payment = () => {
           celular: customerData.phone.replace(/\D/g, ""),
           platform: orderDetails.platform,
         },
-      };
+      }; */
 
-      const response = await fetch(
-        `${URL}/payments/create`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+      const body = {
+        paymentMethod: "pix",
+        value: valueCents,
+        description,
+        postbackUrl: "https://new-back-end-phi.vercel.app/payments/webhook", // ou deixe para o backend injetar
+        customer: {
+          name: customerData.name,
+          email: customerData.email,
+          document: customerData.document.replace(/\D/g, ""),
+          phone: customerData.phone.replace(/\D/g, ""),
+        },
+        items: [
+          {
+            name: description,
+            quantity: quantityFromTitle,
+            unitAmount: valueCents,
           },
-          body: JSON.stringify(body),
-        }
-      );
+        ],
+        metadata: {
+          service_id: orderDetails.serviceId,
+          link: customerData.linkPerfil,
+          quantity: quantityFromTitle,
+          email: customerData.email,
+          celular: customerData.phone.replace(/\D/g, ""),
+          platform: orderDetails.platform,
+        },
+      };
+      console.log("Enviando para o backend:", body);
+      const response = await fetch(`${URL}/payments/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
 
       const result = await response.json();
       console.log("💚 Pedido criado com sucesso:", result);
       if (response.ok) {
         setQrCode(result.qrcode_image);
-        setPixCode(result.qrcode);
+        setPixCode(result.pixCode);
         setPaymentRequest(true);
-        setQrCodeTimer(300); 
+        setQrCodeTimer(300);
       } else {
         console.error("❌ Erro ao criar pedido:", result.message);
         alert("Erro ao criar pedido. Tente novamente.");
@@ -656,10 +686,16 @@ const Payment = () => {
                           value={customerData.email}
                           onChange={handleCustomerDataChange}
                           required
-                          className={`w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${formErrors.email ? 'border-red-500 ring-red-500' : ''}`}
+                          className={`w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${
+                            formErrors.email
+                              ? "border-red-500 ring-red-500"
+                              : ""
+                          }`}
                         />
                         {formErrors.email && (
-                          <span className="text-xs text-red-500 mt-1 block">{formErrors.email}</span>
+                          <span className="text-xs text-red-500 mt-1 block">
+                            {formErrors.email}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -678,10 +714,14 @@ const Payment = () => {
                           value={customerData.name}
                           onChange={handleCustomerDataChange}
                           required
-                          className={`w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${formErrors.name ? 'border-red-500 ring-red-500' : ''}`}
+                          className={`w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${
+                            formErrors.name ? "border-red-500 ring-red-500" : ""
+                          }`}
                         />
                         {formErrors.name && (
-                          <span className="text-xs text-red-500 mt-1 block">{formErrors.name}</span>
+                          <span className="text-xs text-red-500 mt-1 block">
+                            {formErrors.name}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -704,10 +744,16 @@ const Payment = () => {
                           value={customerData.phone}
                           onChange={handleCustomerDataChange}
                           required
-                          className={`w-full pl-20 pr-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${formErrors.phone ? 'border-red-500 ring-red-500' : ''}`}
+                          className={`w-full pl-20 pr-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${
+                            formErrors.phone
+                              ? "border-red-500 ring-red-500"
+                              : ""
+                          }`}
                         />
                         {formErrors.phone && (
-                          <span className="text-xs text-red-500 mt-1 block">{formErrors.phone}</span>
+                          <span className="text-xs text-red-500 mt-1 block">
+                            {formErrors.phone}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -726,10 +772,16 @@ const Payment = () => {
                           value={customerData.document}
                           onChange={handleCustomerDataChange}
                           required
-                          className={`w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${formErrors.document ? 'border-red-500 ring-red-500' : ''}`}
+                          className={`w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${
+                            formErrors.document
+                              ? "border-red-500 ring-red-500"
+                              : ""
+                          }`}
                         />
                         {formErrors.document && (
-                          <span className="text-xs text-red-500 mt-1 block">{formErrors.document}</span>
+                          <span className="text-xs text-red-500 mt-1 block">
+                            {formErrors.document}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -748,10 +800,16 @@ const Payment = () => {
                           value={customerData.linkPerfil}
                           onChange={handleCustomerDataChange}
                           required
-                          className={`w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${formErrors.linkPerfil ? 'border-red-500 ring-red-500' : ''}`}
+                          className={`w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${
+                            formErrors.linkPerfil
+                              ? "border-red-500 ring-red-500"
+                              : ""
+                          }`}
                         />
                         {formErrors.linkPerfil && (
-                          <span className="text-xs text-red-500 mt-1 block">{formErrors.linkPerfil}</span>
+                          <span className="text-xs text-red-500 mt-1 block">
+                            {formErrors.linkPerfil}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -1138,7 +1196,9 @@ const Payment = () => {
                         id="terms"
                         checked={acceptTerms}
                         onChange={(e) => setAcceptTerms(e.target.checked)}
-                        className={`h-5 w-5 rounded border-2 border-blue-400 text-blue-600 focus:ring-blue-500 focus:ring-2 focus:ring-offset-2 ${formErrors.terms ? 'border-red-500 ring-red-500' : ''}`}
+                        className={`h-5 w-5 rounded border-2 border-blue-400 text-blue-600 focus:ring-blue-500 focus:ring-2 focus:ring-offset-2 ${
+                          formErrors.terms ? "border-red-500 ring-red-500" : ""
+                        }`}
                       />
                     </div>
                     <div className="flex-1">
