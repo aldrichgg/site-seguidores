@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getApiBase } from "@/lib/api_base";
 
 // shadcn/ui
@@ -44,20 +44,30 @@ const inferOrderTypeFromName = (name?: string): OrderType => {
   return "Seguidores";
 };
 
-const toBRLStringFromCents = (cents?: number) => {
-  const n = (cents ?? 0) / 100;
-  return n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
-
 const parseBRLToCents = (s: string) => {
   if (!s) return 0;
   const n = Number(s.replace(/\./g, "").replace(",", "."));
   return Number.isFinite(n) ? Math.round(n * 100) : 0;
 };
 
+const toBRLStringFromCents = (cents?: number) => {
+  const n = (cents ?? 0) / 100;
+  return n.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+// ------------------------
+
 const Orders: React.FC = () => {
   const [orders, setOrders] = useState<any[]>([]);
-  const [meta, setMeta] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
+  const [meta, setMeta] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+  });
   const [loading, setLoading] = useState(false);
 
   // filtros
@@ -73,7 +83,7 @@ const Orders: React.FC = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isStatusChanging, setIsStatusChanging] = useState(false);
 
-  // criar pedido (modal)
+  // criar
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newOrder, setNewOrder] = useState({
@@ -89,9 +99,10 @@ const Orders: React.FC = () => {
     status: "approved" as "approved" | "pending" | "cancelled",
     phone: "",
     serviceId: computeServiceId("Seguidores", "Instagram"),
+    famaId: "", // <<< novo campo (providerOrderId)
   });
 
-  // editar pedido (modal)
+  // editar
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [editOrder, setEditOrder] = useState<{
@@ -108,12 +119,18 @@ const Orders: React.FC = () => {
     phone: string;
     status: "approved" | "pending" | "cancelled";
     serviceId: number;
+    famaId: string;
   } | null>(null);
 
-  // excluir pedido (modal)
+  // excluir
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    label: string;
+  } | null>(null);
+
+  // ------------------------ helpers
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -138,7 +155,45 @@ const Orders: React.FC = () => {
     setCurrentPage(1);
   };
 
-  // Busca pedidos
+  const mapApiOrderToUi = (order: any) => {
+    const famaId =
+      order.order_id ??
+      order.provider?.orderId ??
+      order.metadata?.order_id ??
+      "";
+
+    return {
+      id: order.id,
+      order_id: famaId,
+      famaId,
+      status:
+        statusMap[order.status] || statusMap[order.statusGroup] || order.status,
+      statusGroup: order.statusGroup,
+      product: order.orderName,
+      customer: {
+        name:
+          order.customer?.fullName || order.customer?.firstName || order.email,
+        email: order.email,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+          order.customer?.fullName || order.customer?.firstName || order.email
+        )}&background=random`,
+        phone: order.metadata?.phone || "",
+      },
+      platform: order.platform || "Instagram",
+      quantity: order.quantity,
+      amount: (order.amount ?? 0) / 100,
+      date: order.createdAt
+        ? new Date(order.createdAt).toLocaleString("pt-BR")
+        : "",
+      instagramProfile: order.metadata?.link || "",
+      paymentMethod: order.metadata?.payment_id ? "PIX" : "",
+      raw: order,
+      paymentPlatform: order.paymentPlatform || "",
+    };
+  };
+
+  // ------------------------ fetch
+
   useEffect(() => {
     const fetchOrders = async () => {
       setLoading(true);
@@ -158,31 +213,11 @@ const Orders: React.FC = () => {
         if (!res.ok) throw new Error(`GET /orders ${res.status}`);
         const json = await res.json();
 
-        const mapped = (json.data || []).map((order: any) => ({
-          id: order.id,
-          status: statusMap[order.status] || statusMap[order.statusGroup] || order.status,
-          statusGroup: order.statusGroup,
-          product: order.orderName,
-          customer: {
-            name: order.customer?.fullName || order.customer?.firstName || order.email,
-            email: order.email,
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-              order.customer?.fullName || order.customer?.firstName || order.email
-            )}&background=random`,
-            username: order.customer?.fullName || order.customer?.firstName || order.email,
-            phone: order.metadata?.phone || "",
-          },
-          platform: order.platform || "Instagram",
-          quantity: order.quantity,
-          amount: (order.amount ?? 0) / 100,
-          date: order.createdAt ? new Date(order.createdAt).toLocaleString("pt-BR") : "",
-          instagramProfile: order.metadata?.link || "",
-          paymentMethod: order.metadata?.payment_id ? "PIX" : "",
-          raw: order,
-        }));
-
+        const mapped = (json.data || []).map(mapApiOrderToUi);
         setOrders(mapped);
-        setMeta(json.meta || { page: 1, limit: itemsPerPage, total: 0, totalPages: 1 });
+        setMeta(
+          json.meta || { page: 1, limit: itemsPerPage, total: 0, totalPages: 1 }
+        );
       } catch {
         setOrders([]);
         setMeta({ page: 1, limit: itemsPerPage, total: 0, totalPages: 1 });
@@ -192,13 +227,19 @@ const Orders: React.FC = () => {
     fetchOrders();
   }, [searchTerm, statusFilter, currentPage, itemsPerPage, startDate, endDate]);
 
+  // ------------------------ detalhes
+
   const handleViewDetails = (order: any) => {
     setSelectedOrder(order);
     setIsDetailsOpen(true);
   };
 
-  // Atualizar status via API (em vez de simular)
-  const handleChangeStatus = async (orderId: string, newStatusPtBR: "Completo" | "Pendente") => {
+  // ------------------------ status quick actions (PATCH)
+
+  const handleChangeStatus = async (
+    orderId: string,
+    newStatusPtBR: "Completo" | "Pendente"
+  ) => {
     const statusApi = newStatusPtBR === "Completo" ? "approved" : "pending";
     try {
       setIsStatusChanging(true);
@@ -209,21 +250,8 @@ const Orders: React.FC = () => {
       });
       if (!res.ok) throw new Error(`PATCH /orders/${orderId} ${res.status}`);
       const updated = await res.json();
-
       setOrders((prev) =>
-        prev.map((o) =>
-          o.id === orderId
-            ? {
-                ...o,
-                status: statusMap[updated.status] || statusMap[updated.statusGroup] || updated.status,
-                statusGroup: updated.statusGroup,
-                date: updated.createdAt ? new Date(updated.createdAt).toLocaleString("pt-BR") : o.date,
-                amount: (updated.amount ?? 0) / 100,
-                instagramProfile: updated.metadata?.link || "",
-                platform: updated.platform || o.platform,
-              }
-            : o
-        )
+        prev.map((o) => (o.id === orderId ? mapApiOrderToUi(updated) : o))
       );
     } catch {
       alert("Falha ao atualizar status.");
@@ -232,57 +260,36 @@ const Orders: React.FC = () => {
     }
   };
 
-  /** -------- CRIAR -------- */
+  // ------------------------ criar
+
   const handleCreateOrder = async () => {
     try {
       setCreating(true);
-
       const payload = {
         email: newOrder.email.trim().toLowerCase(),
         firstName: newOrder.firstName.trim(),
         lastName: newOrder.lastName.trim(),
         cpf: newOrder.cpf.trim(),
-        orderName: newOrder.orderType,
-        platform: newOrder.platform,
+        orderName: newOrder.orderType, // "Seguidores" | "Visualizações" | "Curtidas"
+        platform: newOrder.platform, // "Instagram" | "TikTok"
         quantity: Number(newOrder.quantity) || 0,
         amountCents: parseBRLToCents(newOrder.amountBRL),
         link: newOrder.link || undefined,
         status: newOrder.status, // "approved" | "pending" | "cancelled"
         phone: newOrder.phone || undefined,
         serviceId: newOrder.serviceId,
+        providerOrderId: newOrder.famaId || undefined, // <<< envia fama id
       };
-
       const res = await fetch(`${getApiBase()}/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
       if (!res.ok) throw new Error(`POST /orders ${res.status}`);
       const created = await res.json();
 
-      const mapped = {
-        id: created.id,
-        status: statusMap[created.status] || statusMap[created.statusGroup] || created.status,
-        statusGroup: created.statusGroup,
-        product: created.orderName,
-        customer: {
-          name: created.customer?.fullName || created.email,
-          email: created.email,
-          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-            created.customer?.fullName || created.email
-          )}&background=random`,
-          username: created.customer?.fullName || created.email,
-          phone: created.metadata?.phone || "",
-        },
-        platform: created.platform || "Instagram",
-        quantity: created.quantity,
-        amount: (created.amount ?? 0) / 100,
-        date: created.createdAt ? new Date(created.createdAt).toLocaleString("pt-BR") : "",
-        instagramProfile: created.metadata?.link || "",
-        paymentMethod: created.metadata?.payment_id ? "PIX" : "",
-      };
-
-      setOrders((prev) => [mapped, ...prev]);
+      setOrders((prev) => [mapApiOrderToUi(created), ...prev]);
       setMeta((m) => ({
         ...m,
         total: m.total + 1,
@@ -303,6 +310,7 @@ const Orders: React.FC = () => {
         status: "approved",
         phone: "",
         serviceId: computeServiceId("Seguidores", "Instagram"),
+        famaId: "",
       });
     } catch {
       alert("Falha ao criar pedido.");
@@ -311,17 +319,25 @@ const Orders: React.FC = () => {
     }
   };
 
-  /** -------- EDITAR -------- */
+  // ------------------------ editar
+
   const openEditModal = (order: any) => {
     const orderType = inferOrderTypeFromName(order.product);
-    const platform: Platform = (order.platform === "TikTok" ? "TikTok" : "Instagram") as Platform;
-
+    const platform: Platform =
+      order.platform === "TikTok" ? "TikTok" : "Instagram";
     setEditOrder({
       id: order.id,
-      email: order.customer?.email || order.email || "",
-      firstName: (order.customer?.name || "").split(" ")[0] || "",
-      lastName: (order.customer?.name || "").split(" ").slice(1).join(" ") || "",
-      cpf: order.raw?.metadata?.cpf || order.raw?.cpf || "",
+      email: order.customer?.email || order.raw?.email || "",
+      firstName:
+        (order.customer?.name || order.raw?.customer?.fullName || "").split(
+          " "
+        )[0] || "",
+      lastName:
+        (order.customer?.name || order.raw?.customer?.fullName || "")
+          .split(" ")
+          .slice(1)
+          .join(" ") || "",
+      cpf: order.raw?.cpf || "",
       orderType,
       platform,
       quantity: Number(order.quantity) || 0,
@@ -331,10 +347,12 @@ const Orders: React.FC = () => {
       status:
         order.raw?.status === "approved"
           ? "approved"
-          : order.raw?.status === "cancelled" || order.raw?.status === "canceled"
+          : order.raw?.status === "cancelled" ||
+            order.raw?.status === "canceled"
           ? "cancelled"
           : "pending",
       serviceId: computeServiceId(orderType, platform),
+      famaId: order.famaId || "",
     });
     setIsEditOpen(true);
   };
@@ -354,8 +372,9 @@ const Orders: React.FC = () => {
         amountCents: parseBRLToCents(editOrder.amountBRL),
         link: editOrder.link || null,
         phone: editOrder.phone || null,
-        status: editOrder.status, // "approved" | "pending" | "cancelled"
+        status: editOrder.status,
         serviceId: editOrder.serviceId,
+        providerOrderId: editOrder.famaId || null, // <<< atualiza fama id
       };
 
       const res = await fetch(`${getApiBase()}/orders/${editOrder.id}`, {
@@ -363,35 +382,13 @@ const Orders: React.FC = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error(`PATCH /orders/${editOrder.id} ${res.status}`);
+      if (!res.ok)
+        throw new Error(`PATCH /orders/${editOrder.id} ${res.status}`);
       const updated = await res.json();
 
       setOrders((prev) =>
-        prev.map((o) =>
-          o.id === editOrder.id
-            ? {
-                ...o,
-                product: updated.orderName,
-                platform: updated.platform || o.platform,
-                quantity: updated.quantity,
-                amount: (updated.amount ?? 0) / 100,
-                instagramProfile: updated.metadata?.link || "",
-                status: statusMap[updated.status] || statusMap[updated.statusGroup] || updated.status,
-                statusGroup: updated.statusGroup,
-                customer: {
-                  ...o.customer,
-                  name: updated.customer?.fullName || updated.email || o.customer.name,
-                  email: updated.email || o.customer.email,
-                  phone: updated.metadata?.phone || o.customer.phone,
-                  avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    updated.customer?.fullName || updated.email || o.customer.name
-                  )}&background=random`,
-                },
-              }
-            : o
-        )
+        prev.map((o) => (o.id === editOrder.id ? mapApiOrderToUi(updated) : o))
       );
-
       setIsEditOpen(false);
       setEditOrder(null);
     } catch {
@@ -401,7 +398,8 @@ const Orders: React.FC = () => {
     }
   };
 
-  /** -------- EXCLUIR -------- */
+  // ------------------------ excluir
+
   const openDeleteModal = (order: any) => {
     setDeleteTarget({ id: order.id, label: `${order.id} — ${order.product}` });
     setIsDeleteOpen(true);
@@ -414,14 +412,20 @@ const Orders: React.FC = () => {
       const res = await fetch(`${getApiBase()}/orders/${deleteTarget.id}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error(`DELETE /orders/${deleteTarget.id} ${res.status}`);
+      if (!res.ok)
+        throw new Error(`DELETE /orders/${deleteTarget.id} ${res.status}`);
 
       setOrders((prev) => prev.filter((o) => o.id !== deleteTarget.id));
       setMeta((m) => {
         const newTotal = Math.max(0, m.total - 1);
         const newTotalPages = Math.max(1, Math.ceil(newTotal / m.limit));
         const newPage = Math.min(m.page, newTotalPages);
-        return { ...m, total: newTotal, totalPages: newTotalPages, page: newPage };
+        return {
+          ...m,
+          total: newTotal,
+          totalPages: newTotalPages,
+          page: newPage,
+        };
       });
 
       setIsDeleteOpen(false);
@@ -433,6 +437,8 @@ const Orders: React.FC = () => {
     }
   };
 
+  // ------------------------ UI
+
   return (
     <div id="webcrumbs">
       <div className="w-full flex justify-center p-2 md:p-0">
@@ -440,19 +446,25 @@ const Orders: React.FC = () => {
           {/* Filtros */}
           <div className="mb-6 bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Filtros de Pedidos</h2>
+              <h2 className="text-lg font-bold text-gray-800">
+                Filtros de Pedidos
+              </h2>
               <button
                 className="flex items-center gap-1 text-primary-600 hover:text-primary-700 transition-colors"
                 onClick={clearFilters}
               >
-                <span className="material-symbols-outlined text-sm">refresh</span>
+                <span className="material-symbols-outlined text-sm">
+                  refresh
+                </span>
                 <span className="text-sm font-medium">Limpar Filtros</span>
               </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Data Inicial</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Data Inicial
+                </label>
                 <input
                   type="date"
                   className="w-full p-2.5 rounded-lg border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
@@ -462,7 +474,9 @@ const Orders: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Data Final</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Data Final
+                </label>
                 <input
                   type="date"
                   className="w-full p-2.5 rounded-lg border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
@@ -472,7 +486,9 @@ const Orders: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Status</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Status
+                </label>
                 <select
                   className="w-full p-2.5 rounded-lg border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
                   value={statusFilter}
@@ -489,7 +505,9 @@ const Orders: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Buscar</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Buscar
+                </label>
                 <input
                   type="text"
                   placeholder="Buscar por nome, email ou produto"
@@ -506,7 +524,9 @@ const Orders: React.FC = () => {
 
           {/* Header & paginação topo */}
           <div className="flex justify-between mt-4">
-            <div className="text-sm text-gray-500">Mostrando {meta.total} pedidos no total</div>
+            <div className="text-sm text-gray-500">
+              Mostrando {meta.total} pedidos no total
+            </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">Itens por página:</span>
               <UiSelect
@@ -533,21 +553,21 @@ const Orders: React.FC = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-0 p-4 md:p-5 border-b border-gray-100">
               <div>
-                <h2 className="text-lg font-bold text-gray-800">Lista de Pedidos</h2>
-                <p className="text-xs text-gray-500 mt-1">Clique em um pedido para ver seus detalhes</p>
+                <h2 className="text-lg font-bold text-gray-800">
+                  Lista de Pedidos
+                </h2>
+                <p className="text-xs text-gray-500 mt-1">
+                  Clique em um pedido para ver seus detalhes
+                </p>
               </div>
               <div className="flex gap-2">
                 <button
                   className="bg-primary-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-700"
                   onClick={() => setIsCreateOpen(true)}
                 >
-                  <span className="material-symbols-outlined text-gray-500">add</span>
-                </button>
-                <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                  <span className="material-symbols-outlined text-gray-500">file_download</span>
-                </button>
-                <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                  <span className="material-symbols-outlined text-gray-500">print</span>
+                  <span className="material-symbols-outlined text-gray-500">
+                    add
+                  </span>
                 </button>
               </div>
             </div>
@@ -556,38 +576,78 @@ const Orders: React.FC = () => {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="p-4 font-semibold text-gray-600 text-sm">ID</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Cliente</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Produto</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Plataforma</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Qtd</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Valor</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Data</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Status</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Ações</th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">
+                      ID
+                    </th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">
+                      Cliente
+                    </th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">
+                      Produto
+                    </th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">
+                      Plataforma
+                    </th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">
+                      Qtd
+                    </th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">
+                      Valor
+                    </th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">
+                      Data
+                    </th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">
+                      Status
+                    </th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">
+                      Ações
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={9} className="py-6 text-center text-gray-500">Carregando...</td>
+                      <td
+                        colSpan={9}
+                        className="py-6 text-center text-gray-500"
+                      >
+                        Carregando...
+                      </td>
                     </tr>
                   ) : orders.length > 0 ? (
                     orders.map((order: any) => (
                       <tr
                         key={order.id}
                         className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${
-                          selectedOrder && selectedOrder.id === order.id ? "bg-primary-50" : ""
+                          selectedOrder && selectedOrder.id === order.id
+                            ? "bg-primary-50"
+                            : ""
                         }`}
                         onClick={() => handleViewDetails(order)}
                       >
-                        <td className="p-4 text-gray-800 font-medium">{order.id}</td>
+                        <td className="p-4 text-gray-800 font-medium">
+                          {order.id}
+                        </td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
-                            <img src={order.customer.avatar} alt="Cliente" className="w-8 h-8 rounded-full" />
+                            <img
+                              src={order.customer.avatar}
+                              alt="Cliente"
+                              className="w-8 h-8 rounded-full"
+                            />
                             <div>
-                              <p className="text-gray-800">{order.customer.name}</p>
-                              <p className="text-xs text-gray-500">{order.customer.email}</p>
+                              <p className="text-gray-800">
+                                {order.customer.name}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {order.customer.email}
+                              </p>
+                              {order.famaId && (
+                                <p className="text-[11px] text-gray-400">
+                                  Fama ID: {order.famaId}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -595,54 +655,86 @@ const Orders: React.FC = () => {
                         <td className="p-4 text-gray-600">{order.platform}</td>
                         <td className="p-4 text-gray-600">{order.quantity}</td>
                         <td className="p-4 text-gray-800 font-medium">
-                          {order.amount?.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                          {order.amount?.toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          })}
                         </td>
                         <td className="p-4 text-gray-600">{order.date}</td>
                         <td className="p-4">
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                              order.status
+                            )}`}
+                          >
                             {order.status}
                           </span>
                         </td>
                         <td className="p-4">
-                          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                          <div
+                            className="flex gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <button
                               className="p-1.5 rounded hover:bg-gray-100 transition-colors group"
                               onClick={() => openEditModal(order)}
                             >
-                              <span className="material-symbols-outlined text-sm text-gray-500 group-hover:text-primary-600">edit</span>
+                              <span className="material-symbols-outlined text-sm text-gray-500 group-hover:text-primary-600">
+                                edit
+                              </span>
                             </button>
                             <button
                               className="p-1.5 rounded hover:bg-gray-100 transition-colors group"
                               onClick={() => handleViewDetails(order)}
                             >
-                              <span className="material-symbols-outlined text-sm text-gray-500 group-hover:text-primary-600">visibility</span>
+                              <span className="material-symbols-outlined text-sm text-gray-500 group-hover:text-primary-600">
+                                visibility
+                              </span>
                             </button>
                             <details className="relative">
                               <summary className="p-1.5 rounded hover:bg-gray-100 transition-colors cursor-pointer list-none group">
-                                <span className="material-symbols-outlined text-sm text-gray-500 group-hover:text-primary-600">expand_more</span>
+                                <span className="material-symbols-outlined text-sm text-gray-500 group-hover:text-primary-600">
+                                  expand_more
+                                </span>
                               </summary>
                               <div className="absolute right-0 mt-1 bg-white shadow-lg rounded-lg border border-gray-100 z-10 w-48 py-1">
                                 <button
                                   className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-                                  onClick={() => handleChangeStatus(order.id, "Completo")}
-                                  disabled={isStatusChanging || order.status === "Completo"}
+                                  onClick={() =>
+                                    handleChangeStatus(order.id, "Completo")
+                                  }
+                                  disabled={
+                                    isStatusChanging ||
+                                    order.status === "Completo"
+                                  }
                                 >
-                                  <span className="material-symbols-outlined text-sm">check_circle</span>
+                                  <span className="material-symbols-outlined text-sm">
+                                    check_circle
+                                  </span>
                                   Marcar Concluído
                                 </button>
                                 <button
                                   className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-                                  onClick={() => handleChangeStatus(order.id, "Pendente")}
-                                  disabled={isStatusChanging || order.status === "Pendente"}
+                                  onClick={() =>
+                                    handleChangeStatus(order.id, "Pendente")
+                                  }
+                                  disabled={
+                                    isStatusChanging ||
+                                    order.status === "Pendente"
+                                  }
                                 >
-                                  <span className="material-symbols-outlined text-sm">hourglass_empty</span>
+                                  <span className="material-symbols-outlined text-sm">
+                                    hourglass_empty
+                                  </span>
                                   Marcar Pendente
                                 </button>
                                 <button
                                   className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 text-red-500"
                                   onClick={() => openDeleteModal(order)}
                                 >
-                                  <span className="material-symbols-outlined text-sm">delete</span>
+                                  <span className="material-symbols-outlined text-sm">
+                                    delete
+                                  </span>
                                   Excluir
                                 </button>
                               </div>
@@ -653,7 +745,12 @@ const Orders: React.FC = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={9} className="py-6 text-center text-gray-500">Nenhum pedido encontrado.</td>
+                      <td
+                        colSpan={9}
+                        className="py-6 text-center text-gray-500"
+                      >
+                        Nenhum pedido encontrado.
+                      </td>
                     </tr>
                   )}
                 </tbody>
@@ -663,7 +760,8 @@ const Orders: React.FC = () => {
             {/* Paginação */}
             <div className="p-4 border-top border-gray-100 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0">
               <div className="text-sm text-gray-500">
-                Página {meta.page} de {meta.totalPages} | Total: {meta.total} pedidos
+                Página {meta.page} de {meta.totalPages} | Total: {meta.total}{" "}
+                pedidos
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -671,89 +769,143 @@ const Orders: React.FC = () => {
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={meta.page === 1}
                 >
-                  <span className="material-symbols-outlined text-gray-500">chevron_left</span>
+                  <span className="material-symbols-outlined text-gray-500">
+                    chevron_left
+                  </span>
                 </button>
                 <span className="w-9 h-9 rounded flex items-center justify-center bg-primary-600 text-white font-medium">
                   {meta.page}
                 </span>
                 <button
                   className="p-2 rounded hover:bg-gray-100 transition-colors"
-                  onClick={() => setCurrentPage((p) => Math.min(meta.totalPages, p + 1))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(meta.totalPages, p + 1))
+                  }
                   disabled={meta.page === meta.totalPages}
                 >
-                  <span className="material-symbols-outlined text-gray-500">chevron_right</span>
+                  <span className="material-symbols-outlined text-gray-500">
+                    chevron_right
+                  </span>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Modal: Detalhes do Pedido */}
+          {/* Modal: Detalhes */}
           <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
             <DialogContent className="sm:max-w-xl">
               <DialogHeader>
                 <DialogTitle>Detalhes do Pedido</DialogTitle>
-                <DialogDescription>Informações completas sobre o pedido.</DialogDescription>
+                <DialogDescription>
+                  Informações completas sobre o pedido.
+                </DialogDescription>
               </DialogHeader>
 
               {selectedOrder && (
                 <div className="grid gap-4 py-2">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">ID do Pedido</h3>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">
+                        ID do Pedido
+                      </h3>
                       <p className="font-semibold">{selectedOrder.id}</p>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">Data</h3>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">
+                        Fama ID
+                      </h3>
+                      <p className="font-semibold">
+                        {selectedOrder.famaId || "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">
+                        Data
+                      </h3>
                       <p>{selectedOrder.date}</p>
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Cliente</h3>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">
+                      Cliente
+                    </h3>
                     <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-md">
-                      <img className="h-10 w-10 rounded-full" src={selectedOrder.customer.avatar} />
+                      <img
+                        className="h-10 w-10 rounded-full"
+                        src={selectedOrder.customer.avatar}
+                      />
                       <div>
-                        <p className="font-medium">{selectedOrder.customer.name}</p>
-                        <p className="text-xs text-gray-500">{selectedOrder.customer.email}</p>
+                        <p className="font-medium">
+                          {selectedOrder.customer.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {selectedOrder.customer.email}
+                        </p>
                       </div>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">Produto</h3>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">
+                        Produto
+                      </h3>
                       <p>{selectedOrder.product}</p>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">Valor</h3>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">
+                        Valor
+                      </h3>
                       <p className="font-semibold">
-                        {selectedOrder.amount?.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        {selectedOrder.amount?.toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
                       </p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">Status</h3>
-                      <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedOrder.status)}`}>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">
+                        Status
+                      </h3>
+                      <span
+                        className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                          selectedOrder.status
+                        )}`}
+                      >
                         {selectedOrder.status}
                       </span>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">Método de Pagamento</h3>
-                      <p>{selectedOrder.paymentMethod}</p>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1">
+                        Plataforma
+                      </h3>
+                      <p>{selectedOrder.platform}</p>
                     </div>
                   </div>
-
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Perfil</h3>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">
+                      Local da venda
+                    </h3>
+                    <p>{selectedOrder.paymentPlatform || "-"}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">
+                      Perfil
+                    </h3>
                     <p>{selectedOrder.instagramProfile}</p>
                   </div>
                 </div>
               )}
 
               <DialogFooter>
-                <button className="px-4 py-2 rounded border" onClick={() => setIsDetailsOpen(false)}>
+                <button
+                  className="px-4 py-2 rounded border"
+                  onClick={() => setIsDetailsOpen(false)}
+                >
                   Fechar
                 </button>
               </DialogFooter>
@@ -765,7 +917,9 @@ const Orders: React.FC = () => {
             <DialogContent className="sm:max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Novo Pedido (manual)</DialogTitle>
-                <DialogDescription>Crie um pedido diretamente no sistema.</DialogDescription>
+                <DialogDescription>
+                  Crie um pedido diretamente no sistema.
+                </DialogDescription>
               </DialogHeader>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -774,7 +928,9 @@ const Orders: React.FC = () => {
                   <input
                     className="w-full p-2 rounded border"
                     value={newOrder.email}
-                    onChange={(e) => setNewOrder((o) => ({ ...o, email: e.target.value }))}
+                    onChange={(e) =>
+                      setNewOrder((o) => ({ ...o, email: e.target.value }))
+                    }
                   />
                 </div>
                 <div>
@@ -782,7 +938,9 @@ const Orders: React.FC = () => {
                   <input
                     className="w-full p-2 rounded border"
                     value={newOrder.cpf}
-                    onChange={(e) => setNewOrder((o) => ({ ...o, cpf: e.target.value }))}
+                    onChange={(e) =>
+                      setNewOrder((o) => ({ ...o, cpf: e.target.value }))
+                    }
                   />
                 </div>
 
@@ -791,7 +949,9 @@ const Orders: React.FC = () => {
                   <input
                     className="w-full p-2 rounded border"
                     value={newOrder.firstName}
-                    onChange={(e) => setNewOrder((o) => ({ ...o, firstName: e.target.value }))}
+                    onChange={(e) =>
+                      setNewOrder((o) => ({ ...o, firstName: e.target.value }))
+                    }
                   />
                 </div>
                 <div>
@@ -799,12 +959,16 @@ const Orders: React.FC = () => {
                   <input
                     className="w-full p-2 rounded border"
                     value={newOrder.lastName}
-                    onChange={(e) => setNewOrder((o) => ({ ...o, lastName: e.target.value }))}
+                    onChange={(e) =>
+                      setNewOrder((o) => ({ ...o, lastName: e.target.value }))
+                    }
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-1">Produto / Plano *</label>
+                  <label className="block text-sm mb-1">
+                    Produto / Plano *
+                  </label>
                   <select
                     className="w-full p-2 rounded border"
                     value={newOrder.orderType}
@@ -848,7 +1012,12 @@ const Orders: React.FC = () => {
                     type="number"
                     className="w-full p-2 rounded border"
                     value={newOrder.quantity}
-                    onChange={(e) => setNewOrder((o) => ({ ...o, quantity: Number(e.target.value) }))}
+                    onChange={(e) =>
+                      setNewOrder((o) => ({
+                        ...o,
+                        quantity: Number(e.target.value),
+                      }))
+                    }
                   />
                 </div>
 
@@ -858,16 +1027,22 @@ const Orders: React.FC = () => {
                     placeholder="0,00"
                     className="w-full p-2 rounded border"
                     value={newOrder.amountBRL}
-                    onChange={(e) => setNewOrder((o) => ({ ...o, amountBRL: e.target.value }))}
+                    onChange={(e) =>
+                      setNewOrder((o) => ({ ...o, amountBRL: e.target.value }))
+                    }
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm mb-1">Link (perfil/post)</label>
+                  <label className="block text-sm mb-1">
+                    Link (perfil/post)
+                  </label>
                   <input
                     className="w-full p-2 rounded border"
                     value={newOrder.link}
-                    onChange={(e) => setNewOrder((o) => ({ ...o, link: e.target.value }))}
+                    onChange={(e) =>
+                      setNewOrder((o) => ({ ...o, link: e.target.value }))
+                    }
                   />
                 </div>
 
@@ -876,15 +1051,33 @@ const Orders: React.FC = () => {
                   <input
                     className="w-full p-2 rounded border"
                     value={newOrder.phone}
-                    onChange={(e) => setNewOrder((o) => ({ ...o, phone: e.target.value }))}
+                    onChange={(e) =>
+                      setNewOrder((o) => ({ ...o, phone: e.target.value }))
+                    }
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-1">Service ID (automático)</label>
+                  <label className="block text-sm mb-1">
+                    Service ID (auto)
+                  </label>
                   <div className="w-full p-2 rounded border bg-gray-50 text-gray-700">
                     {newOrder.serviceId}
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-1">
+                    Fama ID (opcional)
+                  </label>
+                  <input
+                    className="w-full p-2 rounded border"
+                    placeholder="ex.: 123456789"
+                    value={newOrder.famaId}
+                    onChange={(e) =>
+                      setNewOrder((o) => ({ ...o, famaId: e.target.value }))
+                    }
+                  />
                 </div>
 
                 <div>
@@ -892,7 +1085,12 @@ const Orders: React.FC = () => {
                   <select
                     className="w-full p-2 rounded border"
                     value={newOrder.status}
-                    onChange={(e) => setNewOrder((o) => ({ ...o, status: e.target.value as any }))}
+                    onChange={(e) =>
+                      setNewOrder((o) => ({
+                        ...o,
+                        status: e.target.value as any,
+                      }))
+                    }
                   >
                     <option value="approved">Aprovado</option>
                     <option value="pending">Pendente</option>
@@ -902,11 +1100,14 @@ const Orders: React.FC = () => {
               </div>
 
               <DialogFooter>
-                <button className="px-4 py-2 rounded border" onClick={() => setIsCreateOpen(false)}>
+                <button
+                  className="px-4 py-2 rounded border"
+                  onClick={() => setIsCreateOpen(false)}
+                >
                   Cancelar
                 </button>
                 <button
-                  className="px-4 py-2 rounded bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white"
+                  className="px-4 py-2 rounded bg-primary-600 hover:bg-primary-700 disabled:opacity-50"
                   onClick={handleCreateOrder}
                   disabled={creating}
                 >
@@ -918,10 +1119,12 @@ const Orders: React.FC = () => {
 
           {/* Modal: Editar Pedido */}
           <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-            <DialogContent className="sm:max-w-2xl">
+            <DialogContent className="sm-max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Editar Pedido</DialogTitle>
-                <DialogDescription>Atualize os dados do pedido selecionado.</DialogDescription>
+                <DialogDescription>
+                  Atualize os dados do pedido selecionado.
+                </DialogDescription>
               </DialogHeader>
 
               {editOrder && (
@@ -931,7 +1134,9 @@ const Orders: React.FC = () => {
                     <input
                       className="w-full p-2 rounded border"
                       value={editOrder.email}
-                      onChange={(e) => setEditOrder({ ...editOrder, email: e.target.value })}
+                      onChange={(e) =>
+                        setEditOrder({ ...editOrder, email: e.target.value })
+                      }
                     />
                   </div>
                   <div>
@@ -939,7 +1144,9 @@ const Orders: React.FC = () => {
                     <input
                       className="w-full p-2 rounded border"
                       value={editOrder.cpf}
-                      onChange={(e) => setEditOrder({ ...editOrder, cpf: e.target.value })}
+                      onChange={(e) =>
+                        setEditOrder({ ...editOrder, cpf: e.target.value })
+                      }
                     />
                   </div>
 
@@ -948,7 +1155,12 @@ const Orders: React.FC = () => {
                     <input
                       className="w-full p-2 rounded border"
                       value={editOrder.firstName}
-                      onChange={(e) => setEditOrder({ ...editOrder, firstName: e.target.value })}
+                      onChange={(e) =>
+                        setEditOrder({
+                          ...editOrder,
+                          firstName: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div>
@@ -956,12 +1168,16 @@ const Orders: React.FC = () => {
                     <input
                       className="w-full p-2 rounded border"
                       value={editOrder.lastName}
-                      onChange={(e) => setEditOrder({ ...editOrder, lastName: e.target.value })}
+                      onChange={(e) =>
+                        setEditOrder({ ...editOrder, lastName: e.target.value })
+                      }
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm mb-1">Produto / Plano *</label>
+                    <label className="block text-sm mb-1">
+                      Produto / Plano *
+                    </label>
                     <select
                       className="w-full p-2 rounded border"
                       value={editOrder.orderType}
@@ -969,7 +1185,14 @@ const Orders: React.FC = () => {
                         const orderType = e.target.value as OrderType;
                         setEditOrder((o) =>
                           o
-                            ? { ...o, orderType, serviceId: computeServiceId(orderType, o.platform) }
+                            ? {
+                                ...o,
+                                orderType,
+                                serviceId: computeServiceId(
+                                  orderType,
+                                  o.platform
+                                ),
+                              }
                             : o
                         );
                       }}
@@ -988,7 +1211,16 @@ const Orders: React.FC = () => {
                       onChange={(e) => {
                         const platform = e.target.value as Platform;
                         setEditOrder((o) =>
-                          o ? { ...o, platform, serviceId: computeServiceId(o.orderType, platform) } : o
+                          o
+                            ? {
+                                ...o,
+                                platform,
+                                serviceId: computeServiceId(
+                                  o.orderType,
+                                  platform
+                                ),
+                              }
+                            : o
                         );
                       }}
                     >
@@ -1003,7 +1235,12 @@ const Orders: React.FC = () => {
                       type="number"
                       className="w-full p-2 rounded border"
                       value={editOrder.quantity}
-                      onChange={(e) => setEditOrder({ ...editOrder, quantity: Number(e.target.value) })}
+                      onChange={(e) =>
+                        setEditOrder({
+                          ...editOrder,
+                          quantity: Number(e.target.value),
+                        })
+                      }
                     />
                   </div>
 
@@ -1012,16 +1249,25 @@ const Orders: React.FC = () => {
                     <input
                       className="w-full p-2 rounded border"
                       value={editOrder.amountBRL}
-                      onChange={(e) => setEditOrder({ ...editOrder, amountBRL: e.target.value })}
+                      onChange={(e) =>
+                        setEditOrder({
+                          ...editOrder,
+                          amountBRL: e.target.value,
+                        })
+                      }
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm mb-1">Link (perfil/post)</label>
+                    <label className="block text-sm mb-1">
+                      Link (perfil/post)
+                    </label>
                     <input
                       className="w-full p-2 rounded border"
                       value={editOrder.link}
-                      onChange={(e) => setEditOrder({ ...editOrder, link: e.target.value })}
+                      onChange={(e) =>
+                        setEditOrder({ ...editOrder, link: e.target.value })
+                      }
                     />
                   </div>
 
@@ -1030,15 +1276,30 @@ const Orders: React.FC = () => {
                     <input
                       className="w-full p-2 rounded border"
                       value={editOrder.phone}
-                      onChange={(e) => setEditOrder({ ...editOrder, phone: e.target.value })}
+                      onChange={(e) =>
+                        setEditOrder({ ...editOrder, phone: e.target.value })
+                      }
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm mb-1">Service ID (automático)</label>
+                    <label className="block text-sm mb-1">
+                      Service ID (auto)
+                    </label>
                     <div className="w-full p-2 rounded border bg-gray-50 text-gray-700">
                       {editOrder.serviceId}
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">Fama ID</label>
+                    <input
+                      className="w-full p-2 rounded border"
+                      value={editOrder.famaId}
+                      onChange={(e) =>
+                        setEditOrder({ ...editOrder, famaId: e.target.value })
+                      }
+                    />
                   </div>
 
                   <div>
@@ -1046,7 +1307,12 @@ const Orders: React.FC = () => {
                     <select
                       className="w-full p-2 rounded border"
                       value={editOrder.status}
-                      onChange={(e) => setEditOrder({ ...editOrder, status: e.target.value as any })}
+                      onChange={(e) =>
+                        setEditOrder({
+                          ...editOrder,
+                          status: e.target.value as any,
+                        })
+                      }
                     >
                       <option value="approved">Aprovado</option>
                       <option value="pending">Pendente</option>
@@ -1057,7 +1323,10 @@ const Orders: React.FC = () => {
               )}
 
               <DialogFooter>
-                <button className="px-4 py-2 rounded border" onClick={() => setIsEditOpen(false)}>
+                <button
+                  className="px-4 py-2 rounded border"
+                  onClick={() => setIsEditOpen(false)}
+                >
                   Cancelar
                 </button>
                 <button
@@ -1077,14 +1346,18 @@ const Orders: React.FC = () => {
               <DialogHeader>
                 <DialogTitle>Excluir pedido</DialogTitle>
                 <DialogDescription>
-                  Tem certeza que deseja excluir este pedido? Essa ação não pode ser desfeita.
+                  Tem certeza que deseja excluir este pedido? Essa ação não pode
+                  ser desfeita.
                 </DialogDescription>
               </DialogHeader>
               <div className="p-3 rounded bg-red-50 text-red-700 text-sm">
                 {deleteTarget?.label}
               </div>
               <DialogFooter>
-                <button className="px-4 py-2 rounded border" onClick={() => setIsDeleteOpen(false)}>
+                <button
+                  className="px-4 py-2 rounded border"
+                  onClick={() => setIsDeleteOpen(false)}
+                >
                   Cancelar
                 </button>
                 <button

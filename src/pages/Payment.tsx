@@ -60,6 +60,7 @@ interface OrderDetailsType {
   billingCycle?: string;
   serviceId: number;
   platform: string;
+  paymentPlatform: string
 }
 
 // Interface para os dados do cliente
@@ -106,6 +107,7 @@ const Payment = () => {
     savePercentage: 11,
     serviceId: 0,
     platform: "Instagram",
+    paymentPlatform: 'Site impulsegram',
   });
   const [addExtraOffer, setAddExtraOffer] = useState<boolean>(false);
   const [orderBumps, setOrderBumps] = useState({
@@ -225,7 +227,6 @@ const Payment = () => {
     setIsProcessing(true);
 
     try {
-      console.log("Valor:", totalAmount);
       // você já tem:
       const priceWithFee = Number((totalAmount * 1.01).toFixed(2));
 
@@ -289,7 +290,7 @@ const Payment = () => {
         paymentMethod: "pix",
         value: valueCents,
         description,
-        postbackUrl: "https://new-back-end-phi.vercel.app/payments/webhook", // ou deixe para o backend injetar
+        postbackUrl: "https://new-back-end-phi.vercel.app/payments/webhook",
         customer: {
           name: customerData.name,
           email: customerData.email,
@@ -311,8 +312,8 @@ const Payment = () => {
           celular: customerData.phone.replace(/\D/g, ""),
           platform: orderDetails.platform,
         },
+        paymentPlatform: 'site'
       };
-      console.log("Enviando para o backend:", body);
       const response = await fetch(`${URL}/payments/create`, {
         method: "POST",
         headers: {

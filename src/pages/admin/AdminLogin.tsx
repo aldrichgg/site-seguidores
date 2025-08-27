@@ -3,13 +3,21 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LockIcon, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useTheme } from "@/components/ui/theme-provider";
 import axios from "axios";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { getApiBase } from "@/lib/api_base";
 
 const AdminLogin = () => {
   const { theme } = useTheme();
@@ -20,7 +28,7 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const { login } = useAuth();
-
+  const URL = getApiBase();
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     // Verificar se os campos estão preenchidos
@@ -30,7 +38,7 @@ const AdminLogin = () => {
     }
 
     try {
-      const response = await axios.post(`http://localhost:3000/auth/login`, {
+      const response = await axios.post(`${URL}/auth/login`, {
         email,
         password,
       });
@@ -46,7 +54,7 @@ const AdminLogin = () => {
     } catch (error: any) {
       const status = error.response?.status;
       const message = error.response?.data?.message || "Erro ao fazer login";
-    
+
       if (status === 401) {
         toast({
           title: "Credenciais inválidas",
@@ -83,13 +91,11 @@ const AdminLogin = () => {
             Painel de Gerenciamento
           </p>
         </div>
-        
+
         <Card className="border-slate-200 dark:border-slate-800 shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold">Entrar</CardTitle>
-            <CardDescription>
-              Acesse o painel administrativo
-            </CardDescription>
+            <CardDescription>Acesse o painel administrativo</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin}>
@@ -139,16 +145,28 @@ const AdminLogin = () => {
                     </Button>
                   </div>
                 </div>
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isLoading}
-                >
+                <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? (
                     <>
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
                       </svg>
                       Entrando...
                     </>
@@ -170,11 +188,12 @@ const AdminLogin = () => {
         </Card>
 
         <p className="text-xs text-center text-muted-foreground mt-6">
-          © {new Date().getFullYear()} ImpulseGram. Todos os direitos reservados.
+          © {new Date().getFullYear()} ImpulseGram. Todos os direitos
+          reservados.
         </p>
       </div>
     </div>
   );
 };
 
-export default AdminLogin; 
+export default AdminLogin;

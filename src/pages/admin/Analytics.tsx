@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { 
   Card, 
   CardContent, 
@@ -7,7 +7,7 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { 
-  BarChart, 
+  BarChart as RBarChart,
   Bar, 
   XAxis, 
   YAxis, 
@@ -57,215 +57,164 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { getApiBase } from "@/lib/api_base";
 
-// Dados de exemplo para os gráficos
-const salesData = [
-  { name: "Jan", Instagram: 4000, Facebook: 2400, YouTube: 1200, TikTok: 800 },
-  { name: "Fev", Instagram: 3000, Facebook: 1398, YouTube: 2200, TikTok: 900 },
-  { name: "Mar", Instagram: 2000, Facebook: 9800, YouTube: 2290, TikTok: 1000 },
-  { name: "Abr", Instagram: 2780, Facebook: 3908, YouTube: 1390, TikTok: 1200 },
-  { name: "Mai", Instagram: 1890, Facebook: 4800, YouTube: 2490, TikTok: 1100 },
-  { name: "Jun", Instagram: 2390, Facebook: 3800, YouTube: 3490, TikTok: 1700 },
-  { name: "Jul", Instagram: 3490, Facebook: 4300, YouTube: 3000, TikTok: 2100 },
-];
+// ====== Tipos que refletem o retorno do backend ======
 
-const platformDistribution = [
-  { name: "Instagram", value: 400 },
-  { name: "Facebook", value: 300 },
-  { name: "YouTube", value: 200 },
-  { name: "TikTok", value: 100 },
-];
+type PeriodUI = "7dias" | "30dias" | "90dias";
 
-const serviceDistribution = [
-  { name: "Seguidores", value: 400 },
-  { name: "Curtidas", value: 300 },
-  { name: "Visualizações", value: 300 },
-  { name: "Inscritos", value: 200 },
-];
+type SalesSourceKey = 'site' | 'chatbot' | 'manual' | 'unknown';
 
-const COLORS = {
-  Instagram: "#E1306C",
-  Facebook: "#1877F2", 
-  YouTube: "#FF0000", 
-  TikTok: "#000000",
-  Seguidores: "#8884d8",
-  Curtidas: "#82ca9d",
-  Visualizações: "#ffc658",
-  Inscritos: "#ff8042"
+type OverviewResponse = {
+  period: 'week' | 'month' | 'year';
+  range: { start: string; end: string };
+  kpis: {
+    totalSales: number;        // centavos
+    ordersNew: number;
+    pendingOrders: number;
+    completedOrders: number;
+  };
+  chart: {
+    categories: string[];      // YYYY-MM-DD
+    sales: number[];           // centavos por dia (aprovados)
+    orders: number[];          // pedidos por dia (todos os status)
+  };
+  statusDonut: { labels: ["Pago", "Pendente", "Cancelado"]; series: [number, number, number] };
+  topChannels: { name: string; count: number; sales: number }[]; // sales em centavos
+  salesSources: Record<SalesSourceKey, { orders: number; sales: number }>; // 🆕
+  salesSourcesPct: {
+    orders: Record<SalesSourceKey, number>;
+    sales: Record<SalesSourceKey, number>;
+  };
+  metrics: {
+    conversionRate: number;    // 0..1
+    avgTicket: number;         // centavos
+    growthMoM: number;
+    retentionRate: number;
+  };
 };
 
-// Dados de tendência diária
-const dailyTrendData = [
-  { name: "1", value: 400 },
-  { name: "2", value: 300 },
-  { name: "3", value: 200 },
-  { name: "4", value: 278 },
-  { name: "5", value: 189 },
-  { name: "6", value: 239 },
-  { name: "7", value: 349 },
-];
+// ====== Helpers ======
+const formatBRL = (cents: number) => (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const centsToNumberBRL = (cents: number) => cents / 100;
+const numberToBRL = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-const Analytics = () => {
-  const [timePeriod, setTimePeriod] = useState("7dias");
+const COLORS: Record<string, string> = {
+  Instagram: "#E1306C",
+  Facebook: "#1877F2",
+  YouTube: "#FF0000",
+  TikTok: "#000000",
+  site: "#2563eb",        // azul
+  chatbot: "#16a34a",     // verde
+  manual: "#9333ea",      // roxo
+  unknown: "#9ca3af",     // cinza
+};
+
+const periodMap: Record<PeriodUI, OverviewResponse['period']> = {
+  "7dias": "week",
+  "30dias": "month",
+  "90dias": "year",
+};
+
+const Analytics: React.FC = () => {
+  const [timePeriod, setTimePeriod] = useState<PeriodUI>("7dias");
   const [activeTab, setActiveTab] = useState("overview");
-  const [selectedPlatform, setSelectedPlatform] = useState("");
-  const [selectedService, setSelectedService] = useState("");
+  const [selectedPlatform, setSelectedPlatform] = useState<string>("");
+  const [selectedService, setSelectedService] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [overview, setOverview] = useState<OverviewResponse | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [sourceMetric, setSourceMetric] = useState<'orders' | 'sales'>('orders');
 
-  // Função para exportar relatório
-  const exportReport = () => {
-    /* console.log("Exportando relatório de analytics"); */
-  };
+  // ====== Fetch dos dados reais ======
+  useEffect(() => {
+    const ctrl = new AbortController();
+    const run = async () => {
+      try {
+        setLoading(true); setErr(null);
+        const p = periodMap[timePeriod];
+        const res = await fetch(`${getApiBase()}/analytics?period=${p}`, { signal: ctrl.signal });
+        if (!res.ok) throw new Error(`GET /analytics ${res.status}`);
+        const json = await res.json();
+        setOverview(json as OverviewResponse);
+      } catch (e: any) {
+        if (e.name !== 'AbortError') setErr(e.message || 'Erro ao carregar analytics');
+      } finally {
+        setLoading(false);
+      }
+    };
+    run();
+    return () => ctrl.abort();
+  }, [timePeriod]);
 
-  // Dados específicos por plataforma
-  const platformDetails = {
-    Instagram: {
-      followers: 1500000,
-      growth: 12.5,
-      engagement: 4.8,
-      avgOrderValue: 85.5,
-      topServices: ["Seguidores", "Curtidas", "Stories Views"],
-      trend: [1200, 1450, 1560, 1490, 1580, 1620, 1500],
-      color: COLORS.Instagram,
-    },
-    Facebook: {
-      followers: 950000,
-      growth: 5.2,
-      engagement: 2.9,
-      avgOrderValue: 72.8,
-      topServices: ["Curtidas", "Compartilhamentos", "Comentários"],
-      trend: [850, 890, 920, 980, 930, 980, 950],
-      color: COLORS.Facebook,
-    },
-    YouTube: {
-      followers: 620000,
-      growth: 18.7,
-      engagement: 6.3,
-      avgOrderValue: 115.2,
-      topServices: ["Inscritos", "Visualizações", "Comentários"],
-      trend: [540, 580, 610, 650, 680, 710, 620],
-      color: COLORS.YouTube,
-    },
-    TikTok: {
-      followers: 2200000,
-      growth: 24.1,
-      engagement: 7.5,
-      avgOrderValue: 65.3,
-      topServices: ["Seguidores", "Curtidas", "Compartilhamentos"],
-      trend: [1800, 1950, 2050, 2150, 2180, 2240, 2200],
-      color: COLORS.TikTok,
-    }
-  };
+  // ====== Dados derivados para gráficos ======
+  const dailyData = useMemo(() => {
+    if (!overview) return [] as { name: string; Vendas: number; Pedidos: number }[];
+    return overview.chart.categories.map((name, i) => ({
+      name,
+      Vendas: centsToNumberBRL(overview.chart.sales[i] || 0),
+      Pedidos: overview.chart.orders[i] || 0,
+    }));
+  }, [overview]);
 
-  // Dados específicos por serviço
-  const serviceDetails = {
-    Seguidores: {
-      totalSales: 248500,
-      growth: 18.7,
-      avgPrice: 97.5,
-      platforms: [
-        { name: "Instagram", value: 45 },
-        { name: "TikTok", value: 30 },
-        { name: "Facebook", value: 15 },
-        { name: "YouTube", value: 10 }
-      ],
-      trend: [18500, 19200, 20100, 20800, 21500, 22300, 23200],
-      color: COLORS.Seguidores,
-    },
-    Curtidas: {
-      totalSales: 175800,
-      growth: 12.3,
-      avgPrice: 65.2,
-      platforms: [
-        { name: "Instagram", value: 50 },
-        { name: "Facebook", value: 25 },
-        { name: "TikTok", value: 20 },
-        { name: "YouTube", value: 5 }
-      ],
-      trend: [14200, 14800, 15300, 15900, 16400, 17000, 17500],
-      color: COLORS.Curtidas,
-    },
-    Visualizações: {
-      totalSales: 152600,
-      growth: 24.5,
-      avgPrice: 45.8,
-      platforms: [
-        { name: "YouTube", value: 60 },
-        { name: "TikTok", value: 25 },
-        { name: "Instagram", value: 10 },
-        { name: "Facebook", value: 5 }
-      ],
-      trend: [11800, 12500, 13200, 13800, 14500, 15100, 15800],
-      color: COLORS.Visualizações,
-    },
-    Inscritos: {
-      totalSales: 98400,
-      growth: 15.8,
-      avgPrice: 120.3,
-      platforms: [
-        { name: "YouTube", value: 75 },
-        { name: "TikTok", value: 15 },
-        { name: "Instagram", value: 5 },
-        { name: "Facebook", value: 5 }
-      ],
-      trend: [8100, 8500, 8900, 9300, 9700, 10100, 10500],
-      color: COLORS.Inscritos,
-    }
-  };
+  const platformDistribution = useMemo(() => {
+    if (!overview) return [] as { name: string; value: number }[];
+    // Usa contagem de pedidos por plataforma
+    return overview.topChannels.map(ch => ({ name: ch.name, value: ch.count }));
+  }, [overview]);
 
-  // Formatar número com separador de milhares
-  const formatNumber = (num) => {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  };
+  const salesSourcesDist = useMemo(() => {
+    if (!overview) return [] as { name: string; value: number; key: SalesSourceKey }[];
+    const src = overview.salesSources;
+    return ([
+      { key: 'site', name: 'Site', value: sourceMetric === 'orders' ? src.site.orders : centsToNumberBRL(src.site.sales) },
+      { key: 'chatbot', name: 'Chatbot', value: sourceMetric === 'orders' ? src.chatbot.orders : centsToNumberBRL(src.chatbot.sales) },
+      { key: 'manual', name: 'Manual', value: sourceMetric === 'orders' ? src.manual.orders : centsToNumberBRL(src.manual.sales) },
+      { key: 'unknown', name: 'Desconhecido', value: sourceMetric === 'orders' ? src.unknown.orders : centsToNumberBRL(src.unknown.sales) },
+    ]);
+  }, [overview, sourceMetric]);
 
-  // Selecionar uma plataforma para visualização detalhada
-  const handleSelectPlatform = (platform) => {
-    setSelectedPlatform(platform);
-    setActiveTab("platforms");
-  };
+  const totalSalesBRL = overview ? numberToBRL(centsToNumberBRL(overview.kpis.totalSales)) : 'R$ 0,00';
+  const totalOrders = overview?.kpis.ordersNew ?? 0;
+  const completedOrders = overview?.kpis.completedOrders ?? 0;
+  const conversionPct = overview ? Math.round(overview.metrics.conversionRate * 1000) / 10 : 0; // 1 casa
+  const avgTicketBRL = overview ? numberToBRL(centsToNumberBRL(overview.metrics.avgTicket)) : 'R$ 0,00';
 
-  // Resetar seleção de plataforma
-  const resetPlatformSelection = () => {
-    setSelectedPlatform("");
-  };
-
-  // Selecionar um serviço para visualização detalhada
-  const handleSelectService = (service) => {
-    setSelectedService(service);
-    setActiveTab("services");
-  };
-
-  // Resetar seleção de serviço
-  const resetServiceSelection = () => {
-    setSelectedService("");
-  };
+  // Handlers utilitários existentes
+  const formatNumber = (num: number | string) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  const handleSelectPlatform = (platform: string) => { setSelectedPlatform(platform); setActiveTab("platforms"); };
+  const resetPlatformSelection = () => setSelectedPlatform("");
+  const handleSelectService = (service: string) => { setSelectedService(service); setActiveTab("services"); };
+  const resetServiceSelection = () => setSelectedService("");
+  const exportReport = () => {};
 
   return (
     <div className="space-y-8">
-      {/* Cabeçalho com Visual Aprimorado */}
+      {/* Cabeçalho */}
       <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-xl p-6 shadow-sm border border-primary-100">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
+          <div>
             <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-primary-800">
               <BarChart2 className="h-6 w-6" />
               Analytics
             </h1>
             <p className="text-primary-700 mt-1 text-sm">Análise detalhada de desempenho e vendas</p>
-        </div>
+          </div>
           <div className="flex flex-wrap items-center gap-3">
             <Badge variant="outline" className="bg-white shadow-sm border-primary-200 py-1.5 px-3 flex items-center gap-1.5">
               <RefreshCcw className="h-3.5 w-3.5 text-primary-600" />
-              <span className="text-xs font-medium">Atualizado: 5 min atrás</span>
+              <span className="text-xs font-medium">{loading ? 'Atualizando…' : 'Atualizado agora'}</span>
             </Badge>
-          <Select value={timePeriod} onValueChange={setTimePeriod}>
+            <Select value={timePeriod} onValueChange={(v: PeriodUI) => setTimePeriod(v)}>
               <SelectTrigger className="w-[180px] bg-white border-primary-200 shadow-sm">
-              <SelectValue placeholder="Período" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7dias">Últimos 7 dias</SelectItem>
-              <SelectItem value="30dias">Últimos 30 dias</SelectItem>
-              <SelectItem value="90dias">Últimos 90 dias</SelectItem>
-            </SelectContent>
-          </Select>
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7dias">Últimos 7 dias</SelectItem>
+                <SelectItem value="30dias">Últimos 30 dias</SelectItem>
+                <SelectItem value="90dias">Últimos 90 dias</SelectItem>
+              </SelectContent>
+            </Select>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="bg-white border-primary-200 shadow-sm">
@@ -292,14 +241,17 @@ const Analytics = () => {
               </DropdownMenuContent>
             </DropdownMenu>
             <Button className="bg-primary-600 hover:bg-primary-700 shadow-md" onClick={exportReport}>
-            <Download className="mr-2 h-4 w-4" />
+              <Download className="mr-2 h-4 w-4" />
               Exportar
-          </Button>
+            </Button>
           </div>
         </div>
+        {err && (
+          <div className="mt-3 text-sm text-red-600">{err}</div>
+        )}
       </div>
 
-      {/* Tabs de Navegação */}
+      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid grid-cols-3 mb-8">
           <TabsTrigger value="overview" className="data-[state=active]:bg-primary-50 data-[state=active]:text-primary-800">
@@ -314,7 +266,7 @@ const Analytics = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          {/* Cartões de Métricas com Design Aprimorado */}
+          {/* KPIs com dados reais */}
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <Card className="rounded-xl overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow">
               <div className="absolute top-0 right-0 h-1 w-full bg-primary-500"></div>
@@ -325,18 +277,16 @@ const Analytics = () => {
                   </div>
                   <div className="flex items-center gap-1 text-green-500 text-xs font-medium bg-green-50 px-2 py-1 rounded-full">
                     <ArrowUpRight className="w-3 h-3" />
-                    <span>12%</span>
+                    <span>--</span>
                   </div>
                 </div>
-                <h3 className="text-2xl font-bold mt-1">R$ 42.580,50</h3>
-                <p className="text-sm font-medium text-gray-500 mt-1">
-                  Receita Total
-                </p>
+                <h3 className="text-2xl font-bold mt-1">{totalSalesBRL}</h3>
+                <p className="text-sm font-medium text-gray-500 mt-1">Receita Total</p>
                 <div className="mt-3 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
                   <div className="h-full bg-primary-500 rounded-full" style={{ width: '75%' }}></div>
-            </div>
-          </CardContent>
-        </Card>
+                </div>
+              </CardContent>
+            </Card>
 
             <Card className="rounded-xl overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow">
               <div className="absolute top-0 right-0 h-1 w-full bg-blue-500"></div>
@@ -347,40 +297,36 @@ const Analytics = () => {
                   </div>
                   <div className="flex items-center gap-1 text-green-500 text-xs font-medium bg-green-50 px-2 py-1 rounded-full">
                     <ArrowUpRight className="w-3 h-3" />
-                    <span>8%</span>
+                    <span>--</span>
                   </div>
                 </div>
-                <h3 className="text-2xl font-bold mt-1">342</h3>
-                <p className="text-sm font-medium text-gray-500 mt-1">
-                  Total de Pedidos
-                </p>
+                <h3 className="text-2xl font-bold mt-1">{totalOrders}</h3>
+                <p className="text-sm font-medium text-gray-500 mt-1">Total de Pedidos</p>
                 <div className="mt-3 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
                   <div className="h-full bg-blue-500 rounded-full" style={{ width: '65%' }}></div>
-            </div>
-          </CardContent>
-        </Card>
+                </div>
+              </CardContent>
+            </Card>
 
             <Card className="rounded-xl overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow">
-              <div className="absolute top-0 right-0 h-1 w-full bg-green-500"></div>
+              <div className="absolute top-0 right-0 h-1 w-full bg-emerald-500"></div>
               <CardContent className="p-6 pt-7">
                 <div className="flex items-start justify-between mb-2">
-                  <div className="p-2.5 rounded-lg bg-green-50">
-                    <Users className="w-5 h-5 text-green-600" />
+                  <div className="p-2.5 rounded-lg bg-emerald-50">
+                    <Users className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div className="flex items-center gap-1 text-green-500 text-xs font-medium bg-green-50 px-2 py-1 rounded-full">
                     <ArrowUpRight className="w-3 h-3" />
-                    <span>15%</span>
+                    <span>--</span>
                   </div>
                 </div>
-                <h3 className="text-2xl font-bold mt-1">128</h3>
-                <p className="text-sm font-medium text-gray-500 mt-1">
-                  Novos Clientes
-                </p>
+                <h3 className="text-2xl font-bold mt-1">{completedOrders}</h3>
+                <p className="text-sm font-medium text-gray-500 mt-1">Pedidos Aprovados</p>
                 <div className="mt-3 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-green-500 rounded-full" style={{ width: '55%' }}></div>
-            </div>
-          </CardContent>
-        </Card>
+                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: '55%' }}></div>
+                </div>
+              </CardContent>
+            </Card>
 
             <Card className="rounded-xl overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow">
               <div className="absolute top-0 right-0 h-1 w-full bg-purple-500"></div>
@@ -391,124 +337,56 @@ const Analytics = () => {
                   </div>
                   <div className="flex items-center gap-1 text-green-500 text-xs font-medium bg-green-50 px-2 py-1 rounded-full">
                     <ArrowUpRight className="w-3 h-3" />
-                    <span>5%</span>
+                    <span>--</span>
                   </div>
                 </div>
-                <h3 className="text-2xl font-bold mt-1">3.2%</h3>
-                <p className="text-sm font-medium text-gray-500 mt-1">
-                  Taxa de Conversão
-                </p>
+                <h3 className="text-2xl font-bold mt-1">{conversionPct}%</h3>
+                <p className="text-sm font-medium text-gray-500 mt-1">Taxa de Conversão</p>
                 <div className="mt-3 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-purple-500 rounded-full" style={{ width: '32%' }}></div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                  <div className="h-full bg-purple-500 rounded-full" style={{ width: `${conversionPct}%` }}></div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-          {/* Seção de Gráficos com Visual Aprimorado */}
+          {/* Seção de Gráficos */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* Gráfico Principal - Vendas por Plataforma */}
+            {/* Gráfico Principal - Vendas por Dia (R$) */}
             <Card className="rounded-xl overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow xl:col-span-2">
               <CardHeader className="border-b border-gray-100 bg-gray-50/50 flex flex-row items-center justify-between p-5">
                 <div>
                   <CardTitle className="text-lg font-bold flex items-center gap-2">
                     <BarChart2 className="w-5 h-5 text-primary-600" />
-                    Vendas por Plataforma
+                    Vendas (R$) e Pedidos por Dia
                   </CardTitle>
                   <CardDescription className="mt-1">
-                    Comparação de desempenho entre plataformas ao longo do tempo
+                    Série diária do período selecionado
                   </CardDescription>
                 </div>
                 <Button variant="ghost" size="icon" className="text-gray-500 hover:text-primary-600 hover:bg-primary-50">
                   <Info className="h-4 w-4" />
                 </Button>
-          </CardHeader>
+              </CardHeader>
               <CardContent className="p-5 pt-6">
-                <div className="flex justify-between items-center mb-5 flex-wrap gap-3">
-                  <div className="flex space-x-4">
-                    <Badge variant="outline" className="bg-gray-50 border-gray-200 px-3 py-1 flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-[#E1306C]"></div>
-                      <span className="text-xs">Instagram</span>
-                    </Badge>
-                    <Badge variant="outline" className="bg-gray-50 border-gray-200 px-3 py-1 flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-[#1877F2]"></div>
-                      <span className="text-xs">Facebook</span>
-                    </Badge>
-                    <Badge variant="outline" className="bg-gray-50 border-gray-200 px-3 py-1 flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-[#FF0000]"></div>
-                      <span className="text-xs">YouTube</span>
-                    </Badge>
-                    <Badge variant="outline" className="bg-gray-50 border-gray-200 px-3 py-1 flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-[#000000]"></div>
-                      <span className="text-xs">TikTok</span>
-                    </Badge>
-                  </div>
-                  <Select defaultValue="bar">
-                    <SelectTrigger className="w-[120px] bg-white border-gray-200 shadow-sm">
-                      <SelectValue placeholder="Tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bar">Barras</SelectItem>
-                      <SelectItem value="line">Linhas</SelectItem>
-                      <SelectItem value="area">Área</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
                 <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={salesData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
+                  <RBarChart data={dailyData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#888" />
-                    <YAxis tick={{ fontSize: 12 }} stroke="#888" />
+                    <YAxis yAxisId="left" tick={{ fontSize: 12 }} stroke="#888" />
+                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} stroke="#888" />
                     <Tooltip 
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #f0f0f0",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      }}
+                      contentStyle={{ backgroundColor: "white", border: "1px solid #f0f0f0", borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                      formatter={(value: any, name: any) => name === 'Vendas' ? [numberToBRL(value as number), 'Vendas'] : [value, 'Pedidos']}
                     />
-                    <Legend wrapperStyle={{ paddingTop: 20 }} />
-                    <Bar 
-                      dataKey="Instagram"
-                      fill={COLORS.Instagram}
-                      radius={[4, 4, 0, 0]}
-                      barSize={20}
-                      onClick={(data) => handleSelectPlatform("Instagram")}
-                      className="cursor-pointer"
-                    />
-                    <Bar 
-                      dataKey="Facebook" 
-                      fill={COLORS.Facebook}
-                      radius={[4, 4, 0, 0]}
-                      barSize={20}
-                      onClick={(data) => handleSelectPlatform("Facebook")}
-                      className="cursor-pointer"
-                    />
-                    <Bar 
-                      dataKey="YouTube" 
-                      fill={COLORS.YouTube}
-                      radius={[4, 4, 0, 0]}
-                      barSize={20}
-                      onClick={(data) => handleSelectPlatform("YouTube")}
-                      className="cursor-pointer"
-                    />
-                    <Bar 
-                      dataKey="TikTok" 
-                      fill={COLORS.TikTok}
-                      radius={[4, 4, 0, 0]}
-                      barSize={20}
-                      onClick={(data) => handleSelectPlatform("TikTok")}
-                      className="cursor-pointer"
-                    />
-              </BarChart>
-            </ResponsiveContainer>
-                <div className="text-center mt-2 text-sm text-gray-500">
-                  Clique em uma barra para ver detalhes da plataforma
-                </div>
-          </CardContent>
-        </Card>
+                    <Legend wrapperStyle={{ paddingTop: 10 }} />
+                    <Bar yAxisId="left" dataKey="Vendas" fill="#0ea5e9" radius={[4,4,0,0]} barSize={22} />
+                    <Bar yAxisId="right" dataKey="Pedidos" fill="#22c55e" radius={[4,4,0,0]} barSize={22} />
+                  </RBarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
 
-        {/* Distribuição de Plataformas */}
+            {/* Distribuição de Plataformas (do backend) */}
             <Card className="rounded-xl overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow">
               <CardHeader className="border-b border-gray-100 bg-gray-50/50 flex flex-row items-center justify-between p-5">
                 <div>
@@ -516,698 +394,124 @@ const Analytics = () => {
                     <PieChartIcon className="w-5 h-5 text-blue-600" />
                     Distribuição de Plataformas
                   </CardTitle>
-                  <CardDescription className="mt-1">
-                    Participação de mercado por plataforma
-                  </CardDescription>
+                  <CardDescription className="mt-1">Participação por plataforma (nº de pedidos)</CardDescription>
                 </div>
                 <Button variant="ghost" size="icon" className="text-gray-500 hover:text-blue-600 hover:bg-blue-50">
                   <Info className="h-4 w-4" />
                 </Button>
-          </CardHeader>
+              </CardHeader>
               <CardContent className="p-5">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={platformDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                      outerRadius={90}
-                      innerRadius={40}
-                      paddingAngle={2}
-                  fill="#8884d8"
-                  dataKey="value"
-                      onClick={(data) => handleSelectPlatform(data.name)}
-                >
-                  {platformDistribution.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={COLORS[entry.name]} 
-                          stroke="white"
-                          strokeWidth={2}
-                          className="cursor-pointer"
-                    />
-                  ))}
-                </Pie>
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #f0f0f0",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      }}
-                    />
-                <Legend 
-                  layout="vertical" 
-                  verticalAlign="middle" 
-                  align="right" 
-                      iconType="circle"
-                      iconSize={10}
-                      onClick={(data) => handleSelectPlatform(data.value)}
-                      className="cursor-pointer"
-                />
-              </PieChart>
-            </ResponsiveContainer>
-                <div className="text-center mt-2 text-sm text-gray-500">
-                  Clique em uma plataforma para ver detalhes
-                </div>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie data={platformDistribution} cx="50%" cy="50%" labelLine={false} outerRadius={90} innerRadius={40} paddingAngle={2} dataKey="value">
+                      {platformDistribution.map((entry, idx) => (
+                        <Cell key={idx} fill={COLORS[entry.name] || "#94a3b8"} stroke="white" strokeWidth={2} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ backgroundColor: "white", border: "1px solid #f0f0f0", borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
+                    <Legend layout="vertical" verticalAlign="middle" align="right" iconType="circle" iconSize={10} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="text-center mt-2 text-sm text-gray-500">Dados reais do período selecionado</div>
               </CardContent>
             </Card>
 
-            {/* Gráfico de Área - Tendência de Crescimento */}
-            <Card className="rounded-xl overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow xl:col-span-2">
-              <CardHeader className="border-b border-gray-100 bg-gray-50/50 flex flex-row items-center justify-between p-5">
-                <div>
-                  <CardTitle className="text-lg font-bold flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-green-600" />
-                    Tendência de Crescimento
-                  </CardTitle>
-                  <CardDescription className="mt-1">
-                    Evolução das vendas nos últimos meses
-                  </CardDescription>
-                </div>
-                <Button variant="ghost" size="icon" className="text-gray-500 hover:text-green-600 hover:bg-green-50">
-                  <Info className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent className="p-5 pt-6">
-                <div className="flex justify-between items-center mb-5">
-                  <div className="space-x-3">
-                    <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100">Este mês</Badge>
-                    <Badge variant="outline" className="bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50">Mês passado</Badge>
-                  </div>
-                  <Select defaultValue="receita">
-                    <SelectTrigger className="w-[140px] bg-white border-gray-200 shadow-sm">
-                      <SelectValue placeholder="Métrica" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="receita">Receita</SelectItem>
-                      <SelectItem value="pedidos">Pedidos</SelectItem>
-                      <SelectItem value="clientes">Clientes</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <ResponsiveContainer width="100%" height={350}>
-                  <AreaChart data={salesData} margin={{ top: 10, right: 30, left: 0, bottom: 10 }}>
-                    <defs>
-                      <linearGradient id="colorInstagram" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={COLORS.Instagram} stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor={COLORS.Instagram} stopOpacity={0.1}/>
-                      </linearGradient>
-                      <linearGradient id="colorFacebook" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={COLORS.Facebook} stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor={COLORS.Facebook} stopOpacity={0.1}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#888" />
-                    <YAxis tick={{ fontSize: 12 }} stroke="#888" />
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #f0f0f0",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      }}
-                    />
-                    <Legend wrapperStyle={{ paddingTop: 20 }} />
-                    <Area 
-                      type="monotone" 
-                      dataKey="Instagram" 
-                      stroke={COLORS.Instagram}
-                      fillOpacity={1}
-                      fill="url(#colorInstagram)"
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="Facebook" 
-                      stroke={COLORS.Facebook}
-                      fillOpacity={1}
-                      fill="url(#colorFacebook)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Distribuição de Serviços */}
-            <Card className="rounded-xl overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow">
+            {/* NOVO: Origem das Vendas (site/chatbot/manual) */}
+            <Card className="rounded-xl overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow xl:col-span-1">
               <CardHeader className="border-b border-gray-100 bg-gray-50/50 flex flex-row items-center justify-between p-5">
                 <div>
                   <CardTitle className="text-lg font-bold flex items-center gap-2">
                     <PieChartIcon className="w-5 h-5 text-purple-600" />
-                    Distribuição de Serviços
+                    Origem das Vendas
                   </CardTitle>
-                  <CardDescription className="mt-1">
-                    Tipos de serviços mais vendidos
-                  </CardDescription>
+                  <CardDescription className="mt-1">{sourceMetric === 'orders' ? 'Por quantidade de vendas' : 'Por valor (R$)'}</CardDescription>
                 </div>
-                <Button variant="ghost" size="icon" className="text-gray-500 hover:text-purple-600 hover:bg-purple-50">
-                  <Info className="h-4 w-4" />
-                </Button>
-          </CardHeader>
+                <Select value={sourceMetric} onValueChange={(v: 'orders' | 'sales') => setSourceMetric(v)}>
+                  <SelectTrigger className="w-[130px] bg-white border-gray-200 shadow-sm">
+                    <SelectValue placeholder="Métrica" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="orders">Vendas</SelectItem>
+                    <SelectItem value="sales">Receita</SelectItem>
+                  </SelectContent>
+                </Select>
+              </CardHeader>
               <CardContent className="p-5">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={serviceDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                      outerRadius={90}
-                      innerRadius={40}
-                      paddingAngle={2}
-                  fill="#8884d8"
-                  dataKey="value"
-                      onClick={(data) => handleSelectService(data.name)}
-                >
-                  {serviceDistribution.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={COLORS[entry.name]} 
-                          stroke="white"
-                          strokeWidth={2}
-                          className="cursor-pointer"
-                        />
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie data={salesSourcesDist} cx="50%" cy="50%" labelLine={false} outerRadius={90} innerRadius={40} paddingAngle={2} dataKey="value">
+                      {salesSourcesDist.map((entry, idx) => (
+                        <Cell key={idx} fill={COLORS[entry.key]} stroke="white" strokeWidth={2} />
                       ))}
                     </Pie>
                     <Tooltip 
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #f0f0f0",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      }}
+                      contentStyle={{ backgroundColor: "white", border: "1px solid #f0f0f0", borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                      formatter={(val: any, name: any) => sourceMetric === 'orders' ? [val, name] : [numberToBRL(val as number), name]}
                     />
-                    <Legend 
-                      layout="vertical" 
-                      verticalAlign="middle" 
-                      align="right"
-                      iconType="circle"
-                      iconSize={10}
-                      onClick={(data) => handleSelectService(data.value)}
-                      className="cursor-pointer"
-                    />
+                    <Legend layout="vertical" verticalAlign="middle" align="right" iconType="circle" iconSize={10} />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="text-center mt-2 text-sm text-gray-500">
-                  Clique em um serviço para ver detalhes
-                </div>
+                {overview && (
+                  <div className="grid grid-cols-2 gap-2 mt-3 text-xs text-gray-600">
+                    <div><span className="inline-block w-2 h-2 rounded-full mr-2" style={{ background: COLORS.site }} />Site: {overview.salesSourcesPct.orders.site}% / {overview.salesSourcesPct.sales.site}%</div>
+                    <div><span className="inline-block w-2 h-2 rounded-full mr-2" style={{ background: COLORS.chatbot }} />Chatbot: {overview.salesSourcesPct.orders.chatbot}% / {overview.salesSourcesPct.sales.chatbot}%</div>
+                    <div><span className="inline-block w-2 h-2 rounded-full mr-2" style={{ background: COLORS.manual }} />Manual: {overview.salesSourcesPct.orders.manual}% / {overview.salesSourcesPct.sales.manual}%</div>
+                    <div><span className="inline-block w-2 h-2 rounded-full mr-2" style={{ background: COLORS.unknown }} />Desconhecido: {overview.salesSourcesPct.orders.unknown}% / {overview.salesSourcesPct.sales.unknown}%</div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
+        {/* As abas de Plataformas e Serviços originais podem permanecer; abaixo deixamos um placeholder mantendo seu design.
+            Você pode integrar dados reais neles mais tarde, reaproveitando overview.topChannels e agregações por serviço.
+        */}
         <TabsContent value="platforms" className="space-y-6">
-          {selectedPlatform ? (
-            <>
-              {/* Cabeçalho da plataforma selecionada */}
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="w-10 h-10 rounded-full flex items-center justify-center" 
-                    style={{ backgroundColor: platformDetails[selectedPlatform].color }}
-                  >
-                    <span className="text-white font-bold text-lg">{selectedPlatform.charAt(0)}</span>
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold">{selectedPlatform}</h2>
-                    <p className="text-sm text-gray-500">Análise detalhada de desempenho</p>
-                  </div>
-                </div>
-                <Button 
-                  variant="outline"
-                  className="text-gray-600"
-                  onClick={resetPlatformSelection}
-                >
-                  Voltar para visão geral
-                </Button>
-              </div>
-
-              {/* Métricas principais da plataforma */}
+          <Card className="rounded-xl overflow-hidden border-none shadow-md">
+            <CardHeader className="border-b border-gray-100 bg-gray-50/50">
+              <CardTitle>Análise de Plataformas</CardTitle>
+              <CardDescription>Selecione uma plataforma para visualizar estatísticas detalhadas</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                <Card className="rounded-xl overflow-hidden border-none shadow-md">
-                  <CardContent className="p-5">
+                {(overview?.topChannels || []).map((ch) => (
+                  <div key={ch.name} className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleSelectPlatform(ch.name)}>
                     <div className="flex items-center gap-3 mb-3">
-                      <Users className="w-5 h-5 text-gray-500" />
-                      <h3 className="text-sm font-medium text-gray-500">Seguidores</h3>
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: COLORS[ch.name] || '#111827' }}>
+                        <span className="text-white font-bold">{ch.name.charAt(0)}</span>
+                      </div>
+                      <h3 className="font-semibold">{ch.name}</h3>
                     </div>
-                    <p className="text-2xl font-bold">{formatNumber(platformDetails[selectedPlatform].followers)}</p>
-                    <div className="flex items-center gap-1 mt-2 text-green-500 text-xs">
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                      <span>{platformDetails[selectedPlatform].growth}% crescimento</span>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-sm text-gray-500">Pedidos</span>
+                      <span className="font-medium">{ch.count}</span>
                     </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="rounded-xl overflow-hidden border-none shadow-md">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <TrendingUp className="w-5 h-5 text-gray-500" />
-                      <h3 className="text-sm font-medium text-gray-500">Taxa de Engajamento</h3>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-sm text-gray-500">Vendas</span>
+                      <span className="font-medium">{numberToBRL(centsToNumberBRL(ch.sales))}</span>
                     </div>
-                    <p className="text-2xl font-bold">{platformDetails[selectedPlatform].engagement}%</p>
-                    <div className="w-full h-1.5 bg-gray-100 rounded-full mt-3">
-                      <div 
-                        className="h-full rounded-full" 
-                        style={{ 
-                          backgroundColor: platformDetails[selectedPlatform].color,
-                          width: `${platformDetails[selectedPlatform].engagement * 10}%`
-                        }}
-                      ></div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="rounded-xl overflow-hidden border-none shadow-md">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <DollarSign className="w-5 h-5 text-gray-500" />
-                      <h3 className="text-sm font-medium text-gray-500">Valor Médio do Pedido</h3>
-                    </div>
-                    <p className="text-2xl font-bold">R$ {platformDetails[selectedPlatform].avgOrderValue.toFixed(2).replace('.', ',')}</p>
-                    <div className="flex gap-2 mt-3">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <div 
-                          key={i} 
-                          className={`h-1 flex-1 rounded-full ${i < 4 ? 'bg-green-500' : 'bg-gray-200'}`}
-                        ></div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="rounded-xl overflow-hidden border-none shadow-md">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <ShoppingBag className="w-5 h-5 text-gray-500" />
-                      <h3 className="text-sm font-medium text-gray-500">Serviços Mais Vendidos</h3>
-                    </div>
-                    <ul className="space-y-2">
-                      {platformDetails[selectedPlatform].topServices.map((service, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <div 
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: platformDetails[selectedPlatform].color }}
-                          ></div>
-                          <span className="text-sm">{service}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
+                  </div>
+                ))}
               </div>
-
-              {/* Gráfico de tendência */}
-              <Card className="rounded-xl overflow-hidden border-none shadow-md">
-                <CardHeader className="border-b border-gray-100 bg-gray-50/50">
-                  <CardTitle>Tendência de Crescimento - {selectedPlatform}</CardTitle>
-                  <CardDescription>
-                    Evolução nos últimos 7 dias
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart 
-                      data={platformDetails[selectedPlatform].trend.map((value, index) => ({ 
-                        day: index + 1, 
-                        value 
-                      }))}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis 
-                        dataKey="day" 
-                        stroke="#888"
-                        tickFormatter={(value) => `Dia ${value}`}
-                      />
-                      <YAxis stroke="#888" />
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: "white",
-                          border: "1px solid #f0f0f0",
-                          borderRadius: "8px",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                        }}
-                        formatter={(value) => [`${formatNumber(value)}`, 'Seguidores']}
-                        labelFormatter={(value) => `Dia ${value}`}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="value" 
-                        stroke={platformDetails[selectedPlatform].color}
-                        strokeWidth={3}
-                        dot={{ 
-                          r: 6, 
-                          fill: platformDetails[selectedPlatform].color, 
-                          strokeWidth: 2,
-                          stroke: "white"
-                        }}
-                        activeDot={{ 
-                          r: 8, 
-                          stroke: platformDetails[selectedPlatform].color,
-                          strokeWidth: 2,
-                          fill: "white"
-                        }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </>
-          ) : (
-            <Card className="rounded-xl overflow-hidden border-none shadow-md">
-              <CardHeader className="border-b border-gray-100 bg-gray-50/50">
-                <CardTitle>Análise de Plataformas</CardTitle>
-                <CardDescription>
-                  Selecione uma plataforma para visualizar estatísticas detalhadas
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                  {Object.keys(platformDetails).map((platform) => (
-                    <div 
-                      key={platform}
-                      className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => handleSelectPlatform(platform)}
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <div 
-                          className="w-10 h-10 rounded-full flex items-center justify-center" 
-                          style={{ backgroundColor: COLORS[platform] }}
-                        >
-                          <span className="text-white font-bold">{platform.charAt(0)}</span>
-                        </div>
-                        <h3 className="font-semibold">{platform}</h3>
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-sm text-gray-500">Seguidores</span>
-                        <span className="font-medium">{formatNumber(platformDetails[platform].followers)}</span>
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-sm text-gray-500">Crescimento</span>
-                        <span className="font-medium text-green-500">+{platformDetails[platform].growth}%</span>
-                      </div>
-                      <div className="mt-4">
-                        <Button 
-                          variant="outline" 
-                          className="w-full text-xs" 
-                          size="sm"
-                        >
-                          Ver detalhes
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="services" className="space-y-6">
-          {selectedService ? (
-            <>
-              {/* Cabeçalho do serviço selecionado */}
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="w-10 h-10 rounded-full flex items-center justify-center" 
-                    style={{ backgroundColor: serviceDetails[selectedService].color }}
-                  >
-                    <span className="text-white font-bold text-lg">{selectedService.charAt(0)}</span>
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold">{selectedService}</h2>
-                    <p className="text-sm text-gray-500">Análise detalhada de desempenho</p>
-                  </div>
-                </div>
-                <Button 
-                  variant="outline"
-                  className="text-gray-600"
-                  onClick={resetServiceSelection}
-                >
-                  Voltar para visão geral
-                </Button>
-              </div>
-
-              {/* Métricas principais do serviço */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <Card className="rounded-xl overflow-hidden border-none shadow-md">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <DollarSign className="w-5 h-5 text-gray-500" />
-                      <h3 className="text-sm font-medium text-gray-500">Total de Vendas</h3>
-                    </div>
-                    <p className="text-2xl font-bold">R$ {formatNumber(serviceDetails[selectedService].totalSales.toFixed(2))}</p>
-                    <div className="flex items-center gap-1 mt-2 text-green-500 text-xs">
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                      <span>{serviceDetails[selectedService].growth}% crescimento</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="rounded-xl overflow-hidden border-none shadow-md">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <TrendingUp className="w-5 h-5 text-gray-500" />
-                      <h3 className="text-sm font-medium text-gray-500">Crescimento</h3>
-                    </div>
-                    <p className="text-2xl font-bold">{serviceDetails[selectedService].growth}%</p>
-                    <div className="w-full h-1.5 bg-gray-100 rounded-full mt-3">
-                      <div 
-                        className="h-full rounded-full bg-green-500" 
-                        style={{ width: `${Math.min(serviceDetails[selectedService].growth * 4, 100)}%` }}
-                      ></div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="rounded-xl overflow-hidden border-none shadow-md">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <ShoppingBag className="w-5 h-5 text-gray-500" />
-                      <h3 className="text-sm font-medium text-gray-500">Preço Médio</h3>
-                    </div>
-                    <p className="text-2xl font-bold">R$ {serviceDetails[selectedService].avgPrice.toFixed(2).replace('.', ',')}</p>
-                    <div className="flex items-center gap-1 mt-2 text-gray-500 text-xs">
-                      <span>Por pacote de serviço</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Distribuição por plataforma */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="rounded-xl overflow-hidden border-none shadow-md">
-                  <CardHeader className="border-b border-gray-100 bg-gray-50/50">
-                    <CardTitle className="text-lg font-bold flex items-center gap-2">
-                      <PieChartIcon className="w-5 h-5 text-blue-600" />
-                      Distribuição por Plataforma
-                    </CardTitle>
-                    <CardDescription>
-                      Proporção de vendas de {selectedService} por plataforma
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-5">
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie
-                          data={serviceDetails[selectedService].platforms}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          outerRadius={90}
-                          innerRadius={40}
-                          paddingAngle={2}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {serviceDetails[selectedService].platforms.map((entry, index) => (
-                            <Cell 
-                              key={`cell-${index}`} 
-                              fill={COLORS[entry.name]}
-                              stroke="white"
-                              strokeWidth={2}
-                    />
-                  ))}
-                </Pie>
-                        <Tooltip 
-                          contentStyle={{
-                            backgroundColor: "white",
-                            border: "1px solid #f0f0f0",
-                            borderRadius: "8px",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                          }}
-                          formatter={(value) => [`${value}%`, 'Proporção']}
-                        />
-                <Legend 
-                  layout="vertical" 
-                  verticalAlign="middle" 
-                  align="right" 
-                          iconType="circle"
-                          iconSize={10}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-                {/* Gráfico de tendência */}
-                <Card className="rounded-xl overflow-hidden border-none shadow-md">
-                  <CardHeader className="border-b border-gray-100 bg-gray-50/50">
-                    <CardTitle className="text-lg font-bold flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-green-600" />
-                      Tendência de Vendas
-                    </CardTitle>
-                    <CardDescription>
-                      Evolução nas vendas de {selectedService} nos últimos 7 dias
-                    </CardDescription>
-          </CardHeader>
-                  <CardContent className="p-6">
-            <ResponsiveContainer width="100%" height={300}>
-                      <LineChart 
-                        data={serviceDetails[selectedService].trend.map((value, index) => ({ 
-                          day: index + 1, 
-                          value 
-                        }))}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                        <XAxis 
-                          dataKey="day" 
-                          stroke="#888"
-                          tickFormatter={(value) => `Dia ${value}`}
-                        />
-                        <YAxis stroke="#888" />
-                        <Tooltip 
-                          contentStyle={{
-                            backgroundColor: "white",
-                            border: "1px solid #f0f0f0",
-                            borderRadius: "8px",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                          }}
-                          formatter={(value) => [`R$ ${formatNumber(typeof value === 'number' ? value.toFixed(2) : value)}`, 'Vendas']}
-                          labelFormatter={(value) => `Dia ${value}`}
-                />
-                <Line 
-                  type="monotone" 
-                          dataKey="value" 
-                          stroke={serviceDetails[selectedService].color}
-                          strokeWidth={3}
-                          dot={{ 
-                            r: 6, 
-                            fill: serviceDetails[selectedService].color, 
-                            strokeWidth: 2,
-                            stroke: "white"
-                          }}
-                          activeDot={{ 
-                            r: 8, 
-                            stroke: serviceDetails[selectedService].color,
-                            strokeWidth: 2,
-                            fill: "white"
-                          }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-              {/* Estatísticas avançadas */}
-              <Card className="rounded-xl overflow-hidden border-none shadow-md">
-                <CardHeader className="border-b border-gray-100 bg-gray-50/50">
-                  <CardTitle className="text-lg font-bold">Estatísticas Avançadas</CardTitle>
-                  <CardDescription>
-                    Análise detalhada de métricas de vendas para {selectedService}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-gray-500">Taxa de Retenção</h4>
-                      <p className="text-2xl font-bold">78%</p>
-                      <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 rounded-full" style={{ width: '78%' }}></div>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-gray-500">Ticket Médio</h4>
-                      <p className="text-2xl font-bold">R$ 85,50</p>
-                      <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-green-500 rounded-full" style={{ width: '65%' }}></div>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-gray-500">Frequência de Compra</h4>
-                      <p className="text-2xl font-bold">3.2 <span className="text-sm font-normal text-gray-500">por mês</span></p>
-                      <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-yellow-500 rounded-full" style={{ width: '55%' }}></div>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-gray-500">Churn Rate</h4>
-                      <p className="text-2xl font-bold">12.5%</p>
-                      <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-red-500 rounded-full" style={{ width: '28%' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          ) : (
-            <Card className="rounded-xl overflow-hidden border-none shadow-md">
-              <CardHeader className="border-b border-gray-100 bg-gray-50/50">
-                <CardTitle>Análise de Serviços</CardTitle>
-                <CardDescription>
-                  Selecione um serviço para visualizar estatísticas detalhadas
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                  {Object.keys(serviceDetails).map((service) => (
-                    <div 
-                      key={service}
-                      className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => handleSelectService(service)}
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <div 
-                          className="w-10 h-10 rounded-full flex items-center justify-center" 
-                          style={{ backgroundColor: serviceDetails[service].color }}
-                        >
-                          <span className="text-white font-bold">{service.charAt(0)}</span>
-                        </div>
-                        <h3 className="font-semibold">{service}</h3>
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-sm text-gray-500">Vendas</span>
-                        <span className="font-medium">R$ {formatNumber(serviceDetails[service].totalSales)}</span>
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-sm text-gray-500">Crescimento</span>
-                        <span className="font-medium text-green-500">+{serviceDetails[service].growth}%</span>
-                      </div>
-                      <div className="mt-4">
-                        <Button 
-                          variant="outline" 
-                          className="w-full text-xs" 
-                          size="sm"
-                        >
-                          Ver detalhes
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <Card className="rounded-xl overflow-hidden border-none shadow-md">
+            <CardHeader className="border-b border-gray-100 bg-gray-50/50">
+              <CardTitle>Análise de Serviços</CardTitle>
+              <CardDescription>Integração futura com breakdown por tipo de serviço.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <p className="text-sm text-gray-600">Você pode estender o backend para retornar uma agregação por <em>orderName</em> e preencher esta aba de forma semelhante a plataformas.</p>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
   );
 };
 
-export default Analytics; 
+export default Analytics;
