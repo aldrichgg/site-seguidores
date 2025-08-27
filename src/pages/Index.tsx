@@ -207,7 +207,7 @@ const Index = () => {
                 icon,
                 title: "200 Curtidas",
                 platform,
-                price: "R$2,50",
+                price: "R$3,00",
                 originalPrice: "R$4,90",
                 features: likeFeatures,
                 popular: false,
