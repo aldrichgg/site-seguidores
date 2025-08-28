@@ -89,7 +89,7 @@ const ServiceCard = ({
     };
 
     if (platform === "YouTube" || platform === "Facebook") {
-      const phoneNumber = "+5512981457975";
+      const phoneNumber = "+553284201174";
       const message = `Olá! Tenho interesse no plano *${title}* para *${platform}*. Pode me ajudar?`;
       const encodedMessage = encodeURIComponent(message);
       const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
