@@ -119,7 +119,7 @@ const Orders: React.FC = () => {
     phone: string;
     status: "approved" | "pending" | "cancelled";
     serviceId: number;
-    famaId: string;
+    order_id: string;
   } | null>(null);
 
   // excluir
@@ -352,7 +352,7 @@ const Orders: React.FC = () => {
           ? "cancelled"
           : "pending",
       serviceId: computeServiceId(orderType, platform),
-      famaId: order.famaId || "",
+      order_id: order.famaId || "",
     });
     setIsEditOpen(true);
   };
@@ -374,7 +374,7 @@ const Orders: React.FC = () => {
         phone: editOrder.phone || null,
         status: editOrder.status,
         serviceId: editOrder.serviceId,
-        providerOrderId: editOrder.famaId || null, // <<< atualiza fama id
+        providerOrderId: editOrder.order_id || null, // <<< atualiza fama id
       };
 
       const res = await fetch(`${getApiBase()}/orders/${editOrder.id}`, {
@@ -1295,9 +1295,9 @@ const Orders: React.FC = () => {
                     <label className="block text-sm mb-1">Fama ID</label>
                     <input
                       className="w-full p-2 rounded border"
-                      value={editOrder.famaId}
+                      value={editOrder.order_id}
                       onChange={(e) =>
-                        setEditOrder({ ...editOrder, famaId: e.target.value })
+                        setEditOrder({ ...editOrder, order_id: e.target.value })
                       }
                     />
                   </div>
@@ -1330,7 +1330,7 @@ const Orders: React.FC = () => {
                   Cancelar
                 </button>
                 <button
-                  className="px-4 py-2 rounded bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white"
+                  className="px-4 py-2 rounded bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-gray-500"
                   onClick={handleUpdateOrder}
                   disabled={updating || !editOrder}
                 >
