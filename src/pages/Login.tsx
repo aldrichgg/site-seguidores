@@ -13,6 +13,7 @@ import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import axios from "axios"
 import { useAuth } from "../contexts/AuthContext";
+import { getApiBase } from "@/lib/api_base";
 
 const formSchema = z.object({
   email: z.string().email("Digite um email válido"),
@@ -38,9 +39,9 @@ const Login = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const { email, password } = values;
-
+    const URL = getApiBase();
     try {
-      const response = await axios.post(`https://new-back-end-phi.vercel.app/auth/login`, {
+      const response = await axios.post(`${URL}/auth/login`, {
         email,
         password,
       });
