@@ -212,7 +212,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 100,
-                serviceId: 531,
+                serviceId: 527,
               },
               {
                 icon,
@@ -223,7 +223,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 150,
-                serviceId: 531,
+                serviceId: 527,
               },
               {
                 icon,
@@ -234,7 +234,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 200,
-                serviceId: 531,
+                serviceId: 527,
               },
               {
                 icon,
@@ -245,7 +245,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 250,
-                serviceId: 531,
+                serviceId: 527,
               },
               {
                 icon,
@@ -256,7 +256,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 300,
-                serviceId: 531,
+                serviceId: 527,
               },
               {
                 icon,
@@ -267,7 +267,7 @@ const Index = () => {
                 features: likeFeatures,
                 popular: false,
                 delay: 350,
-                serviceId: 531,
+                serviceId: 527,
               },
             ];
           case "visualizacoes":
