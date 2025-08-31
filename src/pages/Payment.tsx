@@ -217,7 +217,6 @@ const Payment = () => {
     const errors: { [key: string]: string } = {};
     if (!customerData.email.trim()) errors.email = "Preencha o e-mail";
     if (!customerData.name.trim()) errors.name = "Preencha o nome completo";
-    if (!customerData.document.trim()) errors.document = "Preencha o CPF";
     if (!customerData.linkPerfil.trim())
       errors.linkPerfil = "Preencha o link do perfil";
     if (!customerData.phone.trim()) errors.phone = "Preencha o celular";
@@ -294,7 +293,6 @@ const Payment = () => {
         customer: {
           name: customerData.name,
           email: customerData.email,
-          document: customerData.document.replace(/\D/g, ""),
           phone: customerData.phone.replace(/\D/g, ""),
         },
         items: [
@@ -754,34 +752,6 @@ const Payment = () => {
                         {formErrors.phone && (
                           <span className="text-xs text-red-500 mt-1 block">
                             {formErrors.phone}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <Label
-                        htmlFor="document"
-                        className="text-[#1A1A1A] font-semibold text-base"
-                      >
-                        CPF
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="document"
-                          placeholder="000.000.000-00"
-                          value={customerData.document}
-                          onChange={handleCustomerDataChange}
-                          required
-                          className={`w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${
-                            formErrors.document
-                              ? "border-red-500 ring-red-500"
-                              : ""
-                          }`}
-                        />
-                        {formErrors.document && (
-                          <span className="text-xs text-red-500 mt-1 block">
-                            {formErrors.document}
                           </span>
                         )}
                       </div>
