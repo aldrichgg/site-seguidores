@@ -323,7 +323,7 @@ const Payment = () => {
       });
 
       const result = await response.json();
-      console.log("💚 Pedido criado com sucesso:", result);
+      /* console.log("💚 Pedido criado com sucesso:", result); */
       if (response.ok) {
         setQrCode(result.qrcode_image);
         setPixCode(result.pixCode);
