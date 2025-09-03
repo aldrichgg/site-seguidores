@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Chart from "react-apexcharts";
 import { useDashboard } from "@/hooks/useDashboard";
-import { fmtBRL, fmtInt, weekdayPt } from "@/lib/format";
+import { fmtBRL, fmtInt } from "@/lib/format"; // <- removi weekdayPt aqui
 import {
   Card,
   CardContent,
@@ -27,21 +27,30 @@ import {
   BarChart2,
 } from "lucide-react";
 
-// Dados de exemplo para os gráficos (mantidos)
-const salesData = [
-  { name: "Jan", Instagram: 4000, Facebook: 2400, YouTube: 1200, TikTok: 800 },
-  { name: "Fev", Instagram: 3000, Facebook: 1398, YouTube: 2200, TikTok: 900 },
-  { name: "Mar", Instagram: 2000, Facebook: 9800, YouTube: 2290, TikTok: 1000 },
-  { name: "Abr", Instagram: 2780, Facebook: 3908, YouTube: 1390, TikTok: 1200 },
-  { name: "Mai", Instagram: 1890, Facebook: 4800, YouTube: 2490, TikTok: 1100 },
-  { name: "Jun", Instagram: 2390, Facebook: 3800, YouTube: 3490, TikTok: 1700 },
-  { name: "Jul", Instagram: 3490, Facebook: 4300, YouTube: 3000, TikTok: 2100 },
-];
-
 // Paleta para a origem
 const ORIGIN_COLORS = ["#2563eb", "#16a34a", "#9333ea", "#9ca3af"]; // site, chatbot, manual, unknown
 
-// Componente de dashboard
+// *** FIX DE FUSO ***
+// Converte "yyyy-MM-dd" (sem fuso, tratado como UTC pelo JS) para "seg/ter/..." no fuso America/Sao_Paulo.
+const weekdayFromYYYYMMDD = (yyyyMmDd: string) => {
+  const [y, m, d] = yyyyMmDd.split("-").map(Number);
+  // Cria a data em 12:00 UTC para evitar “voltar um dia” ao aplicar o fuso
+  const utcNoon = new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1, 12));
+  return new Intl.DateTimeFormat("pt-BR", {
+    weekday: "short",
+    timeZone: "America/Sao_Paulo",
+  }).format(utcNoon);
+};
+
+// (opcional) formata ISO UTC do backend no fuso SP para o cabeçalho
+const fmtDateBR = (iso?: string) => {
+  if (!iso) return "—";
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    dateStyle: "short",
+  }).format(new Date(iso));
+};
+
 const Dashboard = () => {
   const [period, setPeriod] = useState<"week" | "month" | "year">("week");
   const { data, loading, error } = useDashboard(period);
@@ -52,7 +61,7 @@ const Dashboard = () => {
   const topChannels = data?.topChannels || [];
   const metrics = data?.metrics || {};
 
-  // 🆕 novas métricas do backend
+  // novas métricas do backend
   const salesSources = data?.salesSources || {
     site: { orders: 0, sales: 0 },
     chatbot: { orders: 0, sales: 0 },
@@ -64,26 +73,28 @@ const Dashboard = () => {
     sales: { site: 0, chatbot: 0, manual: 0, unknown: 0 },
   };
 
-  // Para gráfico de área
+  // ===== Área (linhas) =====
   const areaCategories =
-    chart.categories.length > 0
-      ? chart.categories.map(weekdayPt)
-      : ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+  chart.categories.length > 0
+    ? chart.categories.map(weekdayFromYYYYMMDD)
+    : ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
   // sales veio em CENTAVOS -> converter para reais (dividir por 100 e arredondar)
   const areaSales =
     chart.sales.length > 0
       ? chart.sales.map((v) => Math.round(v / 100))
       : [0, 0, 0, 0, 0, 0, 0];
+
   const areaOrders =
     chart.orders.length > 0 ? chart.orders : [0, 0, 0, 0, 0, 0, 0];
 
-  // Para donut de status
+  // ===== Donut de status =====
   const donutLabels =
     donut.labels.length > 0 ? donut.labels : ["Pago", "Pendente", "Cancelado"];
   const donutSeries = donut.series.length > 0 ? donut.series : [0, 0, 0];
   const donutTotal = donutSeries.reduce((a, b) => a + b, 0);
 
-  // Para métricas
+  // ===== Métricas =====
   const conversionRate =
     metrics.conversionRate != null
       ? `${Math.round(metrics.conversionRate * 1000) / 10}%`
@@ -96,16 +107,13 @@ const Dashboard = () => {
       ? `${Math.round(metrics.retentionRate * 100)}%`
       : "—";
 
-  // Para topChannels
+  // ===== Top channels =====
   const maxCount =
     topChannels.length > 0 ? Math.max(...topChannels.map((c) => c.count)) : 1;
 
-  // 🆕 controle local para alternar a métrica da origem: quantidade (orders) vs valor (sales)
+  // ===== Origem das vendas =====
   const [originMode, setOriginMode] = useState<"orders" | "sales">("orders");
   const originLabels = ["Site", "Chatbot", "Manual", "Desconhecido"];
-  // séries do donut de origem:
-  // - se for orders: números absolutos
-  // - se for sales: usar CENTAVOS (assim o tooltip/total usa fmtBRL corretamente)
   const originSeries =
     originMode === "orders"
       ? [
@@ -124,6 +132,11 @@ const Dashboard = () => {
   const originPercOrders = salesSourcesPct.orders;
   const originPercSales = salesSourcesPct.sales;
 
+  // 🐞 DEBUG: confira se o frontend está recebendo 7 dias e rotulando certo
+  /* console.log("CATEGORIES (yyyy-MM-dd):", chart.categories);
+  console.log("X-AXIS (formatado):", areaCategories);
+  console.log("SALES LEN:", areaSales.length, "ORDERS LEN:", areaOrders.length); */
+
   return (
     <>
       <div className="mb-6 md:mb-8">
@@ -131,9 +144,9 @@ const Dashboard = () => {
         <div className="mb-2 text-sm text-gray-500">
           <span className="font-semibold">Período:</span>{" "}
           {data?.period || period} &nbsp;|
-          <span className="font-semibold">Início:</span>{" "}
-          {data?.range?.start || "—"} &nbsp;|
-          <span className="font-semibold">Fim:</span> {data?.range?.end || "—"}
+          <span className="font-semibold"> Início:</span>{" "}
+          {fmtDateBR(data?.range?.start)} &nbsp;|
+          <span className="font-semibold"> Fim:</span> {fmtDateBR(data?.range?.end)}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           <div className="bg-white rounded-xl shadow-md p-5 border-l-4 border-primary-500 hover:shadow-lg transition-all transform hover:-translate-y-1">
@@ -200,7 +213,7 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-green-500 hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-center">
               <div>
                 <p className="text-sm text-gray-500">Pedidos Pagos</p>
                 <h3 className="text-2xl font-bold">
@@ -223,7 +236,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Linha com: Área (col-span-2), Status (1 col) */}
       {/* ===== Linha 1: Gráfico de linha/área (largura máxima) ===== */}
       <div className="mb-8">
         <div className="bg-white rounded-xl shadow-sm p-3 md:p-4 w-full">
