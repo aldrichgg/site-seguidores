@@ -793,7 +793,7 @@ const Orders: React.FC = () => {
 
           {/* Modal: Detalhes */}
           <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-            <DialogContent className="sm:max-w-xl">
+            <DialogContent className="w-[95vw] sm:max-w-4xl lg:max-w-5xl">
               <DialogHeader>
                 <DialogTitle>Detalhes do Pedido</DialogTitle>
                 <DialogDescription>
