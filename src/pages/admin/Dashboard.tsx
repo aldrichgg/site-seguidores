@@ -75,9 +75,9 @@ const Dashboard = () => {
 
   // ===== Área (linhas) =====
   const areaCategories =
-  chart.categories.length > 0
-    ? chart.categories.map(weekdayFromYYYYMMDD)
-    : ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+    chart.categories.length > 0
+      ? chart.categories.map(weekdayFromYYYYMMDD)
+      : ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
   // sales veio em CENTAVOS -> converter para reais (dividir por 100 e arredondar)
   const areaSales =
@@ -132,10 +132,19 @@ const Dashboard = () => {
   const originPercOrders = salesSourcesPct.orders;
   const originPercSales = salesSourcesPct.sales;
 
-  // 🐞 DEBUG: confira se o frontend está recebendo 7 dias e rotulando certo
-  /* console.log("CATEGORIES (yyyy-MM-dd):", chart.categories);
-  console.log("X-AXIS (formatado):", areaCategories);
-  console.log("SALES LEN:", areaSales.length, "ORDERS LEN:", areaOrders.length); */
+  const todayKey = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+  // encontra o índice de hoje nas categorias
+  const todayIdx = chart.categories.indexOf(todayKey);
+
+  // valores de hoje
+  const todaySalesCents = todayIdx >= 0 ? chart.sales[todayIdx] || 0 : 0;
+  const todayOrdersCount = todayIdx >= 0 ? chart.orders[todayIdx] || 0 : 0;
 
   return (
     <>
@@ -146,9 +155,30 @@ const Dashboard = () => {
           {data?.period || period} &nbsp;|
           <span className="font-semibold"> Início:</span>{" "}
           {fmtDateBR(data?.range?.start)} &nbsp;|
-          <span className="font-semibold"> Fim:</span> {fmtDateBR(data?.range?.end)}
+          <span className="font-semibold"> Fim:</span>{" "}
+          {fmtDateBR(data?.range?.end)}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-blue-500 hover:shadow-md transition-shadow">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm text-gray-500">Vendas Hoje</p>
+                <h3 className="text-2xl font-bold">
+                  {loading ? "—" : fmtBRL(todaySalesCents)}
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  {todayIdx >= 0
+                    ? `${todayOrdersCount} pedidos`
+                    : "fora do período selecionado"}
+                </p>
+              </div>
+              <div className="p-2 bg-blue-100 rounded-full">
+                <span className="material-symbols-outlined text-blue-500">
+                  calendar_today
+                </span>
+              </div>
+            </div>
+          </div>
           <div className="bg-white rounded-xl shadow-md p-5 border-l-4 border-primary-500 hover:shadow-lg transition-all transform hover:-translate-y-1">
             <div className="flex justify-between items-start">
               <div>
