@@ -33,11 +33,13 @@ import Settings from "@/pages/admin/Settings";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute"; // admin
 import { UserProtectedRoute } from "./components/UserProtectedRoutes"; // usuário comum
+import { useUTM } from "./hooks/use-utm";
+import { UTMProvider } from "./contexts/utmContext";
 function AppContent() {
   const location = useLocation();
   const isPaymentPage = location.pathname === "/payment";
   const isAdminPage = location.pathname.startsWith("/admin");
-
+  const utm = useUTM();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -52,7 +54,7 @@ function AppContent() {
         <Route path="/termos-e-privacidade" element={<TermsAndPrivacy />} />
 
         {/* Rota protegida para usuário comum */}
-        <Route path="/payment" element={<Payment />} />
+        <Route path="/payment" element={<Payment/>} />
         <Route path="/acompanhar-pedido" element={<OrderStatus />} />
         {/* <Route
           path="/payment"
@@ -108,7 +110,9 @@ function App() {
     <ThemeProvider defaultTheme="light">
       <BrowserRouter>
         <AuthProvider>
+          <UTMProvider>
           <AppContent />
+          </UTMProvider>
         </AuthProvider>
       </BrowserRouter>
       <VercelAnalytics />

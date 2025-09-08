@@ -46,6 +46,8 @@ import { VisaIcon, MastercardIcon, PixIcon } from "@/assets/payment-icons";
 import Layout from "@/components/Layout";
 import { get } from "http";
 import { getApiBase } from "@/lib/api_base";
+import { useUTM } from "@/hooks/use-utm";
+import { useUTMContext } from "@/contexts/utmContext";
 
 // Interface para definir a estrutura dos detalhes do pedido
 interface OrderDetailsType {
@@ -120,6 +122,8 @@ const Payment = () => {
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [isOrderSummaryOpen, setIsOrderSummaryOpen] = useState<boolean>(false);
   const URL = getApiBase();
+  const { utm } = useUTMContext();
+  console.log(utm);
   // Carregar detalhes do pedido da navegação se disponíveis
   useEffect(() => {
     if (location.state && location.state.orderDetails) {
@@ -214,6 +218,7 @@ const Payment = () => {
 
   const handleSubmitPayment = async () => {
     // Validação dos campos obrigatórios
+    
     const errors: { [key: string]: string } = {};
     if (!customerData.email.trim()) errors.email = "Preencha o e-mail";
     if (!customerData.name.trim()) errors.name = "Preencha o nome completo";
@@ -309,6 +314,7 @@ const Payment = () => {
           email: customerData.email,
           celular: customerData.phone.replace(/\D/g, ""),
           platform: orderDetails.platform,
+          ...utm,
         },
         paymentPlatform: 'site'
       };

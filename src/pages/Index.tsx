@@ -29,11 +29,13 @@ import {
 import ServiceCard from "@/components/ServiceCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ClientChatCarousel from "@/components/ClientChatCarousel";
+import { useUTM } from "@/hooks/use-utm";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("instagram");
   const [activeServiceType, setActiveServiceType] = useState("seguidores");
   const [isNetworkMenuOpen, setIsNetworkMenuOpen] = useState(false);
+
   /* const { user } = useAuth(); */
   // Este useEffect executará apenas quando o componente for montado, não quando activeTab ou activeServiceType mudarem
   useEffect(() => {
