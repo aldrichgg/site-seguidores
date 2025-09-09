@@ -318,6 +318,8 @@ const Payment = () => {
         },
         paymentPlatform: 'site'
       };
+
+      /* console.log(body); */
       const response = await fetch(`${URL}/payments/create`, {
         method: "POST",
         headers: {
