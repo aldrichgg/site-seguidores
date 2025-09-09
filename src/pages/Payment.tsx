@@ -123,7 +123,7 @@ const Payment = () => {
   const [isOrderSummaryOpen, setIsOrderSummaryOpen] = useState<boolean>(false);
   const URL = getApiBase();
   const { utm } = useUTMContext();
-  console.log(utm);
+  /* console.log(utm); */
   // Carregar detalhes do pedido da navegação se disponíveis
   useEffect(() => {
     if (location.state && location.state.orderDetails) {
