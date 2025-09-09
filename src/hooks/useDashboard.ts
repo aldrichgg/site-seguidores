@@ -1,16 +1,28 @@
 import { getApiBase } from "@/lib/api_base";
 import { useEffect, useState } from "react";
 
-export function useDashboard(period: "week" | "month" | "year") {
+export function useDashboard(
+  period: "week" | "month" | "year",
+  utmSource?: string
+) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-    const base = getApiBase();
+  const base = getApiBase();
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetch(`${base}/analytics/overview?period=${period}`)
+
+    // Construir a URL com parâmetros opcionais
+    const url = new URL(`${base}/analytics/overview`);
+    url.searchParams.set('period', period);
+    if (utmSource) {
+      url.searchParams.set('utm_source', utmSource);
+    }
+
+    fetch(url.toString())
       .then(async (res) => {
         if (!res.ok) throw new Error("Erro ao buscar dados");
         const json = await res.json();
@@ -24,7 +36,7 @@ export function useDashboard(period: "week" | "month" | "year") {
       });
 
     return () => { cancelled = true; };
-  }, [period]);
+  }, [period, utmSource]);
 
   return { data, loading, error };
 }

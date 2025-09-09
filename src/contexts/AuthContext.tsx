@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 interface AuthContextType {
   user: FirebaseUserClaims | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (token: string) => void;
   logout: () => void;
 }
@@ -12,6 +13,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
+  isLoading: true,
   login: () => {},
   logout: () => {},
 });
@@ -21,6 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const navigate = useNavigate();
   const [user, setUser] = useState<FirebaseUserClaims | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // 🔁 Carrega token e decodifica ao iniciar app
   useEffect(() => {
@@ -33,9 +36,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (decoded) {
         setUser(decoded);
+        
+        // Redirecionar baseado no role apenas se não estiver já na rota correta
+        const currentPath = window.location.pathname;
+        
+        if (decoded.role === 1 && !currentPath.startsWith("/admin")) {
+          navigate("/admin");
+        } else if (decoded.role === 2 && !currentPath.startsWith("/influencer")) {
+          navigate("/influencer");
+        }
       }
     }
-  }, []);
+    
+    // Marcar como carregado
+    setIsLoading(false);
+  }, [navigate]);
 
   // 🔁 Log para acompanhar mudanças no user
   useEffect(() => {
@@ -47,13 +62,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = (token: string) => {
     localStorage.setItem("token", token);
     const decoded = getUserFromToken(token);
-    /* console.log("✅ Login efetuado com token decodificado:", decoded); */
+    console.log("✅ Login efetuado com token decodificado:", decoded);
 
     if (decoded) {
       setUser(decoded);
     }
+    
+    // Redirecionar baseado no role
     if (decoded?.role === 1) {
       navigate("/admin");
+    } else if (decoded?.role === 2) {
+      navigate("/influencer");
     }
   };
 
@@ -61,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
-    if (user?.role === 1) {
+    if (user?.role === 1 || user?.role === 2) {
       navigate("/login");
     }
   };
@@ -70,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

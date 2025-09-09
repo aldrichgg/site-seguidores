@@ -33,12 +33,16 @@ import Settings from "@/pages/admin/Settings";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute"; // admin
 import { UserProtectedRoute } from "./components/UserProtectedRoutes"; // usuário comum
+import { InfluencerProtectedRoute } from "./components/InfluencerProtectedRoute"; // influenciador
 import { useUTM } from "./hooks/use-utm";
 import { UTMProvider } from "./contexts/utmContext";
+import InfluencerLayout from "@/pages/influencer/InfluencerLayout";
+import InfluencerDashboard from "@/pages/influencer/InfluencerDashboard";
 function AppContent() {
   const location = useLocation();
   const isPaymentPage = location.pathname === "/payment";
   const isAdminPage = location.pathname.startsWith("/admin");
+  const isInfluencerPage = location.pathname.startsWith("/influencer");
   const utm = useUTM();
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -92,6 +96,18 @@ function AppContent() {
           <Route path="configuracoes" element={<Settings />} />
         </Route>
 
+        {/* Rotas de influenciador */}
+        <Route
+          path="/influencer"
+          element={
+            <InfluencerProtectedRoute redirectTo="/login">
+              <InfluencerLayout />
+            </InfluencerProtectedRoute>
+          }
+        >
+          <Route index element={<InfluencerDashboard />} />
+        </Route>
+
         {/* Rota 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -99,8 +115,8 @@ function AppContent() {
       <Toaster />
 
       {/* {!isPaymentPage && !isAdminPage && <ScrollToTop />} */}
-      {!isPaymentPage && !isAdminPage && <FloatingReviews />}
-      {!isPaymentPage && !isAdminPage && <SupportChat />}
+      {!isPaymentPage && !isAdminPage && !isInfluencerPage && <FloatingReviews />}
+      {!isPaymentPage && !isAdminPage && !isInfluencerPage && <SupportChat />}
     </>
   );
 }

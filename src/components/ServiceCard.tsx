@@ -45,7 +45,7 @@ const ServiceCard = ({
   const navigate = useNavigate();
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [isSubscriptionClicked, setIsSubscriptionClicked] = useState(false);
-  console.log(recommended);
+  /* console.log(recommended); */
   // Check if this is a subscription plan
   const isSubscription =
     title.toLowerCase().includes("plano") || price.includes("/mês");
