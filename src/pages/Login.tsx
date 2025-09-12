@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, ArrowLeft } from "lucide-react";
+import { Mail, Lock, ArrowLeft, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
@@ -24,6 +24,7 @@ const Login = () => {
   const navigate = useNavigate()
   const { toast } = useToast();
   const { login } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -40,6 +41,9 @@ const Login = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const { email, password } = values;
     const URL = getApiBase();
+    
+    setIsLoading(true);
+    
     try {
       const response = await axios.post(`${URL}/auth/login`, {
         email,
@@ -71,6 +75,8 @@ const Login = () => {
           variant: "destructive",
         });
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -150,14 +156,30 @@ const Login = () => {
                     )}
                   />
                   
-                  <Button type="submit" className="w-full rounded-full hover-lift bg-gradient-to-r from-primary to-accent">
-                    Entrar
+                  <Button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="w-full rounded-full hover-lift bg-gradient-to-r from-primary to-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Entrando...
+                      </div>
+                    ) : (
+                      "Entrar"
+                    )}
                   </Button>
                 </form>
               </Form>
               
               <div className="mt-4 text-center text-sm">
-                <Button variant="link" className="p-0 h-auto text-primary hover:underline" asChild>
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed" 
+                  asChild
+                  disabled={isLoading}
+                >
                   <Link to="/">
                     Esqueceu sua senha?
                   </Link>
@@ -177,7 +199,12 @@ const Login = () => {
                 </div>
               </div>
               
-              <Button variant="outline" className="w-full rounded-full hover-lift" asChild>
+              <Button 
+                variant="outline" 
+                className="w-full rounded-full hover-lift" 
+                asChild
+                disabled={isLoading}
+              >
                 <Link to="/criar-conta">
                   Criar nova conta
                 </Link>
