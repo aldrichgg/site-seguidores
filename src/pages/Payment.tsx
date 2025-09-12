@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { VisaIcon, MastercardIcon, PixIcon } from "@/assets/payment-icons";
 import Layout from "@/components/Layout";
+import ProfilePrivacyModal from "@/components/ProfilePrivacyModal";
 import { get } from "http";
 import { getApiBase } from "@/lib/api_base";
 import { useUTM } from "@/hooks/use-utm";
@@ -121,6 +122,7 @@ const Payment = () => {
   const [qrCodeTimer, setQrCodeTimer] = useState<number>(300); // 5 minutos = 300 segundos
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [isOrderSummaryOpen, setIsOrderSummaryOpen] = useState<boolean>(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState<boolean>(false);
   const URL = getApiBase();
   const { utm } = useUTMContext();
   /* console.log(utm); */
@@ -216,9 +218,8 @@ const Payment = () => {
     }));
   };
 
-  const handleSubmitPayment = async () => {
+  const handleSubmitPayment = () => {
     // Validação dos campos obrigatórios
-    
     const errors: { [key: string]: string } = {};
     if (!customerData.email.trim()) errors.email = "Preencha o e-mail";
     if (!customerData.name.trim()) errors.name = "Preencha o nome completo";
@@ -228,6 +229,13 @@ const Payment = () => {
     if (!acceptTerms) errors.terms = "Você precisa aceitar os termos";
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) return;
+    
+    // Mostrar modal de verificação de privacidade
+    setShowPrivacyModal(true);
+  };
+
+  const handleConfirmPayment = async () => {
+    setShowPrivacyModal(false);
     setIsProcessing(true);
 
     try {
@@ -1222,6 +1230,14 @@ const Payment = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de Verificação de Privacidade */}
+      <ProfilePrivacyModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        onConfirm={handleConfirmPayment}
+        profileLink={customerData.linkPerfil}
+      />
     </Layout>
   );
 };

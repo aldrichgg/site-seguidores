@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = (token: string) => {
     localStorage.setItem("token", token);
     const decoded = getUserFromToken(token);
-    console.log("✅ Login efetuado com token decodificado:", decoded);
+    /* console.log("✅ Login efetuado com token decodificado:", decoded); */
 
     if (decoded) {
       setUser(decoded);
