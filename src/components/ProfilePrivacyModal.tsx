@@ -149,18 +149,18 @@ const ProfilePrivacyModal: React.FC<ProfilePrivacyModalProps> = ({
           </div>
         </div>
 
-        <div className="p-6 pt-0 flex flex-col sm:flex-row gap-3 flex-shrink-0 border-t border-gray-200 bg-gray-50">
+        <div className="p-6 pt-0 flex flex-col sm:flex-row sm:items-center sm:justify-center gap-3 flex-shrink-0 border-t border-gray-200 bg-gray-50">
           <Button
             variant="outline"
             onClick={onClose}
-            className="w-full sm:w-auto border-gray-300 text-gray-700 hover:bg-gray-50"
+            className="w-full sm:w-auto border-gray-300 text-gray-700 hover:bg-gray-50 h-10 mt-2"
           >
             <X className="h-4 w-4 mr-2" />
             Cancelar
           </Button>
           <Button
             onClick={onConfirm}
-            className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold"
+            className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold h-10"
           >
             <CheckCircle className="h-4 w-4 mr-2" />
             Confirmar e Gerar PIX
