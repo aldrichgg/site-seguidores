@@ -1,13 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { AlertTriangle, Eye, EyeOff, CheckCircle, X } from "lucide-react";
 
 interface ProfilePrivacyModalProps {
@@ -23,28 +15,50 @@ const ProfilePrivacyModal: React.FC<ProfilePrivacyModalProps> = ({
   onConfirm,
   profileLink,
 }) => {
+  // Prevenir scroll do body quando modal estiver aberto
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-w-[95vw] mx-4 p-0 overflow-hidden">
-        <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-b border-amber-200">
-          <DialogHeader className="p-6 pb-4">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-lg shadow-2xl flex flex-col max-h-[90vh] w-[95vw] max-w-[500px] mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-b border-amber-200 flex-shrink-0">
+          <div className="p-6 pb-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
                 <AlertTriangle className="h-6 w-6 text-amber-600" />
               </div>
               <div>
-                <DialogTitle className="text-xl font-bold text-gray-800 leading-tight">
+                <h2 className="text-xl font-bold text-gray-800 leading-tight">
                   ⚠️ Verificação Importante
-                </DialogTitle>
-                <DialogDescription className="text-gray-600 mt-1">
+                </h2>
+                <p className="text-gray-600 mt-1">
                   Antes de gerar o PIX, confirme se seu perfil está público
-                </DialogDescription>
+                </p>
               </div>
             </div>
-          </DialogHeader>
+          </div>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           {/* Aviso Principal */}
           <div className="bg-red-50 border border-red-200 rounded-xl p-4">
             <div className="flex items-start gap-3">
@@ -135,7 +149,7 @@ const ProfilePrivacyModal: React.FC<ProfilePrivacyModalProps> = ({
           </div>
         </div>
 
-        <DialogFooter className="p-6 pt-0 flex flex-col sm:flex-row gap-3">
+        <div className="p-6 pt-0 flex flex-col sm:flex-row gap-3 flex-shrink-0 border-t border-gray-200 bg-gray-50">
           <Button
             variant="outline"
             onClick={onClose}
@@ -151,9 +165,9 @@ const ProfilePrivacyModal: React.FC<ProfilePrivacyModalProps> = ({
             <CheckCircle className="h-4 w-4 mr-2" />
             Confirmar e Gerar PIX
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </div>
   );
 };
 
