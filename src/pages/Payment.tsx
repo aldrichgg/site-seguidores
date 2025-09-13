@@ -123,6 +123,11 @@ const Payment = () => {
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [isOrderSummaryOpen, setIsOrderSummaryOpen] = useState<boolean>(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState<boolean>(false);
+  const [linkValidationStatus, setLinkValidationStatus] = useState<{
+    isValid: boolean;
+    message: string;
+    type: 'instagram' | 'invalid';
+  } | null>(null);
   const URL = getApiBase();
   const { utm } = useUTMContext();
   /* console.log(utm); */
@@ -194,12 +199,39 @@ const Payment = () => {
     }, 1000);
   };
 
+  // Função para validar link do Instagram
+  const validateInstagramLink = (link: string): { isValid: boolean; message: string; type: 'instagram' | 'invalid' } => {
+    if (!link.trim()) {
+      return { isValid: false, message: 'Link é obrigatório', type: 'invalid' };
+    }
+
+    // Remove espaços e converte para minúsculo
+    const cleanLink = link.trim().toLowerCase();
+    
+    // Verifica se é um link do Instagram (instagram.com ou ig.me)
+    if (cleanLink.includes('instagram.com') || cleanLink.includes('ig.me')) {
+      return { isValid: true, message: 'Link do Instagram válido', type: 'instagram' };
+    }
+
+    return { isValid: false, message: 'Link deve ser do Instagram (instagram.com ou ig.me)', type: 'invalid' };
+  };
+
   const handleCustomerDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setCustomerData((prev) => ({
       ...prev,
       [id]: value,
     }));
+
+    // Validação em tempo real para o link do Instagram
+    if (id === 'linkPerfil') {
+      const validation = validateInstagramLink(value);
+      setFormErrors((prev) => ({
+        ...prev,
+        linkPerfil: validation.isValid ? '' : validation.message,
+      }));
+      setLinkValidationStatus(validation);
+    }
   };
 
   const handlePaymentMethodChange = (method: string) => {
@@ -223,8 +255,13 @@ const Payment = () => {
     const errors: { [key: string]: string } = {};
     if (!customerData.email.trim()) errors.email = "Preencha o e-mail";
     if (!customerData.name.trim()) errors.name = "Preencha o nome completo";
-    if (!customerData.linkPerfil.trim())
-      errors.linkPerfil = "Preencha o link do perfil";
+    
+    // Validação específica para o link do Instagram
+    const linkValidation = validateInstagramLink(customerData.linkPerfil);
+    if (!linkValidation.isValid) {
+      errors.linkPerfil = linkValidation.message;
+    }
+    
     if (!customerData.phone.trim()) errors.phone = "Preencha o celular";
     if (!acceptTerms) errors.terms = "Você precisa aceitar os termos";
     setFormErrors(errors);
@@ -778,25 +815,65 @@ const Payment = () => {
                         htmlFor="linkPerfil"
                         className="text-[#1A1A1A] font-semibold text-base"
                       >
-                        Link do Perfil
+                        Link do Instagram
                       </Label>
                       <div className="relative">
                         <Input
                           id="linkPerfil"
-                          placeholder="Link completo (incluindo https://)"
+                          placeholder="Cole aqui qualquer link do Instagram"
                           value={customerData.linkPerfil}
                           onChange={handleCustomerDataChange}
                           required
                           className={`w-full px-6 py-4 rounded-3xl border-0 bg-[#EDF2F7] text-[#1A1A1A] placeholder-[#6B7280] focus:bg-white focus:ring-2 focus:ring-[#1A73E8] focus:border-[#1A73E8] transition-all duration-200 text-base ${
                             formErrors.linkPerfil
-                              ? "border-red-500 ring-red-500"
+                              ? "border-red-500 ring-red-500 bg-red-50"
+                              : linkValidationStatus?.isValid
+                              ? "border-green-500 ring-green-500 bg-green-50"
                               : ""
                           }`}
                         />
+                        
+                        {/* Ícone de status da validação */}
+                        {customerData.linkPerfil && linkValidationStatus && !linkValidationStatus.isValid && (
+                          <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                            <X size={16} className="text-red-500" />
+                          </div>
+                        )}
+                        
+                        {/* Mensagens de validação */}
                         {formErrors.linkPerfil && (
-                          <span className="text-xs text-red-500 mt-1 block">
-                            {formErrors.linkPerfil}
-                          </span>
+                          <div className="flex items-center gap-2 mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                            <AlertCircle size={14} className="text-red-500 flex-shrink-0" />
+                            <span className="text-xs text-red-600 font-medium">
+                              {formErrors.linkPerfil}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {linkValidationStatus?.isValid && !formErrors.linkPerfil && (
+                          <div className="flex items-center gap-2 mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                            <CheckIcon size={14} className="text-green-500 flex-shrink-0" />
+                            <span className="text-xs text-green-600 font-medium">
+                              {linkValidationStatus.message}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Dicas de formato */}
+                        {!customerData.linkPerfil && (
+                          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span className="text-xs text-blue-600 font-bold">i</span>
+                              </div>
+                              <div className="text-xs text-blue-700">
+                                <p className="font-medium mb-1">Cole qualquer link do Instagram:</p>
+                                <p className="text-blue-600">
+                                  Perfil, post, reel, story, highlight, etc.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>
