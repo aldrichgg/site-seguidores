@@ -990,7 +990,7 @@ const Index = () => {
                         Seguidores
                       </button>
                     )}
-                    <button
+                    {/* <button
                       className={`px-5 py-2 rounded-full ${
                         activeServiceType === "curtidas"
                           ? "bg-primary text-white"
@@ -999,7 +999,7 @@ const Index = () => {
                       onClick={() => setActiveServiceType("curtidas")}
                     >
                       Curtidas
-                    </button>
+                    </button> */}
                     <button
                       className={`px-5 py-2 rounded-full ${
                         activeServiceType === "visualizacoes"
