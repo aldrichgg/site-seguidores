@@ -19,6 +19,8 @@ import {
   Menu, 
   X,
   Bell,
+  Cog,
+  UserPlus,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -49,15 +51,20 @@ const navItems = [
     path: "/admin/clientes",
   },
   { 
-    icon: Layers, 
-    label: "Serviços", 
-    path: "/admin/servicos",
+    icon: UserPlus, 
+    label: "Influenciadores", 
+    path: "/admin/influenciadores",
   },
   { 
+    icon: Cog, 
+    label: "Configurar Serviços", 
+    path: "/admin/configurar-servicos",
+  },
+  /* { 
     icon: SettingsIcon, 
     label: "Configurações", 
     path: "/admin/configuracoes",
-  },
+  }, */
 ];
 
 const AdminLayout: React.FC = () => {

@@ -27,6 +27,8 @@ import Dashboard from "@/pages/admin/Dashboard";
 import Orders from "@/pages/admin/Orders";
 import Customers from "@/pages/admin/Customers";
 import Services from "@/pages/admin/Services";
+import ServicesAdmin from "@/pages/admin/ServicesAdmin";
+import InfluencersAdmin from "@/pages/admin/InfluencersAdmin";
 import Analytics from "@/pages/admin/Analytics";
 import Settings from "@/pages/admin/Settings";
 
@@ -91,7 +93,9 @@ function AppContent() {
           <Route index element={<Dashboard />} />
           <Route path="vendas" element={<Orders />} />
           <Route path="clientes" element={<Customers />} />
+          <Route path="influenciadores" element={<InfluencersAdmin />} />
           <Route path="servicos" element={<Services />} />
+          <Route path="configurar-servicos" element={<ServicesAdmin />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="configuracoes" element={<Settings />} />
         </Route>

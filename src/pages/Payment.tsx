@@ -126,7 +126,7 @@ const Payment = () => {
   const [linkValidationStatus, setLinkValidationStatus] = useState<{
     isValid: boolean;
     message: string;
-    type: 'instagram' | 'invalid';
+    type: 'instagram' | 'tiktok' | 'invalid';
   } | null>(null);
   const URL = getApiBase();
   const { utm } = useUTMContext();
@@ -199,8 +199,8 @@ const Payment = () => {
     }, 1000);
   };
 
-  // Função para validar link do Instagram
-  const validateInstagramLink = (link: string): { isValid: boolean; message: string; type: 'instagram' | 'invalid' } => {
+  // Função para validar link do Instagram/TikTok
+  const validateInstagramLink = (link: string): { isValid: boolean; message: string; type: 'instagram' | 'tiktok' | 'invalid' } => {
     if (!link.trim()) {
       return { isValid: false, message: 'Link é obrigatório', type: 'invalid' };
     }
@@ -208,12 +208,51 @@ const Payment = () => {
     // Remove espaços e converte para minúsculo
     const cleanLink = link.trim().toLowerCase();
     
-    // Verifica se é um link do Instagram (instagram.com ou ig.me)
-    if (cleanLink.includes('instagram.com') || cleanLink.includes('ig.me')) {
-      return { isValid: true, message: 'Link do Instagram válido', type: 'instagram' };
+    // Regex para validar links válidos do Instagram
+    const instagramPatterns = [
+      // Perfis: /username/
+      /^https?:\/\/(www\.)?instagram\.com\/([a-zA-Z0-9._]+)\/?(\?.*)?$/,
+      
+      // Posts: /p/{código}/
+      /^https?:\/\/(www\.)?instagram\.com\/p\/([a-zA-Z0-9_-]+)\/?(\?.*)?$/,
+      
+      // Reels: /reel/{código}/
+      /^https?:\/\/(www\.)?instagram\.com\/reel\/([a-zA-Z0-9_-]+)\/?(\?.*)?$/,
+      
+      // IGTV: /tv/{código}/
+      /^https?:\/\/(www\.)?instagram\.com\/tv\/([a-zA-Z0-9_-]+)\/?(\?.*)?$/,
+      
+      // Stories: /stories/{username}/{id}/
+      /^https?:\/\/(www\.)?instagram\.com\/stories\/([a-zA-Z0-9._]+)\/([0-9]+)\/?(\?.*)?$/,
+      
+      // Highlights: /stories/highlights/{id}/
+      /^https?:\/\/(www\.)?instagram\.com\/stories\/highlights\/([0-9]+)\/?(\?.*)?$/,
+      
+      // ig.me: /{username}
+      /^https?:\/\/ig\.me\/([a-zA-Z0-9._]+)\/?(\?.*)?$/
+    ];
+    
+    // Regex para validar links válidos do TikTok
+    const tiktokRegex = /^https?:\/\/(www\.)?tiktok\.com\/(@[a-zA-Z0-9._]+)\/?(\?.*)?$/;
+    
+    // Verifica se é um link válido do Instagram
+    for (const pattern of instagramPatterns) {
+      if (pattern.test(cleanLink)) {
+        return { isValid: true, message: 'Link do Instagram válido', type: 'instagram' };
+      }
+    }
+    
+    // Verifica se é um link válido do TikTok
+    if (tiktokRegex.test(cleanLink)) {
+      return { isValid: true, message: 'Link do TikTok válido', type: 'tiktok' };
     }
 
-    return { isValid: false, message: 'Link deve ser do Instagram (instagram.com ou ig.me)', type: 'invalid' };
+    // Verifica se contém instagram.com ou tiktok.com mas não é um link válido
+    if (cleanLink.includes('instagram.com') || cleanLink.includes('tiktok.com') || cleanLink.includes('ig.me')) {
+      return { isValid: false, message: 'Link inválido. Use um link válido do Instagram ou TikTok', type: 'invalid' };
+    }
+
+    return { isValid: false, message: 'Link deve ser do Instagram (instagram.com) ou TikTok (tiktok.com)', type: 'invalid' };
   };
 
   const handleCustomerDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -820,7 +859,7 @@ const Payment = () => {
                       <div className="relative">
                         <Input
                           id="linkPerfil"
-                          placeholder="Cole aqui qualquer link do Instagram"
+                          placeholder="Cole aqui qualquer link do Instagram ou TikTok"
                           value={customerData.linkPerfil}
                           onChange={handleCustomerDataChange}
                           required
@@ -867,9 +906,10 @@ const Payment = () => {
                                 <span className="text-xs text-blue-600 font-bold">i</span>
                               </div>
                               <div className="text-xs text-blue-700">
-                                <p className="font-medium mb-1">Cole qualquer link do Instagram:</p>
+                                <p className="font-medium mb-1">Cole qualquer link do Instagram ou TikTok:</p>
                                 <p className="text-blue-600">
-                                  Perfil, post, reel, story, highlight, etc.
+                                  <strong>Instagram:</strong> Perfil, post, reel, IGTV, story, highlight, ig.me<br/>
+                                  <strong>TikTok:</strong> Perfil (@usuario)
                                 </p>
                               </div>
                             </div>

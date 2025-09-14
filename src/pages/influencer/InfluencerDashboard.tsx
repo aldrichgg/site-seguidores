@@ -62,6 +62,7 @@ const InfluencerDashboard = () => {
   const { user } = useAuth();
   const { data, loading, error, userProfile } = useInfluencerDashboard(period, selectedPageId === "all" ? undefined : selectedPageId);
 
+
   const kpis = data?.kpis || {};
   const chart = data?.chart || { categories: [], sales: [], orders: [] };
   const donut = data?.statusDonut || { labels: [], series: [] };
@@ -183,11 +184,11 @@ const InfluencerDashboard = () => {
         
         <div className="mb-2 text-sm text-gray-500">
           <span className="font-semibold">Período:</span>{" "}
-          {data?.period || period} &nbsp;|
+          {period} &nbsp;|
           <span className="font-semibold"> Início:</span>{" "}
-          {fmtDateBR(data?.range?.start)} &nbsp;|
+          {fmtDateBR(data?.period?.start)} &nbsp;|
           <span className="font-semibold"> Fim:</span>{" "}
-          {fmtDateBR(data?.range?.end)}
+          {fmtDateBR(data?.period?.end)}
           {selectedPageId !== "all" && (
             <>
               &nbsp;|

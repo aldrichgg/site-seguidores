@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getApiBase } from "@/lib/api_base";
+import { useServices } from "@/hooks/useServices";
 
 // shadcn/ui
 import {
@@ -21,12 +22,7 @@ import {
 type OrderType = "Seguidores" | "Visualizações" | "Curtidas";
 type Platform = "Instagram" | "TikTok";
 
-const SERVICE_ID: Record<Platform, Record<OrderType, number>> = {
-  Instagram: { Seguidores: 547, Curtidas: 531, Visualizações: 250 },
-  TikTok: { Seguidores: 396, Curtidas: 50, Visualizações: 334 },
-};
-const computeServiceId = (orderType: OrderType, platform: Platform) =>
-  SERVICE_ID[platform][orderType];
+// Removido: SERVICE_ID hardcoded - agora usa serviços do banco
 
 const statusMap: Record<string, string> = {
   approved: "Pago",
@@ -70,6 +66,18 @@ const Orders: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
 
+  // Buscar serviços para usar serviceId reais do banco
+  const { services: allServices } = useServices(undefined, undefined, true);
+
+  // Função para encontrar serviceId real do banco
+  const findServiceId = (orderType: OrderType, platform: Platform): number => {
+    const service = allServices.find(s => 
+      s.platform.toLowerCase() === platform.toLowerCase() && 
+      s.serviceType.toLowerCase() === orderType.toLowerCase()
+    );
+    return service?.serviceId || 0;
+  };
+
   // filtros
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -98,7 +106,7 @@ const Orders: React.FC = () => {
     link: "",
     status: "approved" as "approved" | "pending" | "cancelled",
     phone: "",
-    serviceId: computeServiceId("Seguidores", "Instagram"),
+    serviceId: findServiceId("Seguidores", "Instagram"),
     famaId: "", // <<< novo campo (providerOrderId)
   });
 
@@ -161,6 +169,7 @@ const Orders: React.FC = () => {
       order.provider?.orderId ??
       order.metadata?.order_id ??
       "";
+
 
     return {
       id: order.id,
@@ -309,7 +318,7 @@ const Orders: React.FC = () => {
         link: "",
         status: "approved",
         phone: "",
-        serviceId: computeServiceId("Seguidores", "Instagram"),
+        serviceId: findServiceId("Seguidores", "Instagram"),
         famaId: "",
       });
     } catch {
@@ -351,7 +360,7 @@ const Orders: React.FC = () => {
             order.raw?.status === "canceled"
           ? "cancelled"
           : "pending",
-      serviceId: computeServiceId(orderType, platform),
+      serviceId: findServiceId(orderType, platform),
       order_id: order.famaId || "",
     });
     setIsEditOpen(true);
@@ -842,6 +851,11 @@ const Orders: React.FC = () => {
                         <p className="text-xs text-gray-500">
                           {selectedOrder.customer.email}
                         </p>
+                        {selectedOrder.customer.phone && (
+                          <p className="text-xs text-gray-500">
+                            📱 {selectedOrder.customer.phone}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -977,7 +991,7 @@ const Orders: React.FC = () => {
                       setNewOrder((o) => ({
                         ...o,
                         orderType,
-                        serviceId: computeServiceId(orderType, o.platform),
+                        serviceId: findServiceId(orderType, o.platform),
                       }));
                     }}
                   >
@@ -997,7 +1011,7 @@ const Orders: React.FC = () => {
                       setNewOrder((o) => ({
                         ...o,
                         platform,
-                        serviceId: computeServiceId(o.orderType, platform),
+                        serviceId: findServiceId(o.orderType, platform),
                       }));
                     }}
                   >
@@ -1188,7 +1202,7 @@ const Orders: React.FC = () => {
                             ? {
                                 ...o,
                                 orderType,
-                                serviceId: computeServiceId(
+                                serviceId: findServiceId(
                                   orderType,
                                   o.platform
                                 ),
@@ -1215,7 +1229,7 @@ const Orders: React.FC = () => {
                             ? {
                                 ...o,
                                 platform,
-                                serviceId: computeServiceId(
+                                serviceId: findServiceId(
                                   o.orderType,
                                   platform
                                 ),

@@ -30,11 +30,15 @@ import ServiceCard from "@/components/ServiceCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ClientChatCarousel from "@/components/ClientChatCarousel";
 import { useUTM } from "@/hooks/use-utm";
+import { useServices } from "@/hooks/useServices";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("instagram");
   const [activeServiceType, setActiveServiceType] = useState("seguidores");
   const [isNetworkMenuOpen, setIsNetworkMenuOpen] = useState(false);
+
+  // Hook para buscar serviços da API (apenas serviços ativos para usuários)
+  const { services, loading: servicesLoading, error: servicesError } = useServices(activeTab, activeServiceType, false);
 
   /* const { user } = useAuth(); */
   // Este useEffect executará apenas quando o componente for montado, não quando activeTab ou activeServiceType mudarem
@@ -51,6 +55,8 @@ const Index = () => {
       setActiveServiceType("seguidores");
     }
   }, [activeTab, activeServiceType]);
+
+  // useEffect removido - agora sempre mostramos todas as abas
 
   // Este useEffect configura os event listeners para scrolling suave
   useEffect(() => {
@@ -815,7 +821,53 @@ const Index = () => {
   const getFollowersLabel = (network) => {
     return network === "youtube" ? "Inscritos" : "Seguidores";
   };
-  const currentPackages = getServicePackages(activeTab, activeServiceType);
+  // Função para obter ícone baseado na plataforma
+  const getIconForPlatform = (platform: string) => {
+    switch (platform) {
+      case 'instagram':
+        return <InstagramIcon className="w-6 h-6 text-[#E1306C]" />;
+      case 'youtube':
+        return <YoutubeIcon className="w-6 h-6 text-[#FF0000]" />;
+      case 'tiktok':
+        return <TikTokIcon className="w-6 h-6 text-black" />;
+      default:
+        return <InstagramIcon className="w-6 h-6 text-[#E1306C]" />;
+    }
+  };
+
+  // Converter serviços da API para o formato esperado pelo componente
+  const currentPackages = services.map(service => ({
+    icon: getIconForPlatform(service.platform),
+    title: service.name,
+    platform: service.platform,
+    price: `R$${service.price.toFixed(2).replace('.', ',')}`,
+    originalPrice: `R$${service.originalPrice.toFixed(2).replace('.', ',')}`,
+    features: service.features,
+    popular: service.isPopular,
+    recommended: service.isRecommended,
+    delay: 150 + (service.sortOrder * 50), // Delay baseado na ordem
+    serviceId: service.serviceId,
+    type: undefined // Sem tipo para ir direto para pagamento
+  }));
+
+  // Funções para verificar se existem serviços ativos para cada categoria
+  const hasActiveServices = (platform: string, serviceType: string) => {
+    return services.some(service => 
+      service.platform === platform && 
+      service.serviceType === serviceType && 
+      service.isActive
+    );
+  };
+
+  // Verificar quais categorias têm serviços ativos para a plataforma atual
+  const getAvailableServiceTypes = (platform: string) => {
+    // Sempre retorna todos os tipos para mostrar todas as abas
+    if (platform === 'youtube') {
+      return ['inscritos', 'curtidas', 'visualizacoes'];
+    } else {
+      return ['seguidores', 'curtidas', 'visualizacoes'];
+    }
+  };
   return (
     <main className="relative overflow-hidden">
       <NavBar />
@@ -967,49 +1019,26 @@ const Index = () => {
 
                 <div className="mb-8">
                   <div className="flex flex-wrap gap-2 md:gap-4 mb-6">
-                    {activeTab === "youtube" ? (
-                      <button
-                        className={`px-5 py-2 rounded-full ${
-                          activeServiceType === "inscritos"
-                            ? "bg-primary text-white"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        } font-medium transition-colors`}
-                        onClick={() => setActiveServiceType("inscritos")}
-                      >
-                        Inscritos
-                      </button>
-                    ) : (
-                      <button
-                        className={`px-5 py-2 rounded-full ${
-                          activeServiceType === "seguidores"
-                            ? "bg-primary text-white"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        } font-medium transition-colors`}
-                        onClick={() => setActiveServiceType("seguidores")}
-                      >
-                        Seguidores
-                      </button>
-                    )}
-                    {/* <button
-                      className={`px-5 py-2 rounded-full ${
-                        activeServiceType === "curtidas"
-                          ? "bg-primary text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      } font-medium transition-colors`}
-                      onClick={() => setActiveServiceType("curtidas")}
-                    >
-                      Curtidas
-                    </button> */}
-                    <button
-                      className={`px-5 py-2 rounded-full ${
-                        activeServiceType === "visualizacoes"
-                          ? "bg-primary text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      } font-medium transition-colors`}
-                      onClick={() => setActiveServiceType("visualizacoes")}
-                    >
-                      Visualizações
-                    </button>
+                    {getAvailableServiceTypes(activeTab).map((serviceType) => {
+                      const isActive = activeServiceType === serviceType;
+                      const label = serviceType === 'inscritos' ? 'Inscritos' : 
+                                   serviceType === 'seguidores' ? 'Seguidores' :
+                                   serviceType === 'curtidas' ? 'Curtidas' :
+                                   serviceType === 'visualizacoes' ? 'Visualizações' : serviceType;
+                      return (
+                        <button
+                          key={serviceType}
+                          className={`px-5 py-2 rounded-full ${
+                            isActive
+                              ? "bg-primary text-white"
+                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          } font-medium transition-colors`}
+                          onClick={() => setActiveServiceType(serviceType)}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
                   </div>
 
                   <div className="relative">
@@ -1023,28 +1052,64 @@ const Index = () => {
                       }
                     `}
                     >
-                      {currentPackages.map((pkg, index) => (
-                        <div
-                          key={`${activeTab}-${activeServiceType}-${index}`}
-                          className={`
-                            ${pkg.popular ? "z-40" : "z-30"}
-                          `}
-                        >
-                          <ServiceCard
-                            icon={pkg.icon}
-                            title={pkg.title}
-                            platform={pkg.platform}
-                            price={pkg.price}
-                            originalPrice={pkg.originalPrice}
-                            features={pkg.features}
-                            popular={pkg.popular}
-                            recommended={pkg.recomended}
-                            delay={pkg.delay}
-                            serviceId={pkg.serviceId}
-                            type={pkg.type}
-                          />
+                      {servicesLoading ? (
+                        <div className="col-span-full flex justify-center items-center h-64">
+                          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
                         </div>
-                      ))}
+                      ) : servicesError ? (
+                        <div className="col-span-full flex flex-col items-center justify-center h-64 text-center">
+                          <div className="text-red-500 mb-4">
+                            <X className="h-16 w-16 mx-auto" />
+                          </div>
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                            Erro ao carregar serviços
+                          </h3>
+                          <p className="text-gray-600 mb-4">
+                            {servicesError}
+                          </p>
+                          <Button 
+                            onClick={() => window.location.reload()}
+                            variant="outline"
+                          >
+                            Tentar novamente
+                          </Button>
+                        </div>
+                      ) : currentPackages.length === 0 ? (
+                        <div className="col-span-full flex flex-col items-center justify-center h-64 text-center">
+                          <div className="text-gray-400 mb-4">
+                            <Star className="h-16 w-16 mx-auto" />
+                          </div>
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                            Nenhum serviço encontrado
+                          </h3>
+                          <p className="text-gray-600">
+                            Não há serviços disponíveis para esta categoria no momento.
+                          </p>
+                        </div>
+                      ) : (
+                        currentPackages.map((pkg, index) => (
+                          <div
+                            key={`${activeTab}-${activeServiceType}-${index}`}
+                            className={`
+                              ${pkg.popular ? "z-40" : "z-30"}
+                            `}
+                          >
+                            <ServiceCard
+                              icon={pkg.icon}
+                              title={pkg.title}
+                              platform={pkg.platform}
+                              price={pkg.price}
+                              originalPrice={pkg.originalPrice}
+                              features={pkg.features}
+                              popular={pkg.popular}
+                              recommended={pkg.recommended}
+                              delay={pkg.delay}
+                              serviceId={pkg.serviceId}
+                              type={pkg.type}
+                            />
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>
