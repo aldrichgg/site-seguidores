@@ -21,6 +21,7 @@ import {
   Bell,
   Cog,
   UserPlus,
+  Globe,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,11 @@ const navItems = [
     icon: UserPlus, 
     label: "Influenciadores", 
     path: "/admin/influenciadores",
+  },
+  { 
+    icon: Globe, 
+    label: "Páginas da Empresa", 
+    path: "/admin/paginas",
   },
   { 
     icon: Cog, 
