@@ -446,6 +446,51 @@ const Orders: React.FC = () => {
     }
   };
 
+  // ------------------------ Exportar CSV
+
+  const exportToCSV = () => {
+    // Preparar dados para exportação
+    const csvData = orders.map(order => ({
+      'ID': order.id,
+      'Nome': order.customer?.name || '',
+      'Email': order.customer?.email || '',
+      'Telefone': order.customer?.phone || '',
+      'Produto': order.product || '',
+      'Plataforma': order.platform || '',
+      'Quantidade': order.quantity || 0,
+      'Valor': toBRLStringFromCents(order.amount),
+      'Status': statusMap[order.status] || order.status,
+      'Data': new Date(order.createdAt).toLocaleDateString('pt-BR'),
+      'Link': order.link || ''
+    }));
+
+    // Converter para CSV
+    const headers = Object.keys(csvData[0] || {});
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => 
+        headers.map(header => {
+          const value = row[header as keyof typeof row];
+          // Escapar aspas e vírgulas
+          return typeof value === 'string' && (value.includes(',') || value.includes('"')) 
+            ? `"${value.replace(/"/g, '""')}"` 
+            : value;
+        }).join(',')
+      )
+    ].join('\n');
+
+    // Criar e baixar arquivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `vendas_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // ------------------------ UI
 
   return (
@@ -570,6 +615,16 @@ const Orders: React.FC = () => {
                 </p>
               </div>
               <div className="flex gap-2">
+                <button
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 flex items-center gap-2"
+                  onClick={exportToCSV}
+                  title="Baixar vendas em CSV"
+                >
+                  <span className="material-symbols-outlined text-sm">
+                    download
+                  </span>
+                  <span className="text-sm">Baixar CSV</span>
+                </button>
                 <button
                   className="bg-primary-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-700"
                   onClick={() => setIsCreateOpen(true)}
