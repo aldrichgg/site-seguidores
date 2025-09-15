@@ -87,6 +87,9 @@ const InfluencersAdmin = () => {
     undefined
   );
 
+
+
+
   // Atualizar influenciador selecionado quando a lista for atualizada
   useEffect(() => {
     if (selectedInfluencer && influencers.length > 0) {
@@ -826,7 +829,7 @@ const InfluencersAdmin = () => {
                         <CardHeader>
                           <CardTitle className="text-lg">{sale.profilePageName}</CardTitle>
                           <CardDescription>
-                            {sale.totalOrders} pedidos • R$ {(sale.totalSales / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            {sale.totalOrders} pedidos • Receita total: {(sale.totalRevenue / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} • Comissão: {(sale.totalSales / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                           </CardDescription>
                         </CardHeader>
                         <CardContent>

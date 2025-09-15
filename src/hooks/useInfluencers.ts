@@ -29,6 +29,7 @@ export interface InfluencerSales {
   influencerId: string;
   profilePageName: string;
   totalSales: number;
+  totalRevenue: number;
   totalOrders: number;
   orders: Array<{
     id: string;
