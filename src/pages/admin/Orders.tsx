@@ -458,7 +458,7 @@ const Orders: React.FC = () => {
       'Produto': order.product || '',
       'Plataforma': order.platform || '',
       'Quantidade': order.quantity || 0,
-      'Valor': toBRLStringFromCents(order.amount),
+      'Valor': order.amount?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || 'R$ 0,00',
       'Status': statusMap[order.status] || order.status,
       'Data': new Date(order.createdAt).toLocaleDateString('pt-BR'),
       'Link': order.link || ''
