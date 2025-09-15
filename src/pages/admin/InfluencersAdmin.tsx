@@ -826,7 +826,7 @@ const InfluencersAdmin = () => {
                         <CardHeader>
                           <CardTitle className="text-lg">{sale.profilePageName}</CardTitle>
                           <CardDescription>
-                            {sale.totalOrders} pedidos • R$ {sale.totalSales.toLocaleString('pt-BR')}
+                            {sale.totalOrders} pedidos • R$ {(sale.totalSales / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -848,7 +848,7 @@ const InfluencersAdmin = () => {
                                     <span className="text-sm text-muted-foreground">{order.email}</span>
                                   </TableCell>
                                   <TableCell>{order.order_name}</TableCell>
-                                  <TableCell>R$ {order.amount.toLocaleString('pt-BR')}</TableCell>
+                                  <TableCell>R$ {(order.amount / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                                   <TableCell>
                                     {new Date(order.createdAt).toLocaleDateString('pt-BR')}
                                   </TableCell>
