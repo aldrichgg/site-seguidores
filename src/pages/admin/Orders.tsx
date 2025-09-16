@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getApiBase } from "@/lib/api_base";
 import { useServices } from "@/hooks/useServices";
+import { Copy, Check } from "lucide-react";
 
 // shadcn/ui
 import {
@@ -90,6 +91,7 @@ const Orders: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isStatusChanging, setIsStatusChanging] = useState(false);
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
 
   // criar
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -447,6 +449,16 @@ const Orders: React.FC = () => {
   };
 
   // ------------------------ Exportar CSV
+
+  const handleCopyLink = async (link: string) => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedLink(link);
+      setTimeout(() => setCopiedLink(null), 2000);
+    } catch (error) {
+      console.error('Erro ao copiar link:', error);
+    }
+  };
 
   const exportToCSV = () => {
     // Preparar dados para exportação
@@ -965,7 +977,22 @@ const Orders: React.FC = () => {
                     <h3 className="text-sm font-medium text-gray-500 mb-1">
                       Perfil
                     </h3>
-                    <p>{selectedOrder.instagramProfile}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="flex-1 break-all">{selectedOrder.instagramProfile}</p>
+                      {selectedOrder.instagramProfile && (
+                        <button
+                          onClick={() => handleCopyLink(selectedOrder.instagramProfile)}
+                          className="flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 hover:bg-gray-50 transition-colors"
+                          title="Copiar link"
+                        >
+                          {copiedLink === selectedOrder.instagramProfile ? (
+                            <Check className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <Copy className="w-4 h-4 text-gray-600" />
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

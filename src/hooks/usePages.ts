@@ -67,6 +67,39 @@ export interface PageAnalytics {
   };
 }
 
+export interface UtmLinkAnalytics {
+  utmLink: {
+    id: string;
+    name: string;
+    utmMedium: string;
+    utmCampaign: string;
+    utmId: string;
+    fullUrl: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  metrics: {
+    totalRevenue: number;
+    totalOrders: number;
+    averageOrderValue: number;
+    conversionRate: number;
+    orders: Array<{
+      id: string;
+      amount: number;
+      status: string;
+      utm_source: string;
+      utm_medium: string;
+      utm_campaign: string;
+      utm_id: string;
+      createdAt: string;
+    }>;
+    period: {
+      start: string;
+      end: string;
+    };
+  };
+}
+
 export interface CreatePageData {
   name: string;
   platform: string;
@@ -336,5 +369,134 @@ export const usePageAnalytics = (pageId?: string, period: string = 'week') => {
     loading,
     error,
     refetch: fetchAnalytics,
+  };
+};
+
+export const usePageUtmMetrics = (pageId?: string, period: string = 'week') => {
+  const [utmMetrics, setUtmMetrics] = useState<UtmLinkAnalytics[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    console.log('🔑 [UTM Metrics] Token encontrado:', token ? 'Sim' : 'Não');
+    console.log('🔑 [UTM Metrics] Token completo:', token);
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+  };
+
+  const fetchUtmMetrics = async () => {
+    console.log('🚀 [UTM Metrics] fetchUtmMetrics chamado com pageId:', pageId, 'period:', period);
+    
+    if (!pageId) {
+      console.log('⚠️ [UTM Metrics] pageId não fornecido, cancelando busca');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('🔍 [UTM Metrics] Iniciando busca de métricas para página:', pageId);
+      
+      // Primeiro, buscar a página para obter os links UTM
+      const pageUrl = `${API_BASE_URL}/pages/${pageId}`;
+      console.log('🌐 [UTM Metrics] Buscando página em:', pageUrl);
+      
+      const pageResponse = await fetch(pageUrl, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      });
+
+      console.log('📡 [UTM Metrics] Status da resposta da página:', pageResponse.status, pageResponse.statusText);
+
+      if (!pageResponse.ok) {
+        const errorText = await pageResponse.text();
+        console.error('❌ [UTM Metrics] Erro ao buscar página:', {
+          status: pageResponse.status,
+          statusText: pageResponse.statusText,
+          errorText: errorText
+        });
+        throw new Error(`Erro ao buscar página: ${pageResponse.status}`);
+      }
+
+      const pageData = await pageResponse.json();
+      console.log('📄 [UTM Metrics] Dados da página:', pageData);
+      
+      const utmLinks = pageData.utmLinks || [];
+      console.log('🔗 [UTM Metrics] Links UTM encontrados:', utmLinks);
+      console.log('🔗 [UTM Metrics] Quantidade de links UTM:', utmLinks.length);
+
+      if (utmLinks.length === 0) {
+        console.log('⚠️ [UTM Metrics] Nenhum link UTM encontrado para esta página');
+        setUtmMetrics([]);
+        return;
+      }
+
+      console.log('🚀 [UTM Metrics] Iniciando busca de métricas para', utmLinks.length, 'links UTM');
+
+      // Buscar métricas para cada link UTM
+      const metricsPromises = utmLinks.map(async (utmLink: any) => {
+        try {
+          const url = `${API_BASE_URL}/pages/${pageId}/utm-links/${utmLink.id}/analytics?period=${period}`;
+          console.log('🌐 [UTM Metrics] Buscando métricas para:', url);
+          
+          const headers = getAuthHeaders();
+          console.log('🔐 [UTM Metrics] Headers de autenticação:', headers);
+          
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: headers,
+          });
+
+          console.log('📡 [UTM Metrics] Status da resposta:', response.status, response.statusText);
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.warn(`❌ [UTM Metrics] Erro ao buscar métricas para link ${utmLink.id}:`, {
+              status: response.status,
+              statusText: response.statusText,
+              errorText: errorText
+            });
+            return null;
+          }
+
+          const data = await response.json();
+          console.log('✅ [UTM Metrics] Métricas recebidas para link', utmLink.id, ':', data);
+          return data;
+        } catch (err) {
+          console.warn(`❌ [UTM Metrics] Erro ao buscar métricas para link ${utmLink.id}:`, err);
+          return null;
+        }
+      });
+
+      const results = await Promise.all(metricsPromises);
+      console.log('📋 [UTM Metrics] Resultados brutos:', results);
+      
+      const validMetrics = results.filter(result => result !== null);
+      console.log('📊 [UTM Metrics] Métricas válidas encontradas:', validMetrics);
+      console.log('📊 [UTM Metrics] Quantidade de métricas válidas:', validMetrics.length);
+      
+      setUtmMetrics(validMetrics);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      console.error('❌ [UTM Metrics] Erro geral ao buscar métricas UTM:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    console.log('⚡ [UTM Metrics] useEffect disparado com pageId:', pageId, 'period:', period);
+    fetchUtmMetrics();
+  }, [pageId, period]);
+
+  return {
+    utmMetrics,
+    loading,
+    error,
+    refetch: fetchUtmMetrics,
   };
 };

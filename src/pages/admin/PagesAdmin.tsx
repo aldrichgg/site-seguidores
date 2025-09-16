@@ -27,7 +27,7 @@ import {
   Users,
   DollarSign
 } from 'lucide-react';
-import { usePages, usePageAnalytics, CompanyPage, CreatePageData, UpdatePageData, CreateUtmLinkData, UpdateUtmLinkData } from '@/hooks/usePages';
+import { usePages, usePageAnalytics, usePageUtmMetrics, CompanyPage, CreatePageData, UpdatePageData, CreateUtmLinkData, UpdateUtmLinkData } from '@/hooks/usePages';
 
 const PLATFORMS = [
   { value: 'instagram', label: 'Instagram' },
@@ -89,7 +89,7 @@ const PagesAdmin = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isUtmCreateOpen, setIsUtmCreateOpen] = useState(false);
   const [isUtmEditOpen, setIsUtmEditOpen] = useState(false);
-  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  const [defaultTab, setDefaultTab] = useState("details");
   
   // Estados dos formulários
   const [selectedPage, setSelectedPage] = useState<CompanyPage | null>(null);
@@ -117,6 +117,17 @@ const PagesAdmin = () => {
     selectedPage?.id, 
     analyticsPeriod
   );
+  
+  const { utmMetrics, loading: utmMetricsLoading, error: utmMetricsError } = usePageUtmMetrics(
+    selectedPage?.id, 
+    analyticsPeriod
+  );
+
+  // Debug logs para métricas UTM
+  console.log('🎯 [PagesAdmin] selectedPage:', selectedPage);
+  console.log('📊 [PagesAdmin] utmMetrics:', utmMetrics);
+  console.log('⏳ [PagesAdmin] utmMetricsLoading:', utmMetricsLoading);
+  console.log('❌ [PagesAdmin] utmMetricsError:', utmMetricsError);
 
   // Filtrar páginas
   const filteredPages = pages.filter(page => {
@@ -196,8 +207,9 @@ const PagesAdmin = () => {
     }
   };
 
-  const handleViewPage = (page: CompanyPage) => {
+  const handleViewPage = (page: CompanyPage, tab: string = "details") => {
     setSelectedPage(page);
+    setDefaultTab(tab);
     setIsViewOpen(true);
   };
 
@@ -220,8 +232,7 @@ const PagesAdmin = () => {
   };
 
   const handleViewAnalytics = (page: CompanyPage) => {
-    setSelectedPage(page);
-    setIsAnalyticsOpen(true);
+    handleViewPage(page, "metrics");
   };
 
   // UTM Links handlers
@@ -641,8 +652,8 @@ const PagesAdmin = () => {
 
         {/* Modal de Visualização */}
         <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-          <DialogContent className="max-w-4xl">
-            <DialogHeader>
+          <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
+            <DialogHeader className="flex-shrink-0 p-6 pb-4 border-b">
               <DialogTitle>{selectedPage?.name}</DialogTitle>
               <DialogDescription>
                 Detalhes da página e gerenciamento de links UTM
@@ -650,12 +661,13 @@ const PagesAdmin = () => {
             </DialogHeader>
 
             {selectedPage && (
-              <Tabs defaultValue="details" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="details">Detalhes</TabsTrigger>
-                  <TabsTrigger value="utm">Links UTM</TabsTrigger>
-                  <TabsTrigger value="metrics">Métricas</TabsTrigger>
-                </TabsList>
+              <div className="flex-1 overflow-y-auto px-6">
+                <Tabs defaultValue={defaultTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-3 mb-4 mt-4">
+                    <TabsTrigger value="details">Detalhes</TabsTrigger>
+                    <TabsTrigger value="utm">Links UTM</TabsTrigger>
+                    <TabsTrigger value="metrics">Métricas</TabsTrigger>
+                  </TabsList>
                 
                 <TabsContent value="details" className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -737,8 +749,6 @@ const PagesAdmin = () => {
                       Novo Link UTM
                     </Button>
                   </div>
-                  
-                  <div className="space-y-4">
                     {selectedPage.utmLinks.map((utmLink) => (
                       <Card key={utmLink.id}>
                         <CardHeader>
@@ -847,7 +857,6 @@ const PagesAdmin = () => {
                         </Button>
                       </div>
                     )}
-                  </div>
                 </TabsContent>
                 
                 <TabsContent value="metrics" className="space-y-4">
@@ -867,57 +876,210 @@ const PagesAdmin = () => {
                     </Select>
                   </div>
                   
-                  {analyticsLoading ? (
+                  {analyticsLoading || utmMetricsLoading ? (
                     <div className="flex items-center justify-center py-8">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                     </div>
                   ) : analytics.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">Total de Vendas</CardTitle>
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold">
-                            {(analytics[0].totalSales / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    <div className="space-y-6">
+                      {/* Métricas Gerais */}
+                      <div>
+                        <h4 className="text-lg font-semibold mb-4">Resumo Geral</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                              <CardTitle className="text-sm font-medium">Total de Vendas</CardTitle>
+                              <DollarSign className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                              <div className="text-2xl font-bold">
+                                {(analytics[0].totalSales / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                              </div>
+                            </CardContent>
+                          </Card>
+                          
+                          <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                              <CardTitle className="text-sm font-medium">Total de Pedidos</CardTitle>
+                              <Users className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                              <div className="text-2xl font-bold">{analytics[0].totalOrders}</div>
+                            </CardContent>
+                          </Card>
+                          
+                          <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                              <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
+                              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                              <div className="text-2xl font-bold">
+                                {(analytics[0].conversionRate * 100).toFixed(1)}%
+                              </div>
+                            </CardContent>
+                          </Card>
+                          
+                          <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                              <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                              <div className="text-2xl font-bold">
+                                {(analytics[0].averageOrderValue / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      </div>
+
+                      {/* Métricas por Link UTM */}
+                      {(() => {
+                        console.log('🔍 [PagesAdmin] Verificando se deve renderizar métricas UTM:', {
+                          utmMetricsLength: utmMetrics.length,
+                          utmMetrics,
+                          utmMetricsLoading,
+                          utmMetricsError
+                        });
+                        return utmMetrics.length > 0;
+                      })() && (
+                        <div>
+                          <h4 className="text-lg font-semibold mb-4">Métricas por Link UTM</h4>
+                          <div className="space-y-4">
+                            {utmMetrics.map((utmData) => (
+                              <Card key={utmData.utmLink.id}>
+                                <CardHeader>
+                                  <CardTitle className="text-lg flex items-center gap-2">
+                                    <Badge variant="outline" className="text-sm">
+                                      {UTM_MEDIUMS.find(m => m.value === utmData.utmLink.utmMedium)?.label || utmData.utmLink.utmMedium}
+                                    </Badge>
+                                    <span className="text-sm text-muted-foreground">
+                                      {utmData.utmLink.utmCampaign}
+                                    </span>
+                                  </CardTitle>
+                                  <CardDescription>
+                                    {utmData.utmLink.name}
+                                  </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                                    <div className="text-center">
+                                      <div className="text-2xl font-bold text-green-600">
+                                        {(utmData.metrics.totalRevenue / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                      </div>
+                                      <div className="text-sm text-muted-foreground">Receita Total</div>
+                                    </div>
+                                    <div className="text-center">
+                                      <div className="text-2xl font-bold text-blue-600">
+                                        {utmData.metrics.totalOrders}
+                                      </div>
+                                      <div className="text-sm text-muted-foreground">Pedidos</div>
+                                    </div>
+                                    <div className="text-center">
+                                      <div className="text-2xl font-bold text-purple-600">
+                                        {utmData.metrics.conversionRate.toFixed(1)}%
+                                      </div>
+                                      <div className="text-sm text-muted-foreground">Conversão</div>
+                                    </div>
+                                    <div className="text-center">
+                                      <div className="text-2xl font-bold text-orange-600">
+                                        {(utmData.metrics.averageOrderValue / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                      </div>
+                                      <div className="text-sm text-muted-foreground">Ticket Médio</div>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Link UTM completo */}
+                                  <div className="mt-4 p-3 bg-gray-50 rounded">
+                                    <p className="text-xs text-muted-foreground mb-2">Link UTM Completo:</p>
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex-1 min-w-0">
+                                        <p
+                                          className="text-sm font-mono truncate"
+                                          title={utmData.utmLink.fullUrl}
+                                        >
+                                          {utmData.utmLink.fullUrl}
+                                        </p>
+                                      </div>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(utmData.utmLink.fullUrl);
+                                          setCopiedLinks(prev => ({ ...prev, [utmData.utmLink.id]: true }));
+                                          setTimeout(() => {
+                                            setCopiedLinks(prev => ({ ...prev, [utmData.utmLink.id]: false }));
+                                          }, 2000);
+                                        }}
+                                        className="shrink-0"
+                                      >
+                                        {copiedLinks[utmData.utmLink.id] ? (
+                                          <Check className="w-4 h-4 text-green-600" />
+                                        ) : (
+                                          <Copy className="w-4 h-4" />
+                                        )}
+                                      </Button>
+                                    </div>
+                                  </div>
+
+                                  {/* Pedidos detalhados */}
+                                  {utmData.metrics.orders.length > 0 && (
+                                    <div className="mt-4">
+                                      <h5 className="font-medium mb-2">Pedidos Recentes:</h5>
+                                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                                        {utmData.metrics.orders.slice(0, 5).map((order) => (
+                                          <div key={order.id} className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
+                                            <div>
+                                              <div className="font-medium">Pedido #{order.id.slice(-8)}</div>
+                                              <div className="text-xs text-muted-foreground">
+                                                {new Date(order.createdAt).toLocaleDateString('pt-BR')}
+                                              </div>
+                                            </div>
+                                            <div className="text-right">
+                                              <div className="font-medium">
+                                                {(order.amount / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                              </div>
+                                              <Badge 
+                                                variant={order.status === 'approved' ? 'default' : 'secondary'}
+                                                className="text-xs"
+                                              >
+                                                {order.status === 'approved' ? 'Aprovado' : order.status}
+                                              </Badge>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            ))}
                           </div>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">Total de Pedidos</CardTitle>
-                          <Users className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold">{analytics[0].totalOrders}</div>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
-                          <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold">
-                            {(analytics[0].conversionRate * 100).toFixed(1)}%
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold">
-                            {(analytics[0].averageOrderValue / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                          </div>
-                        </CardContent>
-                      </Card>
+                        </div>
+                      )}
+
+                      {utmMetricsError && (
+                        <div className="text-center py-4">
+                          <p className="text-red-500 text-sm">
+                            Erro ao carregar métricas por UTM: {utmMetricsError}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Debug: Mostrar informações quando não há métricas */}
+                      {!utmMetricsLoading && utmMetrics.length === 0 && !utmMetricsError && (
+                        <div className="text-center py-8 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <p className="text-yellow-800 text-sm mb-2">
+                            Debug: Nenhuma métrica UTM encontrada
+                          </p>
+                          <p className="text-xs text-yellow-600">
+                            selectedPage: {selectedPage?.id} | 
+                            utmMetrics.length: {utmMetrics.length} | 
+                            loading: {utmMetricsLoading.toString()}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-center py-8">
@@ -927,10 +1089,11 @@ const PagesAdmin = () => {
                     </div>
                   )}
                 </TabsContent>
-              </Tabs>
+                </Tabs>
+              </div>
             )}
 
-            <DialogFooter>
+            <DialogFooter className="flex-shrink-0 p-6 pt-4 border-t">
               <Button variant="outline" onClick={() => setIsViewOpen(false)}>
                 Fechar
               </Button>
@@ -1222,103 +1385,6 @@ const PagesAdmin = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Modal de Analytics */}
-        <Dialog open={isAnalyticsOpen} onOpenChange={setIsAnalyticsOpen}>
-          <DialogContent className="max-w-4xl">
-            <DialogHeader>
-              <DialogTitle>Métricas - {selectedPage?.name}</DialogTitle>
-              <DialogDescription>
-                Analytics e métricas de performance da página
-              </DialogDescription>
-            </DialogHeader>
-
-            {selectedPage && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Métricas da Página</h3>
-                  <Select value={analyticsPeriod} onValueChange={setAnalyticsPeriod}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PERIODS.map((period) => (
-                        <SelectItem key={period.value} value={period.value}>
-                          {period.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {analyticsLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                  </div>
-                ) : analytics.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total de Vendas</CardTitle>
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">
-                          {(analytics[0].totalSales / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total de Pedidos</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{analytics[0].totalOrders}</div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">
-                          {(analytics[0].conversionRate * 100).toFixed(1)}%
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">
-                          {(analytics[0].averageOrderValue / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">
-                      Nenhuma métrica disponível para o período selecionado.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAnalyticsOpen(false)}>
-                Fechar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     </TooltipProvider>
   );
