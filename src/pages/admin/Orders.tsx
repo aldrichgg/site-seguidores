@@ -172,6 +172,18 @@ const Orders: React.FC = () => {
       order.metadata?.order_id ??
       "";
 
+    // Debug: Log da estrutura completa do order para identificar campos UTM
+    console.log('Order structure:', order);
+    console.log('Order metadata:', order.metadata);
+    console.log('Order UTM object:', order.utm);
+    console.log('Order UTM fields:', {
+      utm_source: order.utm?.utm_source,
+      utm_medium: order.utm?.utm_medium,
+      utm_campaign: order.utm?.utm_campaign,
+      utm_id: order.utm?.utm_id,
+      pageName: order.pageName,
+      source: order.source
+    });
 
     return {
       id: order.id,
@@ -200,6 +212,13 @@ const Orders: React.FC = () => {
       paymentMethod: order.metadata?.payment_id ? "PIX" : "",
       raw: order,
       paymentPlatform: order.paymentPlatform || "",
+      // Campos UTM
+      utmSource: order.utm?.utm_source || order.metadata?.utm_source || "",
+      utmMedium: order.utm?.utm_medium || order.metadata?.utm_medium || "",
+      utmCampaign: order.utm?.utm_campaign || order.metadata?.utm_campaign || "",
+      utmId: order.utm?.utm_id || order.metadata?.utm_id || "",
+      pageName: order.pageName || order.metadata?.pageName || "",
+      source: order.source || order.metadata?.source || "",
     };
   };
 
@@ -994,6 +1013,65 @@ const Orders: React.FC = () => {
                       )}
                     </div>
                   </div>
+
+                  {/* Seção UTM - Origem da Venda */}
+                  {(selectedOrder.pageName || selectedOrder.source || selectedOrder.utmSource || selectedOrder.utmMedium || selectedOrder.utmCampaign || selectedOrder.utmId) && (
+                    <div className="border-t pt-4">
+                      <h3 className="text-sm font-medium text-gray-500 mb-3">
+                        Origem da Venda (UTM)
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {selectedOrder.pageName && (
+                          <div>
+                            <h4 className="text-xs font-medium text-gray-400 mb-1">
+                              Página
+                            </h4>
+                            <p className="text-sm font-medium">{selectedOrder.pageName}</p>
+                          </div>
+                        )}
+                        {selectedOrder.source && (
+                          <div>
+                            <h4 className="text-xs font-medium text-gray-400 mb-1">
+                              Origem
+                            </h4>
+                            <p className="text-sm font-medium">{selectedOrder.source}</p>
+                          </div>
+                        )}
+                        {selectedOrder.utmSource && (
+                          <div>
+                            <h4 className="text-xs font-medium text-gray-400 mb-1">
+                              UTM Source
+                            </h4>
+                            <p className="text-sm font-medium">{selectedOrder.utmSource}</p>
+                          </div>
+                        )}
+                        {selectedOrder.utmMedium && (
+                          <div>
+                            <h4 className="text-xs font-medium text-gray-400 mb-1">
+                              UTM Medium
+                            </h4>
+                            <p className="text-sm font-medium">{selectedOrder.utmMedium}</p>
+                          </div>
+                        )}
+                        {selectedOrder.utmCampaign && (
+                          <div>
+                            <h4 className="text-xs font-medium text-gray-400 mb-1">
+                              UTM Campaign
+                            </h4>
+                            <p className="text-sm font-medium">{selectedOrder.utmCampaign}</p>
+                          </div>
+                        )}
+                        {selectedOrder.utmId && (
+                          <div>
+                            <h4 className="text-xs font-medium text-gray-400 mb-1">
+                              UTM ID
+                            </h4>
+                            <p className="text-sm font-medium">{selectedOrder.utmId}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
