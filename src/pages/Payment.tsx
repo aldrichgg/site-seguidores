@@ -45,6 +45,7 @@ import {
 import { VisaIcon, MastercardIcon, PixIcon } from "@/assets/payment-icons";
 import Layout from "@/components/Layout";
 import ProfilePrivacyModal from "@/components/ProfilePrivacyModal";
+import TermsModal from "@/components/TermsModal";
 import { get } from "http";
 import { getApiBase } from "@/lib/api_base";
 import { useUTM } from "@/hooks/use-utm";
@@ -124,6 +125,7 @@ const Payment = () => {
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [isOrderSummaryOpen, setIsOrderSummaryOpen] = useState<boolean>(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState<boolean>(false);
+  const [showTermsModal, setShowTermsModal] = useState<boolean>(false);
   const [linkValidationStatus, setLinkValidationStatus] = useState<{
     isValid: boolean;
     message: string;
@@ -1355,19 +1357,21 @@ const Payment = () => {
                       <p className="text-sm text-gray-600 mt-2 leading-relaxed">
                         Ao marcar esta caixa, você confirma que leu e concorda
                         com nossos{" "}
-                        <a
-                          href="#"
-                          className="text-blue-600 hover:text-blue-800 font-medium underline"
+                        <button
+                          type="button"
+                          onClick={() => setShowTermsModal(true)}
+                          className="text-blue-600 hover:text-blue-800 font-medium underline cursor-pointer transition-colors"
                         >
                           Termos de Serviço
-                        </a>{" "}
+                        </button>{" "}
                         e{" "}
-                        <a
-                          href="#"
-                          className="text-blue-600 hover:text-blue-800 font-medium underline"
+                        <button
+                          type="button"
+                          onClick={() => setShowTermsModal(true)}
+                          className="text-blue-600 hover:text-blue-800 font-medium underline cursor-pointer transition-colors"
                         >
                           Política de Privacidade
-                        </a>
+                        </button>
                         . Esta confirmação é necessária para processar seu
                         pagamento com segurança.
                       </p>
@@ -1394,6 +1398,12 @@ const Payment = () => {
         onClose={() => setShowPrivacyModal(false)}
         onConfirm={handleConfirmPayment}
         profileLink={customerData.linkPerfil}
+      />
+
+      {/* Modal de Termos e Condições */}
+      <TermsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
       />
     </Layout>
   );
