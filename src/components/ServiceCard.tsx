@@ -46,7 +46,6 @@ const ServiceCard = ({
   const navigate = useNavigate();
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [isSubscriptionClicked, setIsSubscriptionClicked] = useState(false);
-  /* console.log(recommended); */
   // Check if this is a subscription plan
   const isSubscription =
     title.toLowerCase().includes("plano") || price.includes("/mês");
@@ -79,11 +78,6 @@ const ServiceCard = ({
 
     // Validar se serviceId é válido
     if (!isValidServiceId(serviceId)) {
-      console.error("ServiceId inválido no ServiceCard:", {
-        serviceId,
-        title,
-        platform
-      });
       alert("Erro: Serviço não identificado corretamente. Tente novamente.");
       return;
     }

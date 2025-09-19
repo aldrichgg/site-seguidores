@@ -131,7 +131,6 @@ const Payment = () => {
   } | null>(null);
   const URL = getApiBase();
   const { utm } = useUTMContext();
-  /* console.log(utm); */
   // Carregar detalhes do pedido da navegação se disponíveis
   useEffect(() => {
     if (location.state && location.state.orderDetails) {
@@ -154,7 +153,7 @@ const Payment = () => {
             }));
           }
         }).catch(error => {
-          console.error('Erro ao buscar serviceId fallback:', error);
+          // Erro silencioso para produção
         });
       }
     }
@@ -345,11 +344,6 @@ const Payment = () => {
       );
 
       if (!isValidServiceId(finalServiceId)) {
-        console.error("ServiceId inválido:", {
-          originalServiceId: orderDetails.serviceId,
-          title: orderDetails.title,
-          platform: orderDetails.platform
-        });
         alert("Erro: Serviço não identificado. Por favor, selecione um serviço novamente.");
         navigate("/");
         return;
@@ -451,9 +445,7 @@ const Payment = () => {
         paymentPlatform: 'site'
       };
 
-      // Log para debug
-      console.log("Enviando pagamento com serviceId:", finalServiceId, "para serviço:", orderDetails.title);
-      console.log("Body completo:", body);
+      // Enviando pagamento
       
       const response = await fetch(`${URL}/payments/create`, {
         method: "POST",
@@ -464,18 +456,15 @@ const Payment = () => {
       });
 
       const result = await response.json();
-      /* console.log("💚 Pedido criado com sucesso:", result); */
       if (response.ok) {
         setQrCode(result.qrcode_image);
         setPixCode(result.pixCode);
         setPaymentRequest(true);
         setQrCodeTimer(300);
       } else {
-        console.error("❌ Erro ao criar pedido:", result.message);
         alert("Erro ao criar pedido. Tente novamente.");
       }
     } catch (error) {
-      console.error("🚨 Erro inesperado na hora de enviar o email:", error);
       alert("Erro ao processar pagamento. Tente novamente.");
     } finally {
       setIsProcessing(false);

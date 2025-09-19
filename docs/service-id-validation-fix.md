@@ -100,12 +100,7 @@ A solução agora usa a API existente `/services` para buscar os serviceIds dina
 
 ## Logs de Debug
 
-A implementação inclui logs detalhados para facilitar o debug:
-
-```typescript
-console.log("Enviando pagamento com serviceId:", finalServiceId, "para serviço:", orderDetails.title);
-console.log("Body completo:", body);
-```
+A implementação foi otimizada para produção, removendo logs desnecessários para melhor performance.
 
 ## Testes
 
@@ -135,9 +130,9 @@ Criados testes unitários em `src/utils/__tests__/serviceIdMapper.test.ts` para 
 
 Para monitorar se o problema foi resolvido:
 
-1. Verifique os logs do console para mensagens de fallback
-2. Monitore o banco de dados para serviceIds null
-3. Verifique os logs da API de pagamento
+1. Monitore o banco de dados para serviceIds null
+2. Verifique os logs da API de pagamento
+3. Observe o comportamento dos usuários na página de pagamento
 
 ## Rollback
 

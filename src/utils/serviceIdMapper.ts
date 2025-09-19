@@ -61,7 +61,6 @@ export async function getServiceIdFromTitle(title: string, platform: string): Pr
     const response = await fetch(`${API_BASE_URL}?platform=${normalizedPlatform}&serviceType=${serviceType}`);
     
     if (!response.ok) {
-      console.error('Erro ao buscar serviços na API:', response.status);
       return null;
     }
     
@@ -76,7 +75,6 @@ export async function getServiceIdFromTitle(title: string, platform: string): Pr
     
     return service?.serviceId || null;
   } catch (error) {
-    console.error('Erro ao buscar serviceId da API:', error);
     return null;
   }
 }
@@ -100,7 +98,6 @@ export async function getServiceIdFromDetails(quantity: number, serviceType: str
     const response = await fetch(`${API_BASE_URL}?platform=${normalizedPlatform}&serviceType=${normalizedServiceType}`);
     
     if (!response.ok) {
-      console.error('Erro ao buscar serviços na API:', response.status);
       return null;
     }
     
@@ -115,7 +112,6 @@ export async function getServiceIdFromDetails(quantity: number, serviceType: str
     
     return service?.serviceId || null;
   } catch (error) {
-    console.error('Erro ao buscar serviceId da API:', error);
     return null;
   }
 }
@@ -149,10 +145,8 @@ export async function getServiceIdWithFallback(
   // Tentar buscar pelo título usando a API
   const fallbackServiceId = await getServiceIdFromTitle(title, platform);
   if (isValidServiceId(fallbackServiceId)) {
-    console.warn(`ServiceId fallback usado para "${title}" (${platform}): ${fallbackServiceId}`);
     return fallbackServiceId!;
   }
   
-  console.error(`Não foi possível determinar serviceId para "${title}" (${platform})`);
   return null;
 }
