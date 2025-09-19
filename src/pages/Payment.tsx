@@ -49,6 +49,7 @@ import { get } from "http";
 import { getApiBase } from "@/lib/api_base";
 import { useUTM } from "@/hooks/use-utm";
 import { useUTMContext } from "@/contexts/utmContext";
+import { getServiceIdWithFallback, isValidServiceId } from "@/utils/serviceIdMapper";
 
 // Interface para definir a estrutura dos detalhes do pedido
 interface OrderDetailsType {
@@ -135,9 +136,30 @@ const Payment = () => {
   useEffect(() => {
     if (location.state && location.state.orderDetails) {
       setOrderDetails(location.state.orderDetails);
+    } else {
+      // Fallback: tentar determinar serviceId baseado no título atual
+      const currentTitle = orderDetails.title;
+      const currentPlatform = orderDetails.platform;
+      
+      if (!isValidServiceId(orderDetails.serviceId) && currentTitle && currentPlatform) {
+        getServiceIdWithFallback(
+          orderDetails.serviceId,
+          currentTitle,
+          currentPlatform
+        ).then(fallbackServiceId => {
+          if (fallbackServiceId) {
+            setOrderDetails(prev => ({
+              ...prev,
+              serviceId: fallbackServiceId
+            }));
+          }
+        }).catch(error => {
+          console.error('Erro ao buscar serviceId fallback:', error);
+        });
+      }
     }
     window.scrollTo(0, 0);
-  }, [location]);
+  }, [location, orderDetails.title, orderDetails.platform, orderDetails.serviceId]);
 
   // Inicializar o total com o valor do pedido
   useEffect(() => {
@@ -315,6 +337,32 @@ const Payment = () => {
     setIsProcessing(true);
 
     try {
+      // Validar se serviceId é válido antes de prosseguir
+      const finalServiceId = await getServiceIdWithFallback(
+        orderDetails.serviceId,
+        orderDetails.title,
+        orderDetails.platform
+      );
+
+      if (!isValidServiceId(finalServiceId)) {
+        console.error("ServiceId inválido:", {
+          originalServiceId: orderDetails.serviceId,
+          title: orderDetails.title,
+          platform: orderDetails.platform
+        });
+        alert("Erro: Serviço não identificado. Por favor, selecione um serviço novamente.");
+        navigate("/");
+        return;
+      }
+
+      // Atualizar orderDetails com o serviceId válido
+      if (finalServiceId !== orderDetails.serviceId) {
+        setOrderDetails(prev => ({
+          ...prev,
+          serviceId: finalServiceId!
+        }));
+      }
+
       // você já tem:
       const priceWithFee = Number((totalAmount * 1.01).toFixed(2));
 
@@ -392,7 +440,7 @@ const Payment = () => {
           },
         ],
         metadata: {
-          service_id: orderDetails.serviceId,
+          service_id: finalServiceId,
           link: customerData.linkPerfil,
           quantity: quantityFromTitle,
           email: customerData.email,
@@ -403,7 +451,10 @@ const Payment = () => {
         paymentPlatform: 'site'
       };
 
-      /* console.log(body); */
+      // Log para debug
+      console.log("Enviando pagamento com serviceId:", finalServiceId, "para serviço:", orderDetails.title);
+      console.log("Body completo:", body);
+      
       const response = await fetch(`${URL}/payments/create`, {
         method: "POST",
         headers: {

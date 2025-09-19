@@ -14,6 +14,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import RatingForm from "./RatingForm";
+import { isValidServiceId } from "@/utils/serviceIdMapper";
 
 interface ServiceCardProps {
   icon: React.ReactNode;
@@ -74,6 +75,17 @@ const ServiceCard = ({
         deliveryTime = feature;
         break;
       }
+    }
+
+    // Validar se serviceId é válido
+    if (!isValidServiceId(serviceId)) {
+      console.error("ServiceId inválido no ServiceCard:", {
+        serviceId,
+        title,
+        platform
+      });
+      alert("Erro: Serviço não identificado corretamente. Tente novamente.");
+      return;
     }
 
     const orderDetails = {
