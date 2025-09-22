@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { getApiBase } from "@/lib/api_base";
 import { useServices } from "@/hooks/useServices";
+import { db } from "@/lib/firebase";
+import { doc, onSnapshot } from 'firebase/firestore';
 import { Copy, Check } from "lucide-react";
 
 // shadcn/ui
@@ -69,6 +71,11 @@ const Orders: React.FC = () => {
 
   // Buscar serviços para usar serviceId reais do banco
   const { services: allServices } = useServices(undefined, undefined, true);
+  
+  // Buscar serviços ativos para o formulário PIX (mesma lógica do index)
+  const { services: instagramServices } = useServices('instagram', undefined, false);
+  const { services: tiktokServices } = useServices('tiktok', undefined, false);
+  const { services: youtubeServices } = useServices('youtube', undefined, false);
 
   // Função para encontrar serviceId real do banco
   const findServiceId = (orderType: OrderType, platform: Platform): number => {
@@ -77,6 +84,128 @@ const Orders: React.FC = () => {
       s.serviceType.toLowerCase() === orderType.toLowerCase()
     );
     return service?.serviceId || 0;
+  };
+
+  // Função para calcular preço baseado no serviço selecionado
+  const calculatePrice = (serviceId: number): string => {
+    const service = allServices.find(s => s.serviceId === serviceId);
+    if (service) {
+      return service.price.toFixed(2).replace('.', ',');
+    }
+    return "0,00";
+  };
+
+  // Função para obter serviços disponíveis por plataforma
+  const getServicesByPlatform = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'instagram':
+        return instagramServices;
+      case 'tiktok':
+        return tiktokServices;
+      case 'youtube':
+        return youtubeServices;
+      default:
+        return [];
+    }
+  };
+
+  // Função para agrupar serviços por tipo
+  const getServicesByType = (platform: string, serviceType: string) => {
+    const services = getServicesByPlatform(platform);
+    return services.filter(service => 
+      service.serviceType.toLowerCase() === serviceType.toLowerCase()
+    );
+  };
+
+  // Função para obter todos os serviços filtrados
+  const getFilteredServices = () => {
+    const allServices = [...instagramServices, ...tiktokServices, ...youtubeServices];
+    
+    if (!serviceSearchTerm) return allServices;
+    
+    return allServices.filter(service => 
+      service.name.toLowerCase().includes(serviceSearchTerm.toLowerCase()) ||
+      service.platform.toLowerCase().includes(serviceSearchTerm.toLowerCase()) ||
+      service.serviceType.toLowerCase().includes(serviceSearchTerm.toLowerCase()) ||
+      service.quantity.toString().includes(serviceSearchTerm)
+    );
+  };
+
+  // Função para obter ícone da plataforma
+  const getPlatformIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'instagram':
+        return '📸';
+      case 'tiktok':
+        return '🎵';
+      case 'youtube':
+        return '📺';
+      default:
+        return '📱';
+    }
+  };
+
+  // Função para obter ícone do tipo de serviço
+  const getServiceTypeIcon = (serviceType: string) => {
+    switch (serviceType.toLowerCase()) {
+      case 'seguidores':
+      case 'inscritos':
+        return '👥';
+      case 'curtidas':
+        return '❤️';
+      case 'visualizações':
+      case 'visualizacoes':
+        return '👁️';
+      default:
+        return '⭐';
+    }
+  };
+
+  // Função para formatar quantidade
+  const formatQuantity = (quantity: number) => {
+    if (quantity >= 1000) {
+      return `${(quantity / 1000).toFixed(quantity % 1000 === 0 ? 0 : 1)}k`;
+    }
+    return quantity.toString();
+  };
+
+  // Função para verificar o status do pagamento no Firebase (mesma lógica da página de Payment)
+  const checkPaymentStatus = (paymentId: string) => {
+    // Referência ao documento no Firebase
+    const paymentRef = doc(db, 'orders', paymentId);
+    
+    // Escutar mudanças no documento
+    const unsubscribe = onSnapshot(paymentRef, (doc) => {
+      if (doc.exists()) {
+        const data = doc.data();
+        const status = data.status;
+        
+        setPaymentStatus(status);
+        
+        // Se o pagamento foi aprovado, atualizar a lista de pedidos
+        if (status === 'approved') {
+          unsubscribe(); // Parar de escutar mudanças
+          
+          // Atualizar a lista de pedidos para refletir o status
+          setOrders((prev) => prev.map(order => 
+            order.id === paymentId 
+              ? { ...order, status: 'approved' }
+              : order
+          ));
+          
+          // Fechar modal do PIX
+          setIsPixModalOpen(false);
+          
+          // Mostrar mensagem de sucesso
+          alert("Pagamento aprovado! O pedido foi processado com sucesso.");
+        }
+      }
+    }, (error) => {
+      console.error("Erro ao verificar status do pagamento:", error);
+    });
+    
+    // Cleanup: parar de escutar quando o componente for desmontado
+    return unsubscribe;
   };
 
   // filtros
@@ -96,6 +225,7 @@ const Orders: React.FC = () => {
   // criar
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [generatePix, setGeneratePix] = useState(false);
   const [newOrder, setNewOrder] = useState({
     email: "",
     firstName: "",
@@ -106,11 +236,46 @@ const Orders: React.FC = () => {
     quantity: 100,
     amountBRL: "0,00",
     link: "",
-    status: "approved" as "approved" | "pending" | "cancelled",
+    status: "pending" as "approved" | "pending" | "cancelled", // Muda para pending quando gerar PIX
     phone: "",
     serviceId: findServiceId("Seguidores", "Instagram"),
+    selectedServiceId: 0, // Para o formulário PIX
     famaId: "", // <<< novo campo (providerOrderId)
   });
+
+  // PIX
+  const [isPixModalOpen, setIsPixModalOpen] = useState(false);
+  const [pixData, setPixData] = useState<{
+    qrCode: string;
+    pixCode: string;
+    paymentId: string;
+    orderId: string;
+  } | null>(null);
+
+  // Filtro de serviços
+  const [serviceSearchTerm, setServiceSearchTerm] = useState("");
+  const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
+
+  // Status do pagamento PIX
+  const [paymentStatus, setPaymentStatus] = useState<string>("");
+
+  // Fechar dropdown quando clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.service-dropdown-container')) {
+        setIsServiceDropdownOpen(false);
+      }
+    };
+
+    if (isServiceDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isServiceDropdownOpen]);
 
   // editar
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -295,58 +460,246 @@ const Orders: React.FC = () => {
   const handleCreateOrder = async () => {
     try {
       setCreating(true);
-      const payload = {
-        email: newOrder.email.trim().toLowerCase(),
-        firstName: newOrder.firstName.trim(),
-        lastName: newOrder.lastName.trim(),
-        cpf: newOrder.cpf.trim(),
-        orderName: newOrder.orderType, // "Seguidores" | "Visualizações" | "Curtidas"
-        platform: newOrder.platform, // "Instagram" | "TikTok"
-        quantity: Number(newOrder.quantity) || 0,
-        amountCents: parseBRLToCents(newOrder.amountBRL),
-        link: newOrder.link || undefined,
-        status: newOrder.status, // "approved" | "pending" | "cancelled"
-        phone: newOrder.phone || undefined,
-        serviceId: newOrder.serviceId,
-        providerOrderId: newOrder.famaId || undefined, // <<< envia fama id
+      
+      // Validação para modo PIX
+      if (generatePix && newOrder.selectedServiceId === 0) {
+        alert("Por favor, selecione um serviço antes de criar o pedido.");
+        return;
+      }
+      
+      // Se não for gerar PIX, cria pedido normalmente
+      if (!generatePix) {
+        const payload = {
+          email: newOrder.email.trim().toLowerCase(),
+          firstName: newOrder.firstName.trim(),
+          lastName: newOrder.lastName.trim(),
+          cpf: newOrder.cpf.trim(),
+          orderName: newOrder.orderType, // "Seguidores" | "Visualizações" | "Curtidas"
+          platform: newOrder.platform, // "Instagram" | "TikTok"
+          quantity: Number(newOrder.quantity) || 0,
+          amountCents: parseBRLToCents(newOrder.amountBRL),
+          link: newOrder.link || undefined,
+          status: newOrder.status, // "approved" | "pending" | "cancelled"
+          phone: newOrder.phone || undefined,
+          serviceId: newOrder.serviceId,
+          providerOrderId: newOrder.famaId || undefined, // <<< envia fama id
+        };
+        const res = await fetch(`${getApiBase()}/orders`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) throw new Error(`POST /orders ${res.status}`);
+        const created = await res.json();
+
+        setOrders((prev) => [mapApiOrderToUi(created), ...prev]);
+        setMeta((m) => ({
+          ...m,
+          total: m.total + 1,
+          totalPages: Math.max(1, Math.ceil((m.total + 1) / m.limit)),
+        }));
+
+        setIsCreateOpen(false);
+        resetNewOrder();
+        return;
+      }
+
+      // Se for gerar PIX, usa a mesma lógica da página de Payment
+      const valueCents = parseBRLToCents(newOrder.amountBRL);
+      const quantityFromTitle = Number(newOrder.quantity) || 0;
+      
+      // Busca o serviço selecionado para obter o nome correto
+      const selectedService = allServices.find(s => s.serviceId === newOrder.selectedServiceId);
+      const description = selectedService ? selectedService.name : `${newOrder.quantity} ${newOrder.orderType} ${newOrder.platform}`;
+
+      // Formatar número do celular no formato internacional
+      const formatPhoneNumber = (phone: string) => {
+        const cleanPhone = phone.replace(/\D/g, "");
+        if (cleanPhone.length === 11 && cleanPhone.startsWith("11")) {
+          return `+55${cleanPhone}`;
+        } else if (cleanPhone.length === 10) {
+          return `+5511${cleanPhone}`;
+        } else if (cleanPhone.startsWith("55")) {
+          return `+${cleanPhone}`;
+        } else if (cleanPhone.startsWith("+55")) {
+          return cleanPhone;
+        }
+        return "+5511999999999"; // Fallback
       };
-      const res = await fetch(`${getApiBase()}/orders`, {
+
+      const formattedPhone = formatPhoneNumber(newOrder.phone);
+
+      // Log do número formatado
+      console.log("=== Phone Number Formatting ===");
+      console.log("Original phone:", newOrder.phone);
+      console.log("Formatted phone:", formattedPhone);
+      console.log("================================");
+
+      // Usa exatamente a mesma estrutura da página de Payment
+      const body = {
+        paymentMethod: "pix",
+        value: valueCents,
+        description,
+        postbackUrl: "https://new-back-end-phi.vercel.app/payments/webhook",
+        customer: {
+          name: `${newOrder.firstName} ${newOrder.lastName}`.trim(),
+          email: newOrder.email.trim().toLowerCase(),
+          phone: formattedPhone,
+        },
+        items: [
+          {
+            name: description,
+            quantity: quantityFromTitle,
+            unitAmount: valueCents,
+          },
+        ],
+        metadata: {
+          service_id: newOrder.selectedServiceId,
+          link: newOrder.link || "",
+          quantity: quantityFromTitle,
+          email: newOrder.email.trim().toLowerCase(),
+          celular: formattedPhone,
+          platform: newOrder.platform.toLowerCase(),
+          source: "admin_manual", // Identifica que foi criado manualmente no admin
+        },
+        paymentPlatform: 'manual'
+      };
+
+      // Log para debug - ver o que está sendo enviado para a API
+      console.log("=== API Request - PIX Creation ===");
+      console.log("URL:", `${getApiBase()}/payments/create`);
+      console.log("Method: POST");
+      console.log("Headers:", {
+        "Content-Type": "application/json",
+      });
+      console.log("Body:", body);
+      console.log("=====================================");
+
+      // Enviando pagamento (mesma lógica da página de Payment)
+      const response = await fetch(`${getApiBase()}/payments/create`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
       });
 
-      if (!res.ok) throw new Error(`POST /orders ${res.status}`);
-      const created = await res.json();
+      const result = await response.json();
+      
+      // Log para debug - ver o que é retornado da API
+      console.log("=== API Response - PIX Creation ===");
+      console.log("Status:", response.status);
+      console.log("Response Headers:", Object.fromEntries(response.headers.entries()));
+      console.log("Response Body:", result);
+      console.log("=====================================");
+      
+      if (response.ok) {
+        // Cria o pedido na lista imediatamente com a estrutura correta
+        const customerName = `${newOrder.firstName.trim()} ${newOrder.lastName.trim()}`.trim();
+        const newOrderData = {
+          id: result.id,
+          order_id: newOrder.famaId || "",
+          famaId: newOrder.famaId || "",
+          status: "pending",
+          statusGroup: "pending",
+          product: newOrder.orderType,
+          customer: {
+            name: customerName,
+            email: newOrder.email.trim().toLowerCase(),
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(customerName)}&background=random`,
+            phone: formattedPhone,
+          },
+          platform: newOrder.platform,
+          quantity: quantityFromTitle,
+          amount: valueCents / 100,
+          date: new Date().toLocaleString("pt-BR"),
+          instagramProfile: newOrder.link || "",
+          paymentMethod: "PIX",
+          raw: {
+            id: result.id,
+            email: newOrder.email.trim().toLowerCase(),
+            firstName: newOrder.firstName.trim(),
+            lastName: newOrder.lastName.trim(),
+            cpf: newOrder.cpf.trim(),
+            orderName: newOrder.orderType,
+            platform: newOrder.platform,
+            quantity: quantityFromTitle,
+            amount: valueCents,
+            link: newOrder.link || undefined,
+            status: "pending",
+            phone: newOrder.phone || undefined,
+            serviceId: newOrder.selectedServiceId,
+            providerOrderId: newOrder.famaId || undefined,
+            paymentId: result.id,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+          paymentPlatform: "manual",
+          utmSource: "",
+          utmMedium: "",
+          utmCampaign: "",
+          utmId: "",
+          pageName: "",
+          source: "admin_manual",
+        };
 
-      setOrders((prev) => [mapApiOrderToUi(created), ...prev]);
-      setMeta((m) => ({
-        ...m,
-        total: m.total + 1,
-        totalPages: Math.max(1, Math.ceil((m.total + 1) / m.limit)),
-      }));
+        // Adiciona o pedido à lista imediatamente
+        setOrders((prev) => [newOrderData, ...prev]);
+        setMeta((m) => ({
+          ...m,
+          total: m.total + 1,
+          totalPages: Math.max(1, Math.ceil((m.total + 1) / m.limit)),
+        }));
 
-      setIsCreateOpen(false);
-      setNewOrder({
-        email: "",
-        firstName: "",
-        lastName: "",
-        cpf: "",
-        orderType: "Seguidores",
-        platform: "Instagram",
-        quantity: 100,
-        amountBRL: "0,00",
-        link: "",
-        status: "approved",
-        phone: "",
-        serviceId: findServiceId("Seguidores", "Instagram"),
-        famaId: "",
-      });
-    } catch {
-      alert("Falha ao criar pedido.");
+        // Exibe modal com PIX (mesma estrutura da página de Payment)
+        setPixData({
+          qrCode: result.qrcode_image,
+          pixCode: result.pixCode,
+          paymentId: result.id,
+          orderId: result.id, // Usa o ID do pagamento como ID do pedido
+        });
+
+        // Iniciar verificação do status do pagamento (mesma lógica da página de Payment)
+        if (result.id) {
+          checkPaymentStatus(result.id);
+        }
+
+        setIsCreateOpen(false);
+        setIsPixModalOpen(true);
+        resetNewOrder();
+      } else {
+        alert("Erro ao criar pedido. Tente novamente.");
+      }
+
+    } catch (error) {
+      console.error("Erro ao criar pedido:", error);
+      alert("Falha ao criar pedido. Tente novamente.");
     } finally {
       setCreating(false);
     }
+  };
+
+  const resetNewOrder = () => {
+    setNewOrder({
+      email: "",
+      firstName: "",
+      lastName: "",
+      cpf: "",
+      orderType: "Seguidores",
+      platform: "Instagram",
+      quantity: 100,
+      amountBRL: "0,00",
+      link: "",
+      status: "pending",
+      phone: "",
+      serviceId: findServiceId("Seguidores", "Instagram"),
+      selectedServiceId: 0,
+      famaId: "",
+    });
+    setGeneratePix(false);
+    setServiceSearchTerm("");
+    setIsServiceDropdownOpen(false);
   };
 
   // ------------------------ editar
@@ -1088,192 +1441,464 @@ const Orders: React.FC = () => {
 
           {/* Modal: Novo Pedido */}
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogContent className="sm:max-w-2xl">
-              <DialogHeader>
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
+              <DialogHeader className="flex-shrink-0">
                 <DialogTitle>Novo Pedido (manual)</DialogTitle>
                 <DialogDescription>
                   Crie um pedido diretamente no sistema.
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm mb-1">Email *</label>
+              {/* Checkbox para gerar PIX - sempre visível no topo */}
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <label className="flex items-center gap-2">
                   <input
-                    className="w-full p-2 rounded border"
-                    value={newOrder.email}
-                    onChange={(e) =>
-                      setNewOrder((o) => ({ ...o, email: e.target.value }))
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm mb-1">CPF</label>
-                  <input
-                    className="w-full p-2 rounded border"
-                    value={newOrder.cpf}
-                    onChange={(e) =>
-                      setNewOrder((o) => ({ ...o, cpf: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-1">Nome</label>
-                  <input
-                    className="w-full p-2 rounded border"
-                    value={newOrder.firstName}
-                    onChange={(e) =>
-                      setNewOrder((o) => ({ ...o, firstName: e.target.value }))
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm mb-1">Sobrenome</label>
-                  <input
-                    className="w-full p-2 rounded border"
-                    value={newOrder.lastName}
-                    onChange={(e) =>
-                      setNewOrder((o) => ({ ...o, lastName: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-1">
-                    Produto / Plano *
-                  </label>
-                  <select
-                    className="w-full p-2 rounded border"
-                    value={newOrder.orderType}
+                    type="checkbox"
+                    checked={generatePix}
                     onChange={(e) => {
-                      const orderType = e.target.value as OrderType;
-                      setNewOrder((o) => ({
-                        ...o,
-                        orderType,
-                        serviceId: findServiceId(orderType, o.platform),
-                      }));
+                      setGeneratePix(e.target.checked);
+                      if (e.target.checked) {
+                        setNewOrder((o) => ({ ...o, status: "pending" }));
+                      }
                     }}
-                  >
-                    <option value="Seguidores">Seguidores</option>
-                    <option value="Visualizações">Visualizações</option>
-                    <option value="Curtidas">Curtidas</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-1">Plataforma *</label>
-                  <select
-                    className="w-full p-2 rounded border"
-                    value={newOrder.platform}
-                    onChange={(e) => {
-                      const platform = e.target.value as Platform;
-                      setNewOrder((o) => ({
-                        ...o,
-                        platform,
-                        serviceId: findServiceId(o.orderType, platform),
-                      }));
-                    }}
-                  >
-                    <option value="Instagram">Instagram</option>
-                    <option value="TikTok">TikTok</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-1">Quantidade *</label>
-                  <input
-                    type="number"
-                    className="w-full p-2 rounded border"
-                    value={newOrder.quantity}
-                    onChange={(e) =>
-                      setNewOrder((o) => ({
-                        ...o,
-                        quantity: Number(e.target.value),
-                      }))
-                    }
+                    className="rounded"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-1">Valor (R$) *</label>
-                  <input
-                    placeholder="0,00"
-                    className="w-full p-2 rounded border"
-                    value={newOrder.amountBRL}
-                    onChange={(e) =>
-                      setNewOrder((o) => ({ ...o, amountBRL: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm mb-1">
-                    Link (perfil/post)
-                  </label>
-                  <input
-                    className="w-full p-2 rounded border"
-                    value={newOrder.link}
-                    onChange={(e) =>
-                      setNewOrder((o) => ({ ...o, link: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-1">Telefone</label>
-                  <input
-                    className="w-full p-2 rounded border"
-                    value={newOrder.phone}
-                    onChange={(e) =>
-                      setNewOrder((o) => ({ ...o, phone: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-1">
-                    Service ID (auto)
-                  </label>
-                  <div className="w-full p-2 rounded border bg-gray-50 text-gray-700">
-                    {newOrder.serviceId}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-1">
-                    Fama ID (opcional)
-                  </label>
-                  <input
-                    className="w-full p-2 rounded border"
-                    placeholder="ex.: 123456789"
-                    value={newOrder.famaId}
-                    onChange={(e) =>
-                      setNewOrder((o) => ({ ...o, famaId: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-1">Status *</label>
-                  <select
-                    className="w-full p-2 rounded border"
-                    value={newOrder.status}
-                    onChange={(e) =>
-                      setNewOrder((o) => ({
-                        ...o,
-                        status: e.target.value as any,
-                      }))
-                    }
-                  >
-                    <option value="approved">Aprovado</option>
-                    <option value="pending">Pendente</option>
-                    <option value="cancelled">Cancelado</option>
-                  </select>
-                </div>
+                  <span className="text-sm font-medium text-blue-800">
+                    Gerar PIX para este pedido
+                  </span>
+                </label>
+                <p className="text-xs text-blue-600 mt-1">
+                  {generatePix 
+                    ? "Formulário simplificado - apenas dados essenciais serão solicitados"
+                    : "Quando ativado, o pedido será criado com status 'Pendente' e um PIX será gerado para o cliente pagar."
+                  }
+                </p>
               </div>
 
-              <DialogFooter>
+              <div className="flex-1 overflow-y-auto px-1">
+                {generatePix ? (
+                  // Formulário simplificado para PIX
+                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm mb-1">Email *</label>
+                      <input
+                        className="w-full p-2 rounded border"
+                        value={newOrder.email}
+                        onChange={(e) =>
+                          setNewOrder((o) => ({ ...o, email: e.target.value }))
+                        }
+                        placeholder="cliente@email.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-1">Telefone *</label>
+                      <input
+                        className="w-full p-2 rounded border"
+                        value={newOrder.phone}
+                        onChange={(e) =>
+                          setNewOrder((o) => ({ ...o, phone: e.target.value }))
+                        }
+                        placeholder="(11) 99999-9999"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">Nome Completo *</label>
+                    <input
+                      className="w-full p-2 rounded border"
+                      value={`${newOrder.firstName} ${newOrder.lastName}`.trim()}
+                      onChange={(e) => {
+                        const fullName = e.target.value;
+                        const nameParts = fullName.split(' ');
+                        setNewOrder((o) => ({
+                          ...o,
+                          firstName: nameParts[0] || '',
+                          lastName: nameParts.slice(1).join(' ') || '',
+                        }));
+                      }}
+                      placeholder="João Silva"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="relative service-dropdown-container">
+                      <label className="block text-sm mb-1">Serviço *</label>
+                      
+                      {/* Campo de busca e seleção */}
+                      <div className="relative">
+                        <input
+                          type="text"
+                          className="w-full p-2 rounded border pr-10"
+                          placeholder="Buscar serviço (ex: seguidores, instagram, 5000)..."
+                          value={serviceSearchTerm}
+                          onChange={(e) => {
+                            setServiceSearchTerm(e.target.value);
+                            setIsServiceDropdownOpen(true);
+                          }}
+                          onFocus={() => setIsServiceDropdownOpen(true)}
+                        />
+                        <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                          {isServiceDropdownOpen ? (
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Dropdown de serviços */}
+                      {isServiceDropdownOpen && (
+                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-80 overflow-y-auto">
+                          {getFilteredServices().length === 0 ? (
+                            <div className="p-3 text-gray-500 text-center">
+                              {serviceSearchTerm ? "Nenhum serviço encontrado" : "Carregando serviços..."}
+                            </div>
+                          ) : (
+                            <div className="py-1">
+                              {/* Agrupar por plataforma */}
+                              {['instagram', 'tiktok', 'youtube'].map(platform => {
+                                const platformServices = getFilteredServices().filter(service => 
+                                  service.platform.toLowerCase() === platform
+                                );
+                                
+                                if (platformServices.length === 0) return null;
+                                
+                                return (
+                                  <div key={platform}>
+                                    {/* Cabeçalho da plataforma */}
+                                    <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
+                                      <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                                        <span>{getPlatformIcon(platform)}</span>
+                                        <span className="capitalize">{platform}</span>
+                                        <span className="text-gray-500">({platformServices.length})</span>
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Serviços da plataforma */}
+                                    {platformServices.map((service) => (
+                                      <button
+                                        key={service.serviceId}
+                                        className="w-full px-3 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                                        onClick={() => {
+                                          setNewOrder((o) => ({
+                                            ...o,
+                                            selectedServiceId: service.serviceId,
+                                            serviceId: service.serviceId,
+                                            orderType: service.serviceType as OrderType,
+                                            platform: service.platform as Platform,
+                                            quantity: service.quantity,
+                                            amountBRL: calculatePrice(service.serviceId),
+                                          }));
+                                          setServiceSearchTerm("");
+                                          setIsServiceDropdownOpen(false);
+                                        }}
+                                      >
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center gap-2">
+                                            <span>{getServiceTypeIcon(service.serviceType)}</span>
+                                            <div>
+                                              <div className="font-medium text-sm">
+                                                {formatQuantity(service.quantity)} {service.serviceType}
+                                              </div>
+                                              <div className="text-xs text-gray-500">
+                                                {service.deliveryTime}
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div className="text-right">
+                                            <div className="font-semibold text-sm text-green-600">
+                                              R$ {service.price.toFixed(2).replace('.', ',')}
+                                            </div>
+                                            {service.originalPrice > service.price && (
+                                              <div className="text-xs text-gray-400 line-through">
+                                                R$ {service.originalPrice.toFixed(2).replace('.', ',')}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </button>
+                                    ))}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Serviço selecionado */}
+                      {newOrder.selectedServiceId > 0 && (
+                        <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded">
+                          {(() => {
+                            const service = allServices.find(s => s.serviceId === newOrder.selectedServiceId);
+                            if (service) {
+                              return (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <span>{getPlatformIcon(service.platform)}</span>
+                                  <span>{getServiceTypeIcon(service.serviceType)}</span>
+                                  <span className="font-medium">
+                                    {formatQuantity(service.quantity)} {service.serviceType} {service.platform}
+                                  </span>
+                                  <span className="text-green-600 font-semibold">
+                                    R$ {service.price.toFixed(2).replace('.', ',')}
+                                  </span>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm mb-1">Valor (R$) *</label>
+                      <input
+                        className="w-full p-2 rounded border bg-gray-50"
+                        value={newOrder.amountBRL}
+                        readOnly
+                        placeholder="Auto-calculado"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Informações do serviço selecionado */}
+                  {newOrder.selectedServiceId > 0 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-800 mb-2">Detalhes do Serviço</h4>
+                      {(() => {
+                        const service = allServices.find(s => s.serviceId === newOrder.selectedServiceId);
+                        if (service) {
+                          return (
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-blue-600">Plataforma:</span>
+                                <span className="ml-2 font-medium">{service.platform}</span>
+                              </div>
+                              <div>
+                                <span className="text-blue-600">Tipo:</span>
+                                <span className="ml-2 font-medium">{service.serviceType}</span>
+                              </div>
+                              <div>
+                                <span className="text-blue-600">Quantidade:</span>
+                                <span className="ml-2 font-medium">{service.quantity.toLocaleString()}</span>
+                              </div>
+                              <div>
+                                <span className="text-blue-600">Entrega:</span>
+                                <span className="ml-2 font-medium">{service.deliveryTime}</span>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm mb-1">Link do Perfil *</label>
+                    <input
+                      className="w-full p-2 rounded border"
+                      value={newOrder.link}
+                      onChange={(e) =>
+                        setNewOrder((o) => ({ ...o, link: e.target.value }))
+                      }
+                      placeholder="https://instagram.com/usuario"
+                    />
+                  </div>
+
+                  {/* Campos ocultos mas necessários */}
+                  <input type="hidden" value={newOrder.serviceId} />
+                  <input type="hidden" value={newOrder.status} />
+                </div>
+              ) : (
+                // Formulário completo (modo original)
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm mb-1">Email *</label>
+                    <input
+                      className="w-full p-2 rounded border"
+                      value={newOrder.email}
+                      onChange={(e) =>
+                        setNewOrder((o) => ({ ...o, email: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1">CPF</label>
+                    <input
+                      className="w-full p-2 rounded border"
+                      value={newOrder.cpf}
+                      onChange={(e) =>
+                        setNewOrder((o) => ({ ...o, cpf: e.target.value }))
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">Nome</label>
+                    <input
+                      className="w-full p-2 rounded border"
+                      value={newOrder.firstName}
+                      onChange={(e) =>
+                        setNewOrder((o) => ({ ...o, firstName: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1">Sobrenome</label>
+                    <input
+                      className="w-full p-2 rounded border"
+                      value={newOrder.lastName}
+                      onChange={(e) =>
+                        setNewOrder((o) => ({ ...o, lastName: e.target.value }))
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">
+                      Produto / Plano *
+                    </label>
+                    <select
+                      className="w-full p-2 rounded border"
+                      value={newOrder.orderType}
+                      onChange={(e) => {
+                        const orderType = e.target.value as OrderType;
+                        setNewOrder((o) => ({
+                          ...o,
+                          orderType,
+                          serviceId: findServiceId(orderType, o.platform),
+                        }));
+                      }}
+                    >
+                      <option value="Seguidores">Seguidores</option>
+                      <option value="Visualizações">Visualizações</option>
+                      <option value="Curtidas">Curtidas</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">Plataforma *</label>
+                    <select
+                      className="w-full p-2 rounded border"
+                      value={newOrder.platform}
+                      onChange={(e) => {
+                        const platform = e.target.value as Platform;
+                        setNewOrder((o) => ({
+                          ...o,
+                          platform,
+                          serviceId: findServiceId(o.orderType, platform),
+                        }));
+                      }}
+                    >
+                      <option value="Instagram">Instagram</option>
+                      <option value="TikTok">TikTok</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">Quantidade *</label>
+                    <input
+                      type="number"
+                      className="w-full p-2 rounded border"
+                      value={newOrder.quantity}
+                      onChange={(e) =>
+                        setNewOrder((o) => ({
+                          ...o,
+                          quantity: Number(e.target.value),
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">Valor (R$) *</label>
+                    <input
+                      placeholder="0,00"
+                      className="w-full p-2 rounded border"
+                      value={newOrder.amountBRL}
+                      onChange={(e) =>
+                        setNewOrder((o) => ({ ...o, amountBRL: e.target.value }))
+                      }
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm mb-1">
+                      Link (perfil/post)
+                    </label>
+                    <input
+                      className="w-full p-2 rounded border"
+                      value={newOrder.link}
+                      onChange={(e) =>
+                        setNewOrder((o) => ({ ...o, link: e.target.value }))
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">Telefone</label>
+                    <input
+                      className="w-full p-2 rounded border"
+                      value={newOrder.phone}
+                      onChange={(e) =>
+                        setNewOrder((o) => ({ ...o, phone: e.target.value }))
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">
+                      Service ID (auto)
+                    </label>
+                    <div className="w-full p-2 rounded border bg-gray-50 text-gray-700">
+                      {newOrder.serviceId}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">
+                      Fama ID (opcional)
+                    </label>
+                    <input
+                      className="w-full p-2 rounded border"
+                      placeholder="ex.: 123456789"
+                      value={newOrder.famaId}
+                      onChange={(e) =>
+                        setNewOrder((o) => ({ ...o, famaId: e.target.value }))
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">Status *</label>
+                    <select
+                      className="w-full p-2 rounded border"
+                      value={newOrder.status}
+                      onChange={(e) =>
+                        setNewOrder((o) => ({
+                          ...o,
+                          status: e.target.value as any,
+                        }))
+                      }
+                    >
+                      <option value="approved">Aprovado</option>
+                      <option value="pending">Pendente</option>
+                      <option value="cancelled">Cancelado</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+              </div>
+
+              <DialogFooter className="flex-shrink-0 pt-4">
                 <button
                   className="px-4 py-2 rounded border"
                   onClick={() => setIsCreateOpen(false)}
@@ -1509,6 +2134,134 @@ const Orders: React.FC = () => {
                   disabled={updating || !editOrder}
                 >
                   {updating ? "Salvando..." : "Salvar Alterações"}
+                </button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Modal: PIX Gerado */}
+          <Dialog open={isPixModalOpen} onOpenChange={setIsPixModalOpen}>
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
+              <DialogHeader className="flex-shrink-0">
+                <DialogTitle className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    </svg>
+                  </div>
+                  PIX Gerado com Sucesso!
+                </DialogTitle>
+                <DialogDescription>
+                  O pedido foi criado e o PIX foi gerado. Envie as informações abaixo para o cliente.
+                </DialogDescription>
+              </DialogHeader>
+
+              {pixData && (
+                <div className="flex-1 overflow-y-auto space-y-4 px-1">
+                  {/* Informações do Pedido */}
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <h3 className="font-semibold text-gray-900 mb-2 text-sm">Informações do Pedido</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      <div className="break-all">
+                        <span className="text-gray-600">ID do Pedido:</span>
+                        <span className="ml-1 font-mono text-xs">{pixData.orderId}</span>
+                      </div>
+                      <div className="break-all">
+                        <span className="text-gray-600">ID do Pagamento:</span>
+                        <span className="ml-1 font-mono text-xs">{pixData.paymentId}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Indicador de status do pagamento */}
+                  {paymentStatus && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                        <span className="text-blue-800 font-medium text-sm">
+                          Aguardando confirmação do pagamento...
+                        </span>
+                      </div>
+                      <p className="text-xs text-blue-600 mt-1 text-center">
+                        Status: {paymentStatus}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* QR Code */}
+                  <div className="text-center">
+                    <h3 className="font-semibold text-gray-900 mb-3 text-sm">QR Code PIX</h3>
+                    <div className="inline-block p-2 sm:p-3 bg-white border-2 border-gray-200 rounded-lg">
+                      <img
+                        src={pixData.qrCode}
+                        alt="QR Code PIX"
+                        className="mx-auto"
+                        style={{ maxWidth: "150px", height: "auto" }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-600 mt-2">
+                      O cliente pode escanear este QR Code com o aplicativo do banco
+                    </p>
+                  </div>
+
+                  {/* Código PIX */}
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <h3 className="font-semibold text-green-800 mb-2 text-sm">Código PIX</h3>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <input
+                        type="text"
+                        value={pixData.pixCode}
+                        readOnly
+                        className="flex-1 p-2 border border-green-300 rounded text-xs font-mono bg-white break-all"
+                      />
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(pixData.pixCode);
+                          alert("Código PIX copiado!");
+                        }}
+                        className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm whitespace-nowrap"
+                      >
+                        Copiar
+                      </button>
+                    </div>
+                    <p className="text-xs text-green-700 mt-2">
+                      O cliente pode copiar e colar este código no aplicativo do banco
+                    </p>
+                  </div>
+
+                  {/* Instruções */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <h3 className="font-semibold text-blue-800 mb-2 text-sm">Instruções para o Cliente</h3>
+                    <ul className="text-xs text-blue-700 space-y-1">
+                      <li>• Escaneie o QR Code ou copie o código PIX</li>
+                      <li>• Abra o aplicativo do seu banco</li>
+                      <li>• Selecione "PIX" e "Pagar com PIX"</li>
+                      <li>• Escaneie o QR Code ou cole o código</li>
+                      <li>• Confirme o pagamento</li>
+                      <li>• O pedido será processado automaticamente após o pagamento</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              <DialogFooter className="flex-shrink-0 pt-4 flex flex-col sm:flex-row gap-2">
+                <button
+                  className="w-full sm:w-auto px-4 py-2 rounded border hover:bg-gray-50 text-sm"
+                  onClick={() => setIsPixModalOpen(false)}
+                >
+                  Fechar
+                </button>
+                <button
+                  className="w-full sm:w-auto px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm"
+                  onClick={() => {
+                    if (pixData) {
+                      const message = `PIX Gerado para seu pedido!\n\nQR Code: ${pixData.qrCode}\nCódigo PIX: ${pixData.pixCode}\n\nID do Pedido: ${pixData.orderId}`;
+                      navigator.clipboard.writeText(message);
+                      alert("Informações do PIX copiadas!");
+                    }
+                  }}
+                >
+                  Copiar Informações
                 </button>
               </DialogFooter>
             </DialogContent>

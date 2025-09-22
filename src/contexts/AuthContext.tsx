@@ -44,6 +44,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           navigate("/admin");
         } else if (decoded.role === 2 && !currentPath.startsWith("/influencer")) {
           navigate("/influencer");
+        } else if (decoded.role === 3 && !currentPath.startsWith("/attendant")) {
+          navigate("/attendant");
         }
       }
     }
@@ -73,6 +75,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       navigate("/admin");
     } else if (decoded?.role === 2) {
       navigate("/influencer");
+    } else if (decoded?.role === 3) {
+      navigate("/attendant");
     }
   };
 
@@ -80,7 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
-    if (user?.role === 1 || user?.role === 2) {
+    if (user?.role === 1 || user?.role === 2 || user?.role === 3) {
       navigate("/login");
     }
   };

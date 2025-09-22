@@ -57,6 +57,11 @@ const navItems = [
     path: "/admin/influenciadores",
   },
   { 
+    icon: MessageSquare, 
+    label: "Atendentes", 
+    path: "/admin/atendentes",
+  },
+  { 
     icon: Globe, 
     label: "Páginas da Empresa", 
     path: "/admin/paginas",

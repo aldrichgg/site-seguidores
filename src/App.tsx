@@ -31,6 +31,7 @@ import Customers from "@/pages/admin/Customers";
 import Services from "@/pages/admin/Services";
 import ServicesAdmin from "@/pages/admin/ServicesAdmin";
 import InfluencersAdmin from "@/pages/admin/InfluencersAdmin";
+import AttendantsAdmin from "@/pages/admin/AttendantsAdmin";
 import PagesAdmin from "@/pages/admin/PagesAdmin";
 import Analytics from "@/pages/admin/Analytics";
 import Settings from "@/pages/admin/Settings";
@@ -39,15 +40,21 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute"; // admin
 import { UserProtectedRoute } from "./components/UserProtectedRoutes"; // usuário comum
 import { InfluencerProtectedRoute } from "./components/InfluencerProtectedRoute"; // influenciador
+import { AttendantProtectedRoute } from "./components/AttendantProtectedRoute"; // atendente
 import { useUTM } from "./hooks/use-utm";
 import { UTMProvider } from "./contexts/utmContext";
 import InfluencerLayout from "@/pages/influencer/InfluencerLayout";
 import InfluencerDashboard from "@/pages/influencer/InfluencerDashboard";
+import AttendantLayout from "@/pages/attendant/AttendantLayout";
+import AttendantDashboard from "@/pages/attendant/AttendantDashboard";
+import AttendantSales from "@/pages/attendant/AttendantSales";
+import AttendantCreateOrder from "@/pages/attendant/AttendantCreateOrder";
 function AppContent() {
   const location = useLocation();
   const isPaymentPage = location.pathname === "/payment";
   const isAdminPage = location.pathname.startsWith("/admin");
   const isInfluencerPage = location.pathname.startsWith("/influencer");
+  const isAttendantPage = location.pathname.startsWith("/attendant");
   const utm = useUTM();
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -99,6 +106,7 @@ function AppContent() {
           <Route path="vendas" element={<Orders />} />
           <Route path="clientes" element={<Customers />} />
           <Route path="influenciadores" element={<InfluencersAdmin />} />
+          <Route path="atendentes" element={<AttendantsAdmin />} />
           <Route path="paginas" element={<PagesAdmin />} />
           <Route path="servicos" element={<Services />} />
           <Route path="configurar-servicos" element={<ServicesAdmin />} />
@@ -118,6 +126,20 @@ function AppContent() {
           <Route index element={<InfluencerDashboard />} />
         </Route>
 
+        {/* Rotas de atendente */}
+        <Route
+          path="/attendant"
+          element={
+            <AttendantProtectedRoute redirectTo="/login">
+              <AttendantLayout />
+            </AttendantProtectedRoute>
+          }
+        >
+          <Route index element={<AttendantDashboard />} />
+          <Route path="sales" element={<AttendantSales />} />
+          <Route path="create-order" element={<AttendantCreateOrder />} />
+        </Route>
+
         {/* Rota 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -125,8 +147,8 @@ function AppContent() {
       <Toaster />
 
       {/* {!isPaymentPage && !isAdminPage && <ScrollToTop />} */}
-      {!isPaymentPage && !isAdminPage && !isInfluencerPage && <FloatingReviews />}
-      {!isPaymentPage && !isAdminPage && !isInfluencerPage && <SupportChat />}
+      {!isPaymentPage && !isAdminPage && !isInfluencerPage && !isAttendantPage && <FloatingReviews />}
+      {!isPaymentPage && !isAdminPage && !isInfluencerPage && !isAttendantPage && <SupportChat />}
     </>
   );
 }
