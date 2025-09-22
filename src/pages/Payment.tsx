@@ -51,6 +51,8 @@ import { getApiBase } from "@/lib/api_base";
 import { useUTM } from "@/hooks/use-utm";
 import { useUTMContext } from "@/contexts/utmContext";
 import { getServiceIdWithFallback, isValidServiceId } from "@/utils/serviceIdMapper";
+import { db } from "@/lib/firebase";
+import { doc, onSnapshot } from 'firebase/firestore';
 
 // Interface para definir a estrutura dos detalhes do pedido
 interface OrderDetailsType {
@@ -82,6 +84,7 @@ declare global {
     gtag?: (...args: any[]) => void;
   }
 }
+
 
 const Payment = () => {
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
@@ -126,6 +129,8 @@ const Payment = () => {
   const [isOrderSummaryOpen, setIsOrderSummaryOpen] = useState<boolean>(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState<boolean>(false);
   const [showTermsModal, setShowTermsModal] = useState<boolean>(false);
+  const [paymentId, setPaymentId] = useState<string>("");
+  const [paymentStatus, setPaymentStatus] = useState<string>("");
   const [linkValidationStatus, setLinkValidationStatus] = useState<{
     isValid: boolean;
     message: string;
@@ -133,6 +138,14 @@ const Payment = () => {
   } | null>(null);
   const URL = getApiBase();
   const { utm } = useUTMContext();
+  
+  // Cleanup do listener do Firebase quando o componente for desmontado
+  useEffect(() => {
+    return () => {
+      // O cleanup será feito automaticamente pelo onSnapshot
+    };
+  }, []);
+
   // Carregar detalhes do pedido da navegação se disponíveis
   useEffect(() => {
     if (location.state && location.state.orderDetails) {
@@ -334,11 +347,13 @@ const Payment = () => {
   };
 
   const handleConfirmPayment = async () => {
+    
     setShowPrivacyModal(false);
     setIsProcessing(true);
 
     try {
       // Validar se serviceId é válido antes de prosseguir
+      
       const finalServiceId = await getServiceIdWithFallback(
         orderDetails.serviceId,
         orderDetails.title,
@@ -458,11 +473,17 @@ const Payment = () => {
       });
 
       const result = await response.json();
+      
       if (response.ok) {
         setQrCode(result.qrcode_image);
         setPixCode(result.pixCode);
         setPaymentRequest(true);
         setQrCodeTimer(300);
+        
+        // Iniciar verificação do status do pagamento
+        if (result.id) {
+          checkPaymentStatus(result.id);
+        }
       } else {
         alert("Erro ao criar pedido. Tente novamente.");
       }
@@ -477,6 +498,52 @@ const Payment = () => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
+  };
+
+  // Função para verificar o status do pagamento no Firebase
+  const checkPaymentStatus = (paymentId: string) => {
+    setPaymentId(paymentId);
+    
+    // Referência ao documento no Firebase
+    const paymentRef = doc(db, 'orders', paymentId);
+    
+    // Escutar mudanças no documento
+    const unsubscribe = onSnapshot(paymentRef, (doc) => {
+      if (doc.exists()) {
+        const data = doc.data();
+        const status = data.status;
+        
+        setPaymentStatus(status);
+        
+        // Se o pagamento foi aprovado, redirecionar para upsell
+        if (status === 'approved') {
+          unsubscribe(); // Parar de escutar mudanças
+          
+          // Redirecionar para página de upsell
+          navigate("/upsell", {
+            state: {
+              upsellData: {
+                originalOrder: {
+                  title: orderDetails.title,
+                  price: totalAmount,
+                  platform: orderDetails.platform,
+                },
+                customerData: {
+                  name: customerData.name,
+                  email: customerData.email,
+                  linkPerfil: customerData.linkPerfil,
+                },
+              },
+            },
+          });
+        }
+      }
+    }, (error) => {
+      console.error("Erro ao verificar status do pagamento:", error);
+    });
+    
+    // Cleanup: parar de escutar quando o componente for desmontado
+    return unsubscribe;
   };
 
   return (
@@ -1205,6 +1272,23 @@ const Payment = () => {
                     {/* Seção PIX (aparece quando QR Code é gerado) */}
                     {qrCode && (
                       <div className="mt-6 space-y-4">
+                        {/* Indicador de status do pagamento */}
+                        {paymentId && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                              <span className="text-blue-800 font-medium">
+                                Aguardando confirmação do pagamento...
+                              </span>
+                            </div>
+                            {paymentStatus && (
+                              <p className="text-sm text-blue-600 mt-1 text-center">
+                                Status: {paymentStatus}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
                         <div className="bg-green-50 border border-green-200 rounded-xl p-6">
                           <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">

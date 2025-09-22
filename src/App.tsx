@@ -9,6 +9,8 @@ import {
 
 import Index from "@/pages/Index";
 import Payment from "@/pages/Payment";
+import Upsell from "@/pages/Upsell";
+import ThankYou from "@/pages/ThankYou";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import NotFound from "@/pages/NotFound";
@@ -62,6 +64,8 @@ function AppContent() {
 
         {/* Rota protegida para usuário comum */}
         <Route path="/payment" element={<Payment/>} />
+        <Route path="/upsell" element={<Upsell />} />
+        <Route path="/obrigado" element={<ThankYou />} />
         <Route path="/acompanhar-pedido" element={<OrderStatus />} />
         {/* <Route
           path="/payment"
