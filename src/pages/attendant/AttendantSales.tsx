@@ -38,7 +38,7 @@ const AttendantSales = () => {
   }
 
   const formatCurrency = (value: number) => {
-    return `R$ ${(value / 100).toFixed(2).replace('.', ',')}`;
+    return `R$ ${value.toFixed(2).replace('.', ',')}`;
   };
 
   const formatDate = (dateString: string) => {
@@ -81,6 +81,7 @@ const AttendantSales = () => {
     pendingOrders: filteredOrders.filter(order => (order.order?.status || '').toLowerCase() === 'pending').length,
     cancelledOrders: filteredOrders.filter(order => (order.order?.status || '').toLowerCase() === 'cancelled').length,
   };
+
 
   const exportToCSV = () => {
     if (!filteredOrders.length) return;

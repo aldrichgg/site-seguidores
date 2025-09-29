@@ -1,7 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { getApiBase } from '@/lib/api_base';
 import { useAuth } from '@/contexts/AuthContext';
-import { AttendantSalesResponse, AttendantSalesQuery } from '@/types/attendants';
+import { AttendantSalesResponse } from '@/types/attendants';
+
+interface AttendantSalesQuery {
+  page?: number;
+  limit?: number;
+  startDate?: string;
+  endDate?: string;
+  sort?: string;
+  search?: string;
+}
 
 export const useAttendantSales = (attendantId?: string, query: AttendantSalesQuery = {}) => {
   const [sales, setSales] = useState<AttendantSalesResponse | null>(null);
@@ -59,7 +68,6 @@ export const useAttendantSales = (attendantId?: string, query: AttendantSalesQue
       
       // Se a rota específica de atendentes não existir (404), tentar rota de pedidos
       if (!response.ok && response.status === 404 && !attendantId && currentUser?.role === 3) {
-        console.log('Rota /attendants/my/sales não encontrada, tentando /orders como fallback');
         const ordersUrl = `${API_URL}/orders`;
         response = await fetch(`${ordersUrl}?${params.toString()}`, {
           headers: {
@@ -78,8 +86,11 @@ export const useAttendantSales = (attendantId?: string, query: AttendantSalesQue
           order.attendant_id === currentUser.uid || order.attendantId === currentUser.uid
         ) || [];
         
-        // Calcular totais
-        const totalRevenue = attendantOrders.reduce((sum: number, order: any) => sum + (order.amount || 0), 0);
+        // Calcular totais - converter de centavos para reais
+        const totalRevenue = attendantOrders.reduce((sum: number, order: any) => {
+          const amount = order.amount || order.order?.amount || 0;
+          return sum + (amount / 100); // Converter de centavos para reais
+        }, 0);
         const totalOrders = attendantOrders.length;
         
         // Para comissão, usar percentual padrão (pode ser melhorado buscando do perfil)
@@ -94,8 +105,8 @@ export const useAttendantSales = (attendantId?: string, query: AttendantSalesQue
           orders: attendantOrders.map((order: any) => ({
             id: order.id,
             email: order.email,
-            amount: order.amount || 0,
-            status: order.status,
+            amount: (order.amount || order.order?.amount || 0) / 100, // Converter de centavos para reais
+            status: order.status || order.order?.status,
             createdAt: order.createdAt || order.date
           }))
         };
@@ -104,9 +115,38 @@ export const useAttendantSales = (attendantId?: string, query: AttendantSalesQue
       } else if (!response.ok) {
         throw new Error(`Erro ao buscar vendas: ${response.statusText}`);
       } else {
-        // Rota específica funcionou
+        // Rota específica funcionou - processar dados da API do atendente
         const data = await response.json();
-        setSales(data);
+        
+        // A API retorna valores em centavos, converter para reais
+        const processedData: AttendantSalesResponse = {
+          attendantId: data.attendantId,
+          totalSales: data.totalSales / 100, // Converter de centavos para reais
+          totalRevenue: data.totalRevenue / 100, // Converter de centavos para reais
+          totalRevenueAll: data.totalRevenueAll ? data.totalRevenueAll / 100 : 0, // Converter de centavos para reais
+          totalOrders: data.totalOrders,
+          approvedOrders: data.approvedOrders,
+          pendingOrders: data.pendingOrders,
+          cancelledOrders: data.cancelledOrders,
+          orders: data.orders?.map((order: any) => ({
+            id: order.id,
+            assignedToMe: order.assignedToMe,
+            customer: order.customer,
+            product: order.product,
+            order: {
+              ...order.order,
+              amount: order.order?.amount ? order.order.amount / 100 : 0 // Converter de centavos para reais
+            },
+            payment: order.payment,
+            utm: order.utm,
+            createdAt: order.createdAt,
+            updatedAt: order.updatedAt,
+            paidAt: order.paidAt,
+            raw: order.raw
+          })) || []
+        };
+        
+        setSales(processedData);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido ao buscar vendas.');

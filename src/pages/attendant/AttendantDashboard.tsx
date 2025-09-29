@@ -34,7 +34,7 @@ const AttendantDashboard = () => {
   }
 
   const formatCurrency = (value: number) => {
-    return `R$ ${(value / 100).toFixed(2).replace('.', ',')}`;
+    return `R$ ${value.toFixed(2).replace('.', ',')}`;
   };
 
   const getStatusBadge = (status: string | undefined) => {

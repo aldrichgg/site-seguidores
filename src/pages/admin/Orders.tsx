@@ -530,11 +530,6 @@ const Orders: React.FC = () => {
 
       const formattedPhone = formatPhoneNumber(newOrder.phone);
 
-      // Log do número formatado
-      console.log("=== Phone Number Formatting ===");
-      console.log("Original phone:", newOrder.phone);
-      console.log("Formatted phone:", formattedPhone);
-      console.log("================================");
 
       // Usa exatamente a mesma estrutura da página de Payment
       const body = {
@@ -566,15 +561,6 @@ const Orders: React.FC = () => {
         paymentPlatform: 'manual'
       };
 
-      // Log para debug - ver o que está sendo enviado para a API
-      console.log("=== API Request - PIX Creation ===");
-      console.log("URL:", `${getApiBase()}/payments/create`);
-      console.log("Method: POST");
-      console.log("Headers:", {
-        "Content-Type": "application/json",
-      });
-      console.log("Body:", body);
-      console.log("=====================================");
 
       // Enviando pagamento (mesma lógica da página de Payment)
       const response = await fetch(`${getApiBase()}/payments/create`, {
@@ -586,13 +572,6 @@ const Orders: React.FC = () => {
       });
 
       const result = await response.json();
-      
-      // Log para debug - ver o que é retornado da API
-      console.log("=== API Response - PIX Creation ===");
-      console.log("Status:", response.status);
-      console.log("Response Headers:", Object.fromEntries(response.headers.entries()));
-      console.log("Response Body:", result);
-      console.log("=====================================");
       
       if (response.ok) {
         // Cria o pedido na lista imediatamente com a estrutura correta

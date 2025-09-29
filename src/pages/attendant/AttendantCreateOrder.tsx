@@ -65,6 +65,7 @@ interface NewOrder {
   serviceId: number;
   famaId: string;
   selectedServiceId: number;
+  selectedServiceUniqueId: string; // ID único do serviço
 }
 
 const AttendantCreateOrder = () => {
@@ -88,6 +89,7 @@ const AttendantCreateOrder = () => {
     serviceId: 0,
     famaId: '',
     selectedServiceId: 0,
+    selectedServiceUniqueId: '',
   });
 
   // Estados de controle
@@ -139,6 +141,11 @@ const AttendantCreateOrder = () => {
     return '47.30';
   };
 
+  // Função para buscar serviço por ID único
+  const getServiceByUniqueId = (uniqueId: string) => {
+    return allServices.find(s => s.id === uniqueId);
+  };
+
   // Função para resetar o formulário
   const resetNewOrder = () => {
     setNewOrder({
@@ -156,6 +163,7 @@ const AttendantCreateOrder = () => {
       serviceId: 0,
       famaId: '',
       selectedServiceId: 0,
+      selectedServiceUniqueId: '',
     });
     setGeneratePix(false);
     setServiceSearchTerm("");
@@ -266,7 +274,7 @@ const AttendantCreateOrder = () => {
 
   // Função para formatar moeda
   const formatCurrency = (value: number) => {
-    return `R$ ${(value / 100).toFixed(2).replace('.', ',')}`;
+    return `R$ ${value.toFixed(2).replace('.', ',')}`;
   };
 
   // Função para abrir modal de detalhes
@@ -314,7 +322,7 @@ const AttendantCreateOrder = () => {
       setCreating(true);
       
       // Validação para modo PIX
-      if (generatePix && newOrder.selectedServiceId === 0) {
+      if (generatePix && !newOrder.selectedServiceUniqueId) {
         toast({
           title: "Erro",
           description: "Por favor, selecione um serviço antes de criar o pedido.",
@@ -379,7 +387,7 @@ const AttendantCreateOrder = () => {
       const quantityFromTitle = Number(newOrder.quantity) || 0;
       
       // Busca o serviço selecionado para obter o nome correto
-      const selectedService = allServices.find(s => s.serviceId === newOrder.selectedServiceId);
+      const selectedService = getServiceByUniqueId(newOrder.selectedServiceUniqueId);
       const description = selectedService ? selectedService.name : `${newOrder.quantity} ${newOrder.orderType} ${newOrder.platform}`;
 
       // Formatar número do celular no formato internacional
@@ -850,11 +858,12 @@ const AttendantCreateOrder = () => {
                                         setNewOrder((o) => ({
                                           ...o,
                                           selectedServiceId: service.serviceId,
+                                          selectedServiceUniqueId: service.id, // ID único
                                           serviceId: service.serviceId,
                                           orderType: service.serviceType as any,
                                           platform: service.platform as any,
                                           quantity: service.quantity,
-                                          amountBRL: calculatePrice(service.serviceId),
+                                          amountBRL: service.price.toFixed(2), // Usar preço direto
                                         }));
                                         setServiceSearchTerm("");
                                         setIsServiceDropdownOpen(false);
@@ -894,10 +903,11 @@ const AttendantCreateOrder = () => {
                     )}
 
                     {/* Serviço selecionado */}
-                    {newOrder.selectedServiceId > 0 && (
+                    {newOrder.selectedServiceUniqueId && (
                       <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded">
                         {(() => {
-                          const service = allServices.find(s => s.serviceId === newOrder.selectedServiceId);
+                          const service = getServiceByUniqueId(newOrder.selectedServiceUniqueId);
+                          
                           if (service) {
                             return (
                               <div className="flex items-center gap-2 text-sm">
@@ -930,11 +940,11 @@ const AttendantCreateOrder = () => {
                 </div>
 
                 {/* Informações do serviço selecionado */}
-                {newOrder.selectedServiceId > 0 && (
+                {newOrder.selectedServiceUniqueId && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <h4 className="font-semibold text-blue-800 mb-2">Detalhes do Serviço</h4>
                     {(() => {
-                      const service = allServices.find(s => s.serviceId === newOrder.selectedServiceId);
+                      const service = getServiceByUniqueId(newOrder.selectedServiceUniqueId);
                       if (service) {
                         return (
                           <div className="grid grid-cols-2 gap-4 text-sm">
