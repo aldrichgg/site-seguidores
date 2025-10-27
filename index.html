@@ -67,41 +67,30 @@
     document.head.appendChild(a);
   </script> -->
 
-  <!-- Google tag (gtag.js) -->
+  <!-- Meta Pixel Code -->
   <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'AW-17584344393');
+    !function (f, b, e, v, n, t, s) {
+      if (f.fbq) return; n = f.fbq = function () {
+        n.callMethod ?
+        n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+      };
+      if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+      n.queue = []; t = b.createElement(e); t.async = !0;
+      t.src = v; s = b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t, s)
+    }(window, document, 'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1516849742235587');
+    fbq('track', 'PageView');
   </script>
+  <noscript><img height="1" width="1" style="display:none"
+      src="https://www.facebook.com/tr?id=1516849742235587&ev=PageView&noscript=1" /></noscript>
+  <!-- End Meta Pixel Code -->
+
 </head>
 
 <body>
   <div id="root"></div>
-  <!-- <noscript
-      ><img
-        height="1"
-        width="1"
-        style="display: none"
-        src="https://www.facebook.com/tr?id=750672574463110&ev=PageView&noscript=1"
-    /></noscript> -->
-  <!-- <script type="text/javascript">
-      var url_link_redirect_pc =
-        "https://judicearaujo.com.br/blog/dicas-de-decoracao-de-natal/";
-
-      function isMobile() {
-        const regex =
-          /Mobi|Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
-        return regex.test(navigator.userAgent);
-      }
-
-      //validation js
-      if (isMobile()) {
-        console.log("Mobile device detected");
-      } else {
-        window.location = url_link_redirect_pc;
-      }
-    </script> -->
   <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
   <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
   <script type="module" src="/src/main.tsx"></script>
