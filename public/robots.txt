@@ -1,0 +1,20 @@
+# robots.txt para ImpulseGram
+# Permite que todos os motores de busca indexem o site
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://www.impulsegram.shop/sitemap.xml
+
+# Bloquear crawlers indesejados (opcional)
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+# Otimização de crawl rate para Google
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0

@@ -68,7 +68,7 @@ const ThankYou = () => {
       ? "Olá! Acabei de realizar um pedido de upsell no ImpulseGram e gostaria de acompanhar o status."
       : "Olá! Acabei de realizar um pedido no ImpulseGram e gostaria de acompanhar o status.";
     
-    const whatsappUrl = `https://api.whatsapp.com/send?phone=5512976024936&text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=5512982299289&text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 

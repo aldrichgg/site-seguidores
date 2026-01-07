@@ -95,7 +95,7 @@ const ServiceCard = ({
     };
 
     if (platform === "YouTube" || platform === "Facebook") {
-      const phoneNumber = "+5512976024936";
+      const phoneNumber = "+5512982299289";
       const message = `Olá! Tenho interesse no plano *${title}* para *${platform}*. Pode me ajudar?`;
       const encodedMessage = encodeURIComponent(message);
       const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
@@ -103,7 +103,7 @@ const ServiceCard = ({
       return;
     }
     if (type) {
-      const phoneNumber = "+5512976024936";
+      const phoneNumber = "+5512982299289";
       const message = `Olá! Tenho interesse na assinatura *${title}* para *${platform}*. Pode me ajudar?`;
       const encodedMessage = encodeURIComponent(message);
       const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
